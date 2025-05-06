@@ -1,0 +1,8 @@
+**unit_test_l298n_set_SpeedAndDirection.ino
+-the code on the esp.
+
+**algorithms.py
+- have 3 functions:
+- Normalize the angle to the range [-pi, pi].
+-  Pure Pursuit algorithm to calculate the steering angle to follow a path.
+- 
