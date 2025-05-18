@@ -5,8 +5,8 @@ import numpy as np
 import math
 from datetime import datetime
 import chaser_data_handling
-from helperFunc import dist
-
+from helperFunc import dist, is_out_of_board 
+import algorithms as al
 import matplotlib.pyplot as plt
 from commands import send_led_error_command
 
@@ -86,6 +86,7 @@ def receive_new_desc(desc: DataDescriptions):
 
 def receive_new_frame(data_frame: DataFrame):
     global i, num_frames
+    # car position and rotation and radius
     global c_pos, c_rot, c_rad
     global t_pos, t_rot, t_rad
     global state, pp
@@ -99,7 +100,7 @@ def receive_new_frame(data_frame: DataFrame):
     num_frames += 1
 
     # Process every 100th frame to avoid excessive processing
-    if (num_frames % 10 == 0):
+    if (num_frames % 30 == 0):
         # Iterate through the rigid bodies in the data frame to extract positions
         for ms in data_frame.rigid_bodies:
             if ms.id_num == 600:
@@ -109,7 +110,15 @@ def receive_new_frame(data_frame: DataFrame):
                 # Handle the target's data
                 t_pos, t_rot, t_rad = chaser_data_handling.handle_frame(ms, "TARGET")
         #if ROBOT_STATE == 2:
-            
+    if dist(c_pos[0], t_pos[0], c_pos[2], t_pos[2]) < 0.25:
+            print(f"YEYYYYY \nThe robot chaser got the target.")
+    if is_out_of_board(c_pos[0], c_pos[2]):
+            print(f"Chaser board limit fail. Check if the chaser robot is on the board.")
+
+    path= []
+    path=al.calculate_rrtS(c_pos[0], c_pos[2], t_pos[0], t_pos[2])
+    for i in range(len(path)):
+        print(path[i])    
 
 
 
