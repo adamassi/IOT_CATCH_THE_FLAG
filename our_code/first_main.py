@@ -69,10 +69,16 @@ desired_yaw = 0
 
 
 def receive_new_desc(desc: DataDescriptions):
-    print("Received data descriptions.")
-    # print(desc)
+    # This function is triggered when new data descriptions are received from the OptiTrack system.
+    # It processes the data descriptions and checks for a specific marker set named 'IOT_car'.
+
+    print("Received data descriptions.")  # Notify that data descriptions have been received.
+
+    # Iterate through the marker sets in the data descriptions.
     for ms in desc.marker_sets:
+        # Check if the marker set name matches 'IOT_car'.
         if ms.name == 'IOT_car':
+            # If a match is found, print the entire data description.
             print(desc)
 
 
@@ -112,6 +118,7 @@ streaming_client = NatNetClient(
     local_ip_address=socket.gethostbyname(socket.gethostname()),  # Local IP address
     use_multicast=False  # Use unicast instead of multicast for communication
 )
+
 
 
 

@@ -292,7 +292,7 @@ try:
                 break
 
             # Sleep for 1 second before updating
-            time.sleep(1)
+            time.sleep(100)
 
             # Update the streaming client to process incoming data synchronously
             streaming_client.update_sync()

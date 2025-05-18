@@ -64,3 +64,15 @@ def kinematic_bicycle_model(x, y, theta, v, delta, L, dt):
     theta_new = theta + (v / L) * math.tan(delta) * dt
 
     return x_new, y_new, theta_new
+
+# RRT* algorithm
+def calculate_rrtS(x1, y1, x2, y2):
+    """
+    Calculate the RRT* path from (x1, y1) to (x2, y2).
+    This is a placeholder function. The actual implementation would involve
+    creating a tree of nodes and finding the optimal path.
+    """
+    # Placeholder for RRT* algorithm
+    # In a real implementation, this would involve creating a tree of nodes
+    # and finding the optimal path from (x1, y1) to (x2, y2).
+    return [(x2, y2)]
