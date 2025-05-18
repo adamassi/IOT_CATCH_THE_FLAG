@@ -64,3 +64,4 @@ htmlcov/
 # OS-specific files
 .DS_Store
 Thumbs.db
+our_code/__pycache__/
