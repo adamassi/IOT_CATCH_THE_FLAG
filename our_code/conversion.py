@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.spatial.transform import Rotation as R
-
+import math
 
 def normalize_angle(angle):
     """Normalize the angle to the range [-pi, pi]."""

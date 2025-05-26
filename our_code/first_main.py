@@ -10,7 +10,8 @@ import algorithms as al
 import matplotlib.pyplot as plt
 from commands import send_led_error_command
 import requests
-from stam import send_go_request, send_stop_request 
+from stam import send_go_request, send_stop_request, send_lift_request, send_right_request ,angle_between_points
+from conversion import normalize_angle
 # Replace with the actual IP address of your ESP device
 # ESP_IP = "http://192.168.0.105"  # This is typically the default for ESP AP mode
 
@@ -111,45 +112,109 @@ def receive_new_frame(data_frame: DataFrame):
     global synt
     # Increment frame counter to keep track of the number of frames processed
     num_frames += 1
-
+    is_left = False
     # Process every 100th frame to avoid excessive processing
     # if (num_frames % 15 == 0):
         # Iterate through the rigid bodies in the data frame to extract positions
     for ms in data_frame.rigid_bodies:
             
-            if ms.id_num == 600:
+            if ms.id_num == 605:
                 # Handle the chaser's data
-                c_pos, c_rot, c_rad = chaser_data_handling.handle_frame(ms, "CHASER")
-                print(f"Type of c_pos600: {type(c_pos)}")
-            if ms.id_num == 601:
+                c_pos, c_rot, c_rad = chaser_data_handling.handle_frame(ms, "ctf_car")
+                #print(f"Chaser rad: {c_rad}")
+                #print(f"Type of c_pos600: {type(c_pos)}")
+            if ms.id_num == 604:
                 # Handle the target's data
-                t_pos, t_rot, t_rad = chaser_data_handling.handle_frame(ms, "TARGET")
+                t_pos, t_rot, t_rad = chaser_data_handling.handle_frame(ms, "ctf_cube")
         #if ROBOT_STATE == 2:
-    if dist(c_pos[0], t_pos[0], c_pos[2], t_pos[2]) < 0.75:
-            send_stop_request()
-            streaming_client.stop_async()
-            synt=False
-
-            # exit()
-            print(f"YEYYYYY \nThe robot chaser got the target.")
-    if is_out_of_board(c_pos[0], c_pos[2]):
-            print(f"Chaser board limit fail. Check if the chaser robot is on the board.")
     
-    print(f"Type of c_pos: {type(c_pos[0])}")
-    print(f"Chaser position: {c_pos[0]}, {c_pos[2]}")
-    print(synt)
-    if not synt:
-         exit()
+    #turn towards the target
+    angle = angle_between_points(c_pos, t_pos)
+    normalized_angle = normalize_angle(angle - c_rad)
+    print(f"Normalized angle: {normalized_angle} angle: {angle} c_rad: {c_rad}")
+    if abs(normalized_angle) < 0.04:
+        print("Chaser is facing the target.")
+        send_stop_request()
+        angle = angle_between_points(c_pos, t_pos)
+        normalized_angle = normalize_angle(angle - c_rad)
+        # print(f"Normalized angle: {normalized_angle} angle: {angle} c_rad: {c_rad}")
+        exit(1)
+    elif normalized_angle < 0:
+        print("Turn Left")
+        is_left = True
+        send_lift_request()
+    else:
+        print("Turn Right")
+        is_left = False
+        send_right_request()
+    # angle = angle_between_points(c_pos, t_pos)
+    # normalized_angle = normalize_angle(angle - c_rad)
+    # print(f"Normalized angle: {normalized_angle} angle: {angle} c_rad: {c_rad}")
 
-    # path= []
-    # path=al.calculate_rrtS(c_pos[0], c_pos[2], t_pos[0], t_pos[2])
-    # for i in range(len(path)):
-    #     print(path[i])    
-    # send_go_request()
-    # if num_frames  == 10:
-    #     # Send a stop command to the robot car
+
+
+    # if (num_frames % 2 == 0):
     #     send_stop_request()
-    #     print("Stop command sent to the robot car.")
+    
+    #send_stop_request()
+
+
+    # if dist(c_pos[0], t_pos[0], c_pos[2], t_pos[2]) < 0.75:
+    #         send_stop_request()
+    #         streaming_client.stop_async()
+    #         synt=False
+    
+
+    #         # exit()
+    #         print(f"YEYYYYY \nThe robot chaser got the target.")
+    # if is_out_of_board(c_pos[0], c_pos[2]):
+    #         print(f"Chaser board limit fail. Check if the chaser robot is on the board.")
+    
+    # print(f"Type of c_pos: {type(c_pos[0])}")
+    # print(f"Chaser position: {c_pos[0]}, {c_pos[2]}")
+    # print(synt)
+    # # if not synt:
+    # #      exit()
+    # print(f"Target position: {t_pos[0]}, {t_pos[2]}")
+    # # if c_pos[0]-t_pos[0]> 0.75 :
+    #     # If the chaser is behind the target, send a command to go forward
+    #     # send_go_request()
+    # angle = angle_between_points(c_pos, t_pos)
+    # print("angle between points: ", angle_between_points(c_pos, t_pos))
+    # normalized_angle = normalize_angle(angle - c_rad)
+    
+
+    # if normalized_angle < 0.1:
+    #     # If the chaser's current angle is not close to the target angle, send a command to turn
+    #     if c_rad > 0:
+    #         send_right_request()
+    #         print("Turning right")
+    #     else:
+    #         send_lift_request()
+            
+    #         print("Turning left")
+    #     send_stop_request()
+    #     return  # Exit the function instead of breaking
+    # else:
+    #     # If the chaser is facing the target, send a command to go forward
+    #     exit()
+    #     send_go_request()
+    #     print("Going forward")
+         
+    # print("angle between points: ", angle_between_points(c_pos, t_pos))
+    # # send_stop_request()
+    # # exit(1)
+         
+
+    # # path= []
+    # # path=al.calculate_rrtS(c_pos[0], c_pos[2], t_pos[0], t_pos[2])
+    # # for i in range(len(path)):
+    # #     print(path[i])    
+    # # send_go_request()
+    # # if num_frames  == 10:
+    # #     # Send a stop command to the robot car
+    # #     send_stop_request()
+    # #     print("Stop command sent to the robot car.")
 
 
 
@@ -184,18 +249,19 @@ try:
                 break
            
             # Sleep for 1 second before updating
-            time.sleep(1)
+            # time.sleep(1)
             
 
             # Update the streaming client to process incoming data synchronously
-            print(synt)
+            ###print(synt)
             if synt:
                 # Update the streaming client to process incoming data synchronously
                 streaming_client.update_sync()
                 # send_go_request()
 
+
             # Print the number of frames received
-            print(f"Received {num_frames} frames in {i + 1}s")
+            #print(f"Received {num_frames} frames in {i + 1}s")
             # send_stop_request()
 
 

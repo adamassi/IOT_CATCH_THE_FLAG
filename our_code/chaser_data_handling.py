@@ -17,11 +17,11 @@ def handle_frame(ms, name):
     location_zup, euler_angles_zup = conversion.convert_yup_to_zup(location_yup, quaternion_yup)
     conversion.only2(ms.pos)
     rad = round(math.radians(euler_angles_zup[2]), 2)
-    print(f"-----{name}-----")
-    print(f"position: {conversion.only2(ms.pos)}")
-    print(f"rotation:    {euler_angles_zup}")
-    print(f"rad:    {rad}")
-    #print(f"rotation quaternion chaser:    {ms.rot}")
+    # print(f"-----{name}-----")
+    # print(f"position: {conversion.only2(ms.pos)}")
+    # print(f"rotation:    {euler_angles_zup}")
+    # print(f"rad:    {rad}")
+    # #print(f"rotation quaternion chaser:    {ms.rot}")
     return conversion.only2(ms.pos), euler_angles_zup, rad
 
 
