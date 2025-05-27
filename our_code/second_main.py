@@ -142,8 +142,9 @@ try:
         turnToTarget(False, base_pos)
         turnToTarget(False, base_pos)
         GoToTarget(False, base_pos)
-        
 
+        
+    send_servo_request(30)
     print("c_pos: ", c_pos, "c_rot: ", c_rot, "c_rad: ", c_rad)
     print("t_pos: ", t_pos, "t_rot: ", t_rot, "t_rad: ", t_rad)
 
