@@ -12,6 +12,9 @@ from commands import send_led_error_command
 import requests
 from stam import send_servo_request, send_go_request, send_stop_request, send_lift_request, send_right_request ,angle_between_points
 from conversion import normalize_angle
+from path_algorithms.RCSPlanner import RCSPlanner
+from path_algorithms.MapEnvironment import MapEnvironment
+
 
 
 
@@ -122,7 +125,20 @@ def GoToTarget(is_cube = True, curr_t_pos = t_pos):
 
     time.sleep(1)
 
+# Function get data where the  robot car and where the cube is and calculate the path to the cube
+def get_path_to_target(start_pos, goal_pos):
+    # Initialize the map environment with the JSON file path
+    json_file_path = "our_code/path_algorithms/map1.json"
+    planning_env = MapEnvironment(json_file=json_file_path)
 
+    # Create an instance of the RCSPlanner with the planning environment
+    planner = RCSPlanner(planning_env=planning_env)
+
+    # Execute the planning algorithm to get the path
+    plan = planner.plan()
+
+    # Visualize the map with the computed plan and expanded nodes
+    planner.planning_env.visualize_map(plan=plan, expanded_nodes=planner.get_expanded_nodes())
 
     
 try:
@@ -134,9 +150,10 @@ try:
         #streaming_client.run_async()
         time.sleep(1)  # Allow some time for the client to start and receive data
         print("Streaming started. Waiting for data...")
-        turnToTarget()
-        turnToTarget()
-        GoToTarget()
+        get_path_to_target(c_pos, t_pos)
+        # turnToTarget()
+        # turnToTarget()
+        # GoToTarget()
         print("Chaser is facing the target.")
     
         send_servo_request(60)
