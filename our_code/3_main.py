@@ -12,16 +12,15 @@ from commands import send_led_error_command
 import requests
 from stam import send_servo_request, send_go_request, send_stop_request, send_lift_request, send_right_request ,angle_between_points
 from conversion import normalize_angle
+from path_algorithms.RCSPlanner import RCSPlanner
+from path_algorithms.MapEnvironment import MapEnvironment
+
 
 
 
 c_pos, c_rot, c_rad = [0,0,0], 0, 0
 t_pos, t_rot, t_rad = [0,0,0], 0, 0
-
-
 base_pos = [4.13, 0.09, 0.26]
-# Define car_positions globally
-car_positions = []
 
 def receive_new_desc(desc: DataDescriptions):
     # This function is triggered when new data descriptions are received from the OptiTrack system.
@@ -44,8 +43,6 @@ def receive_new_frame(data_frame: DataFrame):
 
     global c_pos, c_rot, c_rad
     global t_pos, t_rot, t_rad
-    global car_positions  # Declare car_positions as global
-
 
 
     for ms in data_frame.rigid_bodies:
@@ -53,8 +50,6 @@ def receive_new_frame(data_frame: DataFrame):
             if ms.id_num == 605:
                 # Handle the chaser's data
                 c_pos, c_rot, c_rad = chaser_data_handling.handle_frame(ms, "ctf_car")
-                # Append the current position of the car to car_positions
-                # car_positions.append((c_pos[0], c_pos[2]))
                 #print(f"Chaser rad: {c_rad}")
                 #print(f"Type of c_pos600: {type(c_pos)}")
             if ms.id_num == 604:
@@ -125,58 +120,25 @@ def GoToTarget(is_cube = True, curr_t_pos = t_pos):
             normalized_angle = normalize_angle(angle - c_rad)
             if abs(normalized_angle) > 0.15:
                 send_stop_request()
-                turnToTarget()###TODO:add a parameter to turnToTarget
+                turnToTarget()
                 send_go_request()
 
     time.sleep(1)
-def plot_positions(car_positions, ctf_positions):
-    """
-    Plots the chaser and target positions over time.
 
-    Args:
-        car_positions (list of tuples): The tracked chaser positions, each tuple is (x, y).
-        ctf_positions (list of tuples): The tracked target positions, each tuple is (x, y).
-    """
-    plt.figure(figsize=(6, 10))  # Set the figure size to 6x10 inches
+# Function get data where the  robot car and where the cube is and calculate the path to the cube
+def get_path_to_target(start_pos, goal_pos):
+    # Initialize the map environment with the JSON file path
+    json_file_path = "our_code/path_algorithms/map1.json"
+    planning_env = MapEnvironment(json_file=json_file_path)
 
-    # Unpack chaser and target positions into x and y components
-    chaser_x, chaser_y = car_positions[-1]
-    target_x, target_y = ctf_positions[-1]
+    # Create an instance of the RCSPlanner with the planning environment
+    planner = RCSPlanner(planning_env=planning_env)
 
-    # Plot chaser path with 'o' markers
-    plt.plot(chaser_y, chaser_x, label="Chaser Path", marker='o')
+    # Execute the planning algorithm to get the path
+    plan = planner.plan()
 
-    # Plot target path with 'x' markers
-    plt.plot(target_y, target_x, label="Target Path", marker='x')
-
-    # Label the x-axis and y-axis
-    plt.xlabel('X Position')
-    plt.ylabel('Y Position')
-
-    # Set the plot title
-    plt.title('Chaser and Target Paths Over Time')
-
-    # Add legend to the plot for clarity
-    plt.legend()
-
-    # Add grid lines to the plot for better readability
-    plt.grid(True)
-
-    # Set the x-axis limits from -3 to 3
-    plt.xlim(-3, 3)
-
-    # Set the y-axis limits from -5 to 5
-    plt.ylim(-5, 5)
-
-    # Adjust the aspect ratio of the plot to fit the specified limits
-    plt.gca().set_aspect('auto')
-
-    # Display the plot
-    plt.show()
-
-
-
-
+    # Visualize the map with the computed plan and expanded nodes
+    planner.planning_env.visualize_map(plan=plan, expanded_nodes=planner.get_expanded_nodes())
 
     
 try:
@@ -188,9 +150,10 @@ try:
         #streaming_client.run_async()
         time.sleep(1)  # Allow some time for the client to start and receive data
         print("Streaming started. Waiting for data...")
-        turnToTarget()
-        turnToTarget()
-        GoToTarget()
+        get_path_to_target(c_pos, t_pos)
+        # turnToTarget()
+        # turnToTarget()
+        # GoToTarget()
         print("Chaser is facing the target.")
     
         send_servo_request(60)
@@ -199,12 +162,10 @@ try:
         turnToTarget(False, base_pos)
         GoToTarget(False, base_pos)
 
-
         
     send_servo_request(30)
     print("c_pos: ", c_pos, "c_rot: ", c_rot, "c_rad: ", c_rad)
     print("t_pos: ", t_pos, "t_rot: ", t_rot, "t_rad: ", t_rad)
-    # plot_positions(car_positions, [(t_pos[0], t_pos[2])])
 
 
 
