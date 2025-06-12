@@ -1,5 +1,5 @@
 import numpy as np
-from RRTTree import RRTTree
+from path_algorithms.RRTTree import RRTTree
 import time
 
 
@@ -118,7 +118,7 @@ class RRTPlanner(object):
             # we want to choose the best eta
             eta_vec = [5, 10, 15]
             # the best result was received when eta = 10
-            tested_eta = eta_vec[1]
+            tested_eta = eta_vec[0]
             self.eta = tested_eta
 
             # Handle the case where delta_norm is zero or very small

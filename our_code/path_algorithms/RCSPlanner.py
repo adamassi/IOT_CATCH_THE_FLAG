@@ -30,7 +30,7 @@ class RCSPlanner(object):
             for j in reversed(x):
                 if exclude_origin and (i == 0 and j == 0):
                     continue
-                moves.append((i, j))
+                moves.append((0.5*i,0.5*j))
         return moves
 
     def plan(self):
@@ -121,7 +121,7 @@ class RCSPlanner(object):
             path.append(node.state)  # Append the state
             node = node.parent       # Move to the parent
         path.reverse()
-        print(path)
+        # print(path)
         return np.array(path)
     
     def get_expanded_nodes(self):

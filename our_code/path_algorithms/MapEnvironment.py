@@ -24,8 +24,10 @@ class MapEnvironment(object):
             json_dict = json.load(f)
 
         # obtain boundary limits, start and inspection points
-        self.xlimit = [0, json_dict['WIDTH']-1]
-        self.ylimit = [0, json_dict['HEIGHT']-1]
+        self.xlimit = [-4.0, json_dict['WIDTH']]
+        self.ylimit = [-2, json_dict['HEIGHT']]
+        print(f'World limits: x={self.xlimit}, y={self.ylimit}')
+        print(f'Start point: {json_dict["START"]}, Goal point: {json_dict["GOAL"]}')
         self.start = np.array(json_dict['START'])
         self.goal = np.array(json_dict['GOAL'])
         self.load_obstacles(obstacles=json_dict['OBSTACLES'])
@@ -155,7 +157,7 @@ class MapEnvironment(object):
         if show_map:
             plt.show()
         else:
-            plt.savefig('map-RCS.png')
+            plt.savefig('map-RRT.png')
 
         return plt
 
@@ -216,7 +218,7 @@ class MapEnvironment(object):
         @param color The requested color for the plan.
         '''
         # add plan edges to the plt
-        point_radius = 0.5
+        point_radius = 0.1
         for expanded_node in expanded_nodes:
             point_circ = plt.Circle(expanded_node, radius=point_radius, color=color, zorder=10)
             plt.gca().add_patch(point_circ)
@@ -232,7 +234,7 @@ class MapEnvironment(object):
         '''
 
         # draw the circle
-        point_radius = 0.5
+        point_radius = 0.1
         point_circ = plt.Circle(state, radius=point_radius, color=color, zorder=30)
         plt.gca().add_patch(point_circ)
     
