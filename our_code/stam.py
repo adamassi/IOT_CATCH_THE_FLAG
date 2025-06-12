@@ -43,6 +43,13 @@ def send_left_request():
         print("LEFT request sent. Response:", response.text)
     except Exception as e:
         print("Error sending LEFT request:", e)
+def send_steer_request(left=250, right = 250):
+    try:
+        response = requests.get(f"{ESP_IP}/steer?left="+str(left)+"&right="+str(right))
+        print("STEER request sent. Response:", response.text)
+    except Exception as e:
+        print("Error sending STEER request:", e)
+
 def angle_between_points(p1, p2):
     
     return math.atan2(p2[2] - p1[2], p2[0] - p1[0])
@@ -57,3 +64,21 @@ def angle_between_points(p1, p2):
 # send_right_request(70)
 # time.sleep(3)
 # send_right_request(250)
+# send_steer(250, 250)
+# print("Steering command sent. left: 250, right: 250")
+# time.sleep(3)
+# send_steer(250, 100)
+# print("Steering command sent. left: 250, right: 100")
+
+# #send steer commands, try speeds from 0 to 250 with steps of 10
+# for i in range(0, 250, 10):
+#     send_steer(250, i)
+#     time.sleep(0.1)  # small delay to observe the change in steering
+#     print(f"Steering command sent. left: 250, right: {i}")
+# # send steer commands, try speeds from 0 to 250 with steps of 1
+# for i in range(0, 250, 10):
+#     send_steer(i, 250)
+#     time.sleep(0.1)  # small delay to observe the change in steering
+#     print(f"Steering command sent. left: {i}, right: 250")
+
+# send_stop_request()

@@ -49,6 +49,7 @@ def receive_new_frame(data_frame: DataFrame):
 
 
     for ms in data_frame.rigid_bodies:
+           
             
             if ms.id_num == 605:
                 # Handle the chaser's data
@@ -76,12 +77,20 @@ def receive_new_frame(data_frame: DataFrame):
 
 
 
+
+# Initialize the NatNetClient
 streaming_client = NatNetClient(
     server_ip_address="132.68.35.2",  # IP address of the OptiTrack server
     local_ip_address=socket.gethostbyname(socket.gethostname()),  # Local IP address
-    
     use_multicast=False  # Use unicast instead of multicast for communication
 )
+
+
+# Check if the client is connected
+if streaming_client.connected:
+    print("Successfully connected to the OptiTrack system.")
+else:
+    print("Failed to connect to the OptiTrack system. Please check the server IP and network settings.")
 
 
 
@@ -181,24 +190,24 @@ def plot_positions(car_positions, ctf_positions):
 
     
 try:
-    send_servo_request(30)
+    # send_servo_request(30)
     with streaming_client:
         streaming_client.request_modeldef()
 
         streaming_client.update_sync()
-        #streaming_client.run_async()
+        # streaming_client.run_async()
         time.sleep(1)  # Allow some time for the client to start and receive data
         print("Streaming started. Waiting for data...")
-        turnToTarget()
-        turnToTarget()
-        GoToTarget()
-        print("Chaser is facing the target.")
+    #     turnToTarget()
+    #     turnToTarget()
+    #     GoToTarget()
+    #     print("Chaser is facing the target.")
     
-        send_servo_request(60)
-        time.sleep(1)
-        turnToTarget(False, base_pos)
-        turnToTarget(False, base_pos)
-        GoToTarget(False, base_pos)
+    #     send_servo_request(60)
+    #     time.sleep(1)
+    #     turnToTarget(False, base_pos)
+    #     turnToTarget(False, base_pos)
+    #     GoToTarget(False, base_pos)
 
 
         

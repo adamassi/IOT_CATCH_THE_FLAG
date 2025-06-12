@@ -58,6 +58,11 @@ const char index_html[] PROGMEM = R"rawliteral(
   </style>
 </head>
 <body>
+  <p><strong>Servo Angle</strong></p>
+  <span id="servo_angle_display">%SERVOANGLE%</span>°
+  <input type="range" onchange="updateServoAngle(this)" id="servoSlider" min="0" max="90" value="%SERVOANGLE%" step="1" class="slider">
+
+
   <h2>DC Motor Speed Control Web Server</h2>
   <p><span id="textslider_value">%SLIDERVALUE%</span></p>
   <p><input type="range" onchange="updateSliderPWM(this)" id="pwmSlider" min="-255" max="255" value="%SLIDERVALUE%" step="1" class="slider"></p>
@@ -76,6 +81,15 @@ const char index_html[] PROGMEM = R"rawliteral(
   </p>
 
 <script>
+
+function updateServoAngle(element) {
+  var angle = document.getElementById("servoSlider").value;
+  document.getElementById("servo_angle_display").innerHTML = angle;
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "/servo?value=" + angle, true);
+  xhr.send();
+}
+
 function updateSliderPWM(element) {
   var slider_value = document.getElementById("pwmSlider").value;
   document.getElementById("textslider_value").innerHTML = slider_value;
@@ -162,11 +176,22 @@ document.addEventListener("keydown", function(event) {
 //   return String();
 // }
 
+// String processor(const String &var) {
+//   if (var == "SLIDERVALUE") {
+//     return slider_value;
+//   } else if (var == "SLIDERPWMVALUE") {
+//     return String(pwm_power_value);
+//   }
+//   return String();
+// }
+
 String processor(const String &var) {
   if (var == "SLIDERVALUE") {
     return slider_value;
   } else if (var == "SLIDERPWMVALUE") {
     return String(pwm_power_value);
+  } else if (var == "SERVOANGLE") {
+    return String(servoAngle);
   }
   return String();
 }
@@ -303,9 +328,9 @@ void setup() {
     if (request->hasParam(input_parameter)) {
       speed = request->getParam(input_parameter)->value().toInt();
     }
-    ledcWrite(pwm_channel1, 0);
-    ledcWrite(pwm_channel2, 120);
-    ledcWrite(pwm_channel3, 250);
+    ledcWrite(pwm_channel1, speed);
+    ledcWrite(pwm_channel2, 0);
+    ledcWrite(pwm_channel3, speed);
     ledcWrite(pwm_channel4, 0);
 
     request->send(200, "text/plain", "turn right");
@@ -318,11 +343,34 @@ void setup() {
       speed = request->getParam(input_parameter)->value().toInt();
     }
     ledcWrite(pwm_channel1, 0);
-    ledcWrite(pwm_channel2, 250);
-    ledcWrite(pwm_channel3, 120);
-    ledcWrite(pwm_channel4, 0);
+    ledcWrite(pwm_channel2, speed);
+    ledcWrite(pwm_channel3, 0);
+    ledcWrite(pwm_channel4, speed);
 
     request->send(200, "text/plain", "turn left");
+  });
+
+  server.on("/steer", HTTP_GET, [](AsyncWebServerRequest *request) {
+    int left_speed = 0;
+    int right_speed = 0;
+
+    // Check if both parameters exist
+    if (request->hasParam("left") && request->hasParam("right")) {
+      left_speed = request->getParam("left")->value().toInt();
+      right_speed = request->getParam("right")->value().toInt();
+    } else {
+      request->send(400, "text/plain", "Missing 'left' or 'right' parameter");
+      return;
+    }
+
+    // Set motor speeds
+    ledcWrite(pwm_channel1, 0);
+    ledcWrite(pwm_channel2, right_speed);
+    ledcWrite(pwm_channel3, left_speed);
+    ledcWrite(pwm_channel4, 0);
+
+    // Respond to client
+    request->send(200, "text/plain", "Steering updated");
   });
 
   server.on("/servo", HTTP_GET, [](AsyncWebServerRequest *request) {

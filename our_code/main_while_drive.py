@@ -52,9 +52,8 @@ def receive_new_frame(data_frame: DataFrame):
             if ms.id_num == 605:
                 # Handle the chaser's data
                 c_pos, c_rot, c_rad = chaser_data_handling.handle_frame(ms, "ctf_car")
-                print(f"Chaser pos: {c_pos}, Chaser rot: {c_rot}, Chaser rad: {c_rad}")
-                print(f"Chaser rad: {c_rad}")
-                # print(f"Type of c_pos600: {type(c_pos)}")
+                #print(f"Chaser rad: {c_rad}")
+                #print(f"Type of c_pos600: {type(c_pos)}")
             if ms.id_num == 604:
                 # Handle the target's data
                 t_pos, t_rot, t_rad = chaser_data_handling.handle_frame(ms, "ctf_cube")
@@ -75,7 +74,7 @@ def receive_new_frame(data_frame: DataFrame):
 
 
 streaming_client = NatNetClient(
-    server_ip_address="132.68.35.255",  # IP address of the OptiTrack server
+    server_ip_address="132.68.35.2",  # IP address of the OptiTrack server
     local_ip_address=socket.gethostbyname(socket.gethostname()),  # Local IP address
     use_multicast=False  # Use unicast instead of multicast for communication
 )
@@ -129,59 +128,60 @@ def GoToTarget(is_cube = True, curr_t_pos = t_pos):
     time.sleep(1)
 
 
-# def steerToTarget(is_cube = True, curr_t_pos = t_pos):
-#     left, right, stop = 1, 2, 3
-#     turning_state = stop
-#     MAX_SPEED = 250
-#     MIN_SPEED = 10
-#     while True:
-#         streaming_client.update_sync()
-#         curr_c_pos, curr_c_rad = c_pos, c_rad
-#         if is_cube:
-#             curr_t_pos = t_pos
-#         angle = angle_between_points(curr_c_pos, curr_t_pos)
-#         normalized_angle = normalize_angle(angle - curr_c_rad)
-#         if abs(normalized_angle) < 0.07:
-#             send_go_request()
-#             break
+def steerToTarget(is_cube = True, curr_t_pos = t_pos):
+    left, right, stop = 1, 2, 3
+    turning_state = stop
+    MAX_SPEED = 250
+    MIN_SPEED = 80
+    while True:
+        streaming_client.update_sync()
+        curr_c_pos, curr_c_rad = c_pos, c_rad
+        if is_cube:
+            curr_t_pos = t_pos
+        angle = angle_between_points(curr_c_pos, curr_t_pos)
+        normalized_angle = normalize_angle(angle - curr_c_rad)
+        if abs(normalized_angle) < 0.07:
+            send_go_request()
+            break
 
-#         speed_ratio = max(0.0, 1.0 - abs(normalized_angle) / (math.pi / 2))  # normalized: 1.0 (straight) → 0.0 (sharp turn)
-#         reduced_speed = int(MAX_SPEED * speed_ratio)
-#         reduced_speed = max(reduced_speed, MIN_SPEED)
-#         if normalized_angle < 0:
-#             #if not turning_state == left:
-#             turning_state = left
-#             #send_lift_request(150)
-#             send_steer_request(left=reduced_speed, right=250)
-#         else:
-#             #if not turning_state == right:
-#             turning_state = right
-#             #send_right_request(150)
-#             send_steer_request(left=250, right=reduced_speed)
-#     time.sleep(1)
+        speed_ratio = max(0.0, 1.0 - abs(normalized_angle) / (math.pi / 2))  # normalized: 1.0 (straight) → 0.0 (sharp turn)
+        reduced_speed = int(MAX_SPEED * speed_ratio)
+        reduced_speed = max(reduced_speed, MIN_SPEED)
+        if normalized_angle < 0:
+            #if not turning_state == left:
+            turning_state = left
+            #send_lift_request(150)
+            send_steer_request(left=reduced_speed, right=250)
+        else:
+            #if not turning_state == right:
+            turning_state = right
+            #send_right_request(150)
+            send_steer_request(left=250, right=reduced_speed)
+    time.sleep(1)
 
-# def GoToTargetWithSteer(is_cube = True, curr_t_pos = t_pos):
-#     if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) >= 0.15:
-#         send_go_request()
-#         while True:
-#             streaming_client.update_sync()
-#             if is_cube:
-#                 curr_t_pos = t_pos
-#             if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) < 0.15:
-#                 send_stop_request()
-#                 break
-#             angle = angle_between_points(c_pos, curr_t_pos)
-#             normalized_angle = normalize_angle(angle - c_rad)
-#             if abs(normalized_angle) > 1:
-#                 #send_stop_request()
-#                 steerToTarget(is_cube, curr_t_pos)
-#                 send_go_request()
-#             elif abs(normalized_angle) > 0.15:
-#                 #send_stop_request()
-#                 turnToTarget(is_cube, curr_t_pos)
-#                 send_go_request()
+def GoToTargetWithSteer(is_cube = True, curr_t_pos = t_pos):
+    distance = dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2])
+    if distance >= 0.15:
+        send_go_request()
+        while True:
+            streaming_client.update_sync()
+            if is_cube:
+                curr_t_pos = t_pos
+            distance = dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2])
+            if distance < 0.15:
+                send_stop_request()
+                break
+            angle = angle_between_points(c_pos, curr_t_pos)
+            normalized_angle = normalize_angle(angle - c_rad)
 
-#     time.sleep(1)
+            if abs(normalized_angle) > 0.15:
+                # if distance < 1:
+                #     turnToTarget(is_cube, curr_t_pos)
+                # else:
+                steerToTarget(is_cube, curr_t_pos)
+                send_go_request()
+
+    time.sleep(1)
 
 
 # Function get data where the  robot car and where the cube is and calculate the path to the cube
@@ -202,52 +202,6 @@ def get_path_to_target(start_pos, goal_pos):
     planner.planning_env.visualize_map(plan=plan, tree_edges=planner.tree.get_edges_as_states())
     return plan
     
-try:
-    send_servo_request(30)
-    with streaming_client:
-        streaming_client.request_modeldef()
-
-        streaming_client.update_sync()
-        #streaming_client.run_async()
-        time.sleep(1)  # Allow some time for the client to start and receive data
-        print("Streaming started. Waiting for data...")
-        plan = []
-        plan=get_path_to_target(c_pos, t_pos)
-
-        #iteration nover the plan
-        for i in range(len(plan) - 1):
-            go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
-            print("Current position:", go_to_pos)
-            turnToTarget(False, go_to_pos)
-            turnToTarget(False, go_to_pos)
-            GoToTarget(False, go_to_pos)
-
-        # turnToTarget()
-        # turnToTarget()
-        # GoToTarget()
-        print("Chaser is facing the target.")
-    
-        send_servo_request(57)
-        plan=get_path_to_target(c_pos, base_pos)
-        print("finished planening")
-        for i in range(len(plan) - 1):
-            go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
-            print("Current position:", go_to_pos)
-            turnToTarget(False, go_to_pos)
-            turnToTarget(False, go_to_pos)
-            GoToTarget(False, go_to_pos)
-        
-        # turnToTarget(False, base_pos)
-        # turnToTarget(False, base_pos)
-        # GoToTarget(False, base_pos)
-        print("KNOW WE CAN GO TO THE TARGET POSITION")
-
-        
-    send_servo_request(30)
-    print("c_pos: ", c_pos, "c_rot: ", c_rot, "c_rad: ", c_rad)
-    print("t_pos: ", t_pos, "t_rot: ", t_rot, "t_rad: ", t_rad)
-
-
 # try:
 #     send_servo_request(30)
 #     with streaming_client:
@@ -264,10 +218,9 @@ try:
 #         for i in range(len(plan) - 1):
 #             go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
 #             print("Current position:", go_to_pos)
-#             if i == 0:
-#                 turnToTarget(False, go_to_pos)
-#                 print("first turn to target")
-#             GoToTargetWithSteer(False, go_to_pos)
+#             turnToTarget(False, go_to_pos)
+#             turnToTarget(False, go_to_pos)
+#             GoToTarget(False, go_to_pos)
 
 #         # turnToTarget()
 #         # turnToTarget()
@@ -280,11 +233,9 @@ try:
 #         for i in range(len(plan) - 1):
 #             go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
 #             print("Current position:", go_to_pos)
-#             if i == 0:
-#                 turnToTarget(False, go_to_pos)
-#                 print("first turn to target")
-#             GoToTargetWithSteer(False, go_to_pos)
-
+#             turnToTarget(False, go_to_pos)
+#             turnToTarget(False, go_to_pos)
+#             GoToTarget(False, go_to_pos)
         
 #         # turnToTarget(False, base_pos)
 #         # turnToTarget(False, base_pos)
@@ -295,6 +246,57 @@ try:
 #     send_servo_request(30)
 #     print("c_pos: ", c_pos, "c_rot: ", c_rot, "c_rad: ", c_rad)
 #     print("t_pos: ", t_pos, "t_rot: ", t_rot, "t_rad: ", t_rad)
+
+# firas
+try:
+    send_servo_request(30)
+    with streaming_client:
+        streaming_client.request_modeldef()
+
+        streaming_client.update_sync()
+        #streaming_client.run_async()
+        time.sleep(1)  # Allow some time for the client to start and receive data
+        print("Streaming started. Waiting for data...")
+        plan = []
+        plan=get_path_to_target(c_pos, t_pos)
+
+        #iteration nover the plan
+        for i in range(len(plan) - 1):
+            go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
+            print("Current position:", go_to_pos)
+            if i == 0 or i == len(plan) - 2:
+                turnToTarget(False, go_to_pos)
+                print("first turn to target")
+            else:
+                steerToTarget(False, go_to_pos)
+            GoToTargetWithSteer(False, go_to_pos)
+
+        # turnToTarget()
+        # turnToTarget()
+        # GoToTarget()
+        print("Chaser is facing the target.")
+    
+        send_servo_request(57)
+        plan=get_path_to_target(c_pos, base_pos)
+        print("finished planening")
+        for i in range(len(plan) - 1):
+            go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
+            print("Current position:", go_to_pos)
+            if i == 0:
+                turnToTarget(False, go_to_pos)
+                print("first turn to target")
+            GoToTargetWithSteer(False, go_to_pos)
+
+        
+        turnToTarget(False, base_pos)
+        turnToTarget(False, base_pos)
+        GoToTarget(False, base_pos)
+        print("KNOW WE CAN GO TO THE TARGET POSITION")
+
+        
+    send_servo_request(30)
+    print("c_pos: ", c_pos, "c_rot: ", c_rot, "c_rad: ", c_rad)
+    print("t_pos: ", t_pos, "t_rot: ", t_rot, "t_rad: ", t_rad)
 
 
 
