@@ -168,7 +168,8 @@ class MapEnvironment(object):
         # create figure and add background
         plt.figure()
         back_img = np.zeros((self.ylimit[1]+1, self.xlimit[1]+1))
-        plt.imshow(back_img, origin='lower', zorder=0)
+        plt.imshow(back_img, origin='lower', zorder=0,
+                   extent=(self.xlimit[0], self.xlimit[1], self.ylimit[0], self.ylimit[1]))
 
         return plt
 
