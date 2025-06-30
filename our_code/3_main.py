@@ -21,6 +21,7 @@ from path_algorithms.RRTStarPlanner import RRTStarPlanner
 
 
 c_pos, c_rot, c_rad = [0,0,0], 0, 0
+t_pos2, t_rot2, t_rad2 = [0,0,0], 0, 0
 t_pos, t_rot, t_rad = [0,0,0], 0, 0
 base_pos = [4, 0.09, 0]
 
@@ -42,23 +43,21 @@ def receive_new_desc(desc: DataDescriptions):
 
 
 def receive_new_frame(data_frame: DataFrame):
-
     global c_pos, c_rot, c_rad
     global t_pos, t_rot, t_rad
-
+    global t_pos2, t_rot2, t_rad2  # Add variables for ctf_cube2
 
     for ms in data_frame.rigid_bodies:
-            
-            if ms.id_num == 605:
-                # Handle the chaser's data
-                c_pos, c_rot, c_rad = chaser_data_handling.handle_frame(ms, "ctf_car")
-                print(f"Chaser pos: {c_pos}, Chaser rot: {c_rot}, Chaser rad: {c_rad}")
-                print(f"Chaser rad: {c_rad}")
-                # print(f"Type of c_pos600: {type(c_pos)}")
-            if ms.id_num == 604:
-                # Handle the target's data
-                t_pos, t_rot, t_rad = chaser_data_handling.handle_frame(ms, "ctf_cube")
-    
+        if ms.id_num == 605:
+            # Handle the chaser's data
+            c_pos, c_rot, c_rad = chaser_data_handling.handle_frame(ms, "ctf_car")
+        if ms.id_num == 604:
+            # Handle the target's data (ctf_cube)
+            t_pos, t_rot, t_rad = chaser_data_handling.handle_frame(ms, "ctf_cube")
+        if ms.id_num == 606:
+            # Handle the second cube's data (ctf_cube2)
+            t_pos2, t_rot2, t_rad2 = chaser_data_handling.handle_frame(ms, "ctf_cube2")
+        
     #print("received new frame")
 
 
@@ -129,59 +128,7 @@ def GoToTarget(is_cube = True, curr_t_pos = t_pos):
     time.sleep(1)
 
 
-# def steerToTarget(is_cube = True, curr_t_pos = t_pos):
-#     left, right, stop = 1, 2, 3
-#     turning_state = stop
-#     MAX_SPEED = 250
-#     MIN_SPEED = 10
-#     while True:
-#         streaming_client.update_sync()
-#         curr_c_pos, curr_c_rad = c_pos, c_rad
-#         if is_cube:
-#             curr_t_pos = t_pos
-#         angle = angle_between_points(curr_c_pos, curr_t_pos)
-#         normalized_angle = normalize_angle(angle - curr_c_rad)
-#         if abs(normalized_angle) < 0.07:
-#             send_go_request()
-#             break
 
-#         speed_ratio = max(0.0, 1.0 - abs(normalized_angle) / (math.pi / 2))  # normalized: 1.0 (straight) → 0.0 (sharp turn)
-#         reduced_speed = int(MAX_SPEED * speed_ratio)
-#         reduced_speed = max(reduced_speed, MIN_SPEED)
-#         if normalized_angle < 0:
-#             #if not turning_state == left:
-#             turning_state = left
-#             #send_lift_request(150)
-#             send_steer_request(left=reduced_speed, right=250)
-#         else:
-#             #if not turning_state == right:
-#             turning_state = right
-#             #send_right_request(150)
-#             send_steer_request(left=250, right=reduced_speed)
-#     time.sleep(1)
-
-# def GoToTargetWithSteer(is_cube = True, curr_t_pos = t_pos):
-#     if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) >= 0.15:
-#         send_go_request()
-#         while True:
-#             streaming_client.update_sync()
-#             if is_cube:
-#                 curr_t_pos = t_pos
-#             if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) < 0.15:
-#                 send_stop_request()
-#                 break
-#             angle = angle_between_points(c_pos, curr_t_pos)
-#             normalized_angle = normalize_angle(angle - c_rad)
-#             if abs(normalized_angle) > 1:
-#                 #send_stop_request()
-#                 steerToTarget(is_cube, curr_t_pos)
-#                 send_go_request()
-#             elif abs(normalized_angle) > 0.15:
-#                 #send_stop_request()
-#                 turnToTarget(is_cube, curr_t_pos)
-#                 send_go_request()
-
-#     time.sleep(1)
 
 
 # Function get data where the  robot car and where the cube is and calculate the path to the cube

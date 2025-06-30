@@ -26,8 +26,8 @@ class MapEnvironment(object):
         # obtain boundary limits, start and inspection points
         self.xlimit = [-4.0, json_dict['WIDTH']]
         self.ylimit = [-2, json_dict['HEIGHT']]
-        print(f'World limits: x={self.xlimit}, y={self.ylimit}')
-        print(f'Start point: {json_dict["START"]}, Goal point: {json_dict["GOAL"]}')
+        # print(f'World limits: x={self.xlimit}, y={self.ylimit}')
+        # print(f'Start point: {json_dict["START"]}, Goal point: {json_dict["GOAL"]}')
         self.start = np.array(json_dict['START'])
         self.goal = np.array(json_dict['GOAL'])
         self.load_obstacles(obstacles=json_dict['OBSTACLES'])

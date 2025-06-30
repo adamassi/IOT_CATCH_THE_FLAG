@@ -4,7 +4,7 @@ import math
 
 
 # Replace with the actual IP address of your ESP device
-ESP_IP = "http://192.168.0.102"  # This is typically the default for ESP AP mode
+ESP_IP = "http://192.168.0.101"  # This is typically the default for ESP AP mode
 
 def send_servo_request(angle=10):
     try:
