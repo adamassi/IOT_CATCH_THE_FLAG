@@ -10,7 +10,7 @@ import algorithms as al
 import matplotlib.pyplot as plt
 from commands import send_led_error_command
 import requests
-from stam import send_servo_request, send_go_request, send_stop_request, send_lift_request, send_right_request ,angle_between_points, send_steer_request
+from stam import send_servo_request, send_go_request, send_stop_request, send_lift_request, send_right_request ,angle_between_points, send_steer_request,send_back_request
 from conversion import normalize_angle
 from path_algorithms.RCSPlanner import RCSPlanner
 from path_algorithms.MapEnvironment import MapEnvironment
@@ -126,6 +126,20 @@ def GoToTarget(is_cube = True, curr_t_pos = t_pos):
                 #send_stop_request()
                 turnToTarget(is_cube, curr_t_pos)
                 send_go_request()
+def go_back(curr_t_pos ):
+    if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) >= 0.15:
+        send_back_request()
+        while True:
+            streaming_client.update_sync()
+            if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) < 0.15:
+                send_stop_request()
+                break
+            angle = angle_between_points(c_pos, curr_t_pos)
+            normalized_angle = normalize_angle(angle - c_rad)
+            if abs(normalized_angle) > 0.15:
+                #send_stop_request()
+                turnToTarget(False, curr_t_pos)
+                send_back_request()
 
     time.sleep(1)
 
