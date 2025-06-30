@@ -25,6 +25,12 @@ def send_stop_request():
         print("STOP request sent. Response:", response.text)
     except Exception as e:
         print("Error sending STOP request:", e)
+def send_back_request():
+    try:
+        response = requests.get(f"{ESP_IP}/back")
+        print("BACK request sent. Response:", response.text)
+    except Exception as e:
+        print("Error sending BACK request:", e)
 def send_lift_request(speed=45):
     try:
         response = requests.get(f"{ESP_IP}/left?value="+str(speed))

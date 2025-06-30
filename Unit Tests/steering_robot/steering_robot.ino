@@ -29,7 +29,7 @@ int servoAngle = 10;
 
 const int frequency = 500;
 
-const int pwm_channel1 = 1;
+const int pwm_channel1 = 5;
 const int pwm_channel2 = 2;
 const int pwm_channel3 = 3;
 const int pwm_channel4 = 4;
