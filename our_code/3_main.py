@@ -126,7 +126,7 @@ def GoToTarget(is_cube = True, curr_t_pos = t_pos):
                 #send_stop_request()
                 turnToTarget(is_cube, curr_t_pos)
                 send_go_request()
-def go_back(curr_t_pos ):
+def GoBack(curr_t_pos ):
     if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) >= 0.15:
         send_back_request()
         while True:
@@ -226,6 +226,8 @@ try:
             GoToTarget(False, go_to_pos)
         turnToTarget(False, [go_to_pos[0]+0.3,0.09, 0.28])
         GoToTarget(False, [go_to_pos[0]+0.3,0.09, 0.28])  # Move slightly forward after reaching the target
+        GoBack(False, [go_to_pos[0]+0.3,0.09, 0.28])
+        
         
         # turnToTarget(False, base_pos)
         # turnToTarget(False, base_pos)
