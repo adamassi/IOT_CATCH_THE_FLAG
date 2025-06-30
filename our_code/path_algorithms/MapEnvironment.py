@@ -219,7 +219,7 @@ class MapEnvironment(object):
         @param color The requested color for the plan.
         '''
         # add plan edges to the plt
-        point_radius = 0.1
+        point_radius = 0.05
         for expanded_node in expanded_nodes:
             point_circ = plt.Circle(expanded_node, radius=point_radius, color=color, zorder=10)
             plt.gca().add_patch(point_circ)

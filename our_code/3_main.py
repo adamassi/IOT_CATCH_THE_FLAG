@@ -23,10 +23,9 @@ from shapely.geometry import Polygon  # Ensure this is imported
 c_pos, c_rot, c_rad = [0,0,0], 0, 0
 t_pos2, t_rot2, t_rad2 = [0,0,0], 0, 0
 t_pos, t_rot, t_rad = [0,0,0], 0, 0
-base_pos = [3.4, 0.09, 0]
-json_file_path = "our_code/path_algorithms/map1.json"
-planning_env = MapEnvironment(json_file=json_file_path)
-i=1
+base_pos = [3.9, 0.09, 0.28]
+i = 1  # Initialize a global variable for iteration count
+
 
 def receive_new_desc(desc: DataDescriptions):
     # This function is triggered when new data descriptions are received from the OptiTrack system.
@@ -132,17 +131,41 @@ def GoToTarget(is_cube = True, curr_t_pos = t_pos):
 
 
 
+def add_cube_obstacle(env, cube_pos, size=0.2):
+    """
+    Adds a square obstacle representing a cube to the environment.
+
+    Args:
+        env (MapEnvironment): The planning environment object.
+        cube_pos (list): The [x, y, z] position of the cube (only x and z used).
+        size (float): The size of the cube (side length in meters).
+    """
+    cx, cz = cube_pos[0], cube_pos[2]
+    half = size / 2
+    obstacle = [
+        [cx - half, cz - half],
+        [cx + half, cz - half],
+        [cx + half, cz + half],
+        [cx - half, cz + half],
+        [cx - half, cz - half]
+    ]
+    env.obstacles.append(Polygon(obstacle))
 
 
 # Function get data where the  robot car and where the cube is and calculate the path to the cube
-def get_path_to_target(start_pos, goal_pos):
+def get_path_to_target(start_pos, goal_pos, cube_obstacles=[]):
     global i  # Use the global variable i
+    json_file_path = "our_code/path_algorithms/map1.json"
+    planning_env = MapEnvironment(json_file=json_file_path)
     # Initialize the map environment with the JSON file path
     planning_env.start = np.array([start_pos[0], start_pos[2]])  # Use x and y coordinates for the start position
     planning_env.goal = np.array([goal_pos[0], goal_pos[2]])  # Use x and y coordinates for the goal position
-
+# Add dynamic obstacles (e.g., cubes detected in the environment)
+    for cube_pos in cube_obstacles:
+        print(f"BBBBBBBBBBAdding cube obstacle at position {cube_pos}.")
+        add_cube_obstacle(planning_env, cube_pos)
     # Create an instance of the RCSPlanner with the planning environment
-    planner = RRTStarPlanner(planning_env=planning_env, ext_mode='E2', goal_prob=0.05, k=10)
+    planner = RRTStarPlanner(planning_env=planning_env, ext_mode='E2', goal_prob=0.40, k=10)
     print(f"Planning path from {planning_env.start} to {planning_env.goal}...")
     # Execute the planning algorithm to get the path
     plan = planner.plan()
@@ -163,13 +186,13 @@ try:
         time.sleep(1)  # Allow some time for the client to start and receive data
         print("Streaming started. Waiting for data...")
         plan = []
-        plan=get_path_to_target(c_pos, t_pos)
+        plan=get_path_to_target(c_pos, t_pos2,[t_pos])  # Pass t_pos2 as a dynamic obstacle
 
         #iteration nover the plan
         for i in range(len(plan) - 1):
             go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
             print("Current position:", go_to_pos)
-            turnToTarget(False, go_to_pos)
+            # turnToTarget(False, go_to_pos)
             turnToTarget(False, go_to_pos)
             GoToTarget(False, go_to_pos)
 
@@ -178,15 +201,17 @@ try:
         # GoToTarget()
         print("Chaser is facing the target.")
     
-        send_servo_request(57)
-        plan=get_path_to_target(c_pos, base_pos)
+        send_servo_request(80)
+        plan=get_path_to_target(c_pos, base_pos, [t_pos])  # Pass t_pos2 as a dynamic obstacle
         print("finished planening")
         for i in range(len(plan) - 1):
             go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
             print("Current position:", go_to_pos)
-            turnToTarget(False, go_to_pos)
+            # turnToTarget(False, go_to_pos)
             turnToTarget(False, go_to_pos)
             GoToTarget(False, go_to_pos)
+        turnToTarget(False, [go_to_pos[0]+0.3,0.09, 0.28])
+        GoToTarget(False, [go_to_pos[0]+0.3,0.09, 0.28])  # Move slightly forward after reaching the target
         
         # turnToTarget(False, base_pos)
         # turnToTarget(False, base_pos)
@@ -199,53 +224,6 @@ try:
     print("t_pos: ", t_pos, "t_rot: ", t_rot, "t_rad: ", t_rad)
 
 
-# try:
-#     send_servo_request(30)
-#     with streaming_client:
-#         streaming_client.request_modeldef()
-
-#         streaming_client.update_sync()
-#         #streaming_client.run_async()
-#         time.sleep(1)  # Allow some time for the client to start and receive data
-#         print("Streaming started. Waiting for data...")
-#         plan = []
-#         plan=get_path_to_target(c_pos, t_pos)
-
-#         #iteration nover the plan
-#         for i in range(len(plan) - 1):
-#             go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
-#             print("Current position:", go_to_pos)
-#             if i == 0:
-#                 turnToTarget(False, go_to_pos)
-#                 print("first turn to target")
-#             GoToTargetWithSteer(False, go_to_pos)
-
-#         # turnToTarget()
-#         # turnToTarget()
-#         # GoToTarget()
-#         print("Chaser is facing the target.")
-    
-#         send_servo_request(57)
-#         plan=get_path_to_target(c_pos, base_pos)
-#         print("finished planening")
-#         for i in range(len(plan) - 1):
-#             go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
-#             print("Current position:", go_to_pos)
-#             if i == 0:
-#                 turnToTarget(False, go_to_pos)
-#                 print("first turn to target")
-#             GoToTargetWithSteer(False, go_to_pos)
-
-        
-#         # turnToTarget(False, base_pos)
-#         # turnToTarget(False, base_pos)
-#         # GoToTarget(False, base_pos)
-#         print("KNOW WE CAN GO TO THE TARGET POSITION")
-
-        
-#     send_servo_request(30)
-#     print("c_pos: ", c_pos, "c_rot: ", c_rot, "c_rad: ", c_rad)
-#     print("t_pos: ", t_pos, "t_rot: ", t_rot, "t_rad: ", t_rad)
 
 
 

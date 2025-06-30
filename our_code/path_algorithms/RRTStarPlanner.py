@@ -51,7 +51,7 @@ class RRTStarPlanner(object):
                 goal = True
             else:
                 # Sample a random state within the environment bounds
-                x = np.random.uniform(env.xlimit[0], env.xlimit[1])
+                x = np.random.uniform(env.xlimit[0], env.xlimit[1]-0.5)
                 y = np.random.uniform(env.ylimit[0], env.ylimit[1])
                 s = [x, y]
 
