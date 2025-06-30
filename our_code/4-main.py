@@ -57,9 +57,9 @@ def receive_new_frame(data_frame: DataFrame):
         if ms.id_num == 604:
             # Handle the target's data (ctf_cube)
             t_pos, t_rot, t_rad = chaser_data_handling.handle_frame(ms, "ctf_cube")
-        if ms.id_num == 606:
-            # Handle the second cube's data (ctf_cube2)
-            t_pos2, t_rot2, t_rad2 = chaser_data_handling.handle_frame(ms, "ctf_cube2")
+        # if ms.id_num == 606:
+        #     # Handle the second cube's data (ctf_cube2)
+        #     t_pos2, t_rot2, t_rad2 = chaser_data_handling.handle_frame(ms, "ctf_cube2")
         
     #print("received new frame")
 
