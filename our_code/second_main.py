@@ -10,7 +10,7 @@ import algorithms as al
 import matplotlib.pyplot as plt
 from commands import send_led_error_command
 import requests
-from stam import send_servo_request, send_go_request, send_stop_request, send_lift_request, send_right_request ,angle_between_points
+from stam import send_servo_request, send_go_request, send_stop_request, send_lift_request, send_right_request ,angle_between_points, send_beep_request
 from conversion import normalize_angle
 
 
@@ -194,7 +194,10 @@ try:
         GoToTarget()
         print("Chaser is facing the target.")
     
-        send_servo_request(60)
+        send_servo_request(80)
+        send_beep_request(50)
+        time.sleep(0.1)
+        send_beep_request(50)
         time.sleep(1)
         turnToTarget(False, base_pos)
         turnToTarget(False, base_pos)
@@ -203,6 +206,11 @@ try:
 
         
     send_servo_request(30)
+    send_beep_request(50)
+    time.sleep(0.1)
+    send_beep_request(50)
+    time.sleep(0.1)
+    send_beep_request(50)
     print("c_pos: ", c_pos, "c_rot: ", c_rot, "c_rad: ", c_rad)
     print("t_pos: ", t_pos, "t_rot: ", t_rot, "t_rad: ", t_rad)
     # plot_positions(car_positions, [(t_pos[0], t_pos[2])])

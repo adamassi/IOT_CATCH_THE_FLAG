@@ -49,11 +49,22 @@ def send_steer_request(left=250, right = 250):
         print("STEER request sent. Response:", response.text)
     except Exception as e:
         print("Error sending STEER request:", e)
+def send_beep_request(duration=500):
+    try:
+        response = requests.get(f"{ESP_IP}/beep?duration="+str(duration))
+        print("BEEP request sent. Response:", response.text)
+    except Exception as e:
+        print("Error sending BEEP request:", e)
 
 def angle_between_points(p1, p2):
     
     return math.atan2(p2[2] - p1[2], p2[0] - p1[0])
     
+# send_beep_request(50)
+# time.sleep(0.1)  # Wait for the beep to finish
+# send_beep_request(50)
+# time.sleep(0.1)  # Wait for the beep to finish
+# send_beep_request(500)
 
 # Example usage
 # send_go_request()

@@ -132,7 +132,7 @@ def GoToTarget(is_cube = True, curr_t_pos = t_pos):
 
 
 
-def add_cube_obstacle(env, cube_pos, size=0.1):
+def add_cube_obstacle(env, cube_pos, size=0.3):
     """
     Adds a square obstacle representing a cube to the environment.
 
