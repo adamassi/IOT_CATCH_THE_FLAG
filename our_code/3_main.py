@@ -23,7 +23,7 @@ from shapely.geometry import Polygon  # Ensure this is imported
 c_pos, c_rot, c_rad = [0,0,0], 0, 0
 t_pos2, t_rot2, t_rad2 = [0,0,0], 0, 0
 t_pos, t_rot, t_rad = [0,0,0], 0, 0
-base_pos = [4, 0.09, 0]
+base_pos = [3, 0.09, 0]
 
 def receive_new_desc(desc: DataDescriptions):
     # This function is triggered when new data descriptions are received from the OptiTrack system.
