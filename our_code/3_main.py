@@ -24,7 +24,8 @@ c_pos, c_rot, c_rad = [0,0,0], 0, 0
 t_pos2, t_rot2, t_rad2 = [0,0,0], 0, 0
 t_pos, t_rot, t_rad = [0,0,0], 0, 0
 base_pos = [3.9, 0.09, 0.28]
-i = 1  # Initialize a global variable for iteration count
+base_pos2 = [3.9, 0.09, -0.09]  # Define a second base position for the second cube
+z = 1  # Initialize a global variable for iteration count
 
 
 def receive_new_desc(desc: DataDescriptions):
@@ -122,24 +123,20 @@ def GoToTarget(is_cube = True, curr_t_pos = t_pos):
                 break
             angle = angle_between_points(c_pos, curr_t_pos)
             normalized_angle = normalize_angle(angle - c_rad)
-            if abs(normalized_angle) > 0.15:
+            if abs(normalized_angle) > 0.5:
                 #send_stop_request()
                 turnToTarget(is_cube, curr_t_pos)
                 send_go_request()
-def GoBack(curr_t_pos ):
-    if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) >= 0.15:
+def GoBack( ):
+    
+    if c_pos[0] >= 3.9:
         send_back_request()
         while True:
             streaming_client.update_sync()
-            if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) < 0.15:
+            if c_pos[0] < 3.9:
                 send_stop_request()
                 break
-            angle = angle_between_points(c_pos, curr_t_pos)
-            normalized_angle = normalize_angle(angle - c_rad)
-            if abs(normalized_angle) > 0.15:
-                #send_stop_request()
-                turnToTarget(False, curr_t_pos)
-                send_back_request()
+            
 
     time.sleep(1)
 
@@ -168,7 +165,7 @@ def add_cube_obstacle(env, cube_pos, size=0.2):
 
 # Function get data where the  robot car and where the cube is and calculate the path to the cube
 def get_path_to_target(start_pos, goal_pos, cube_obstacles=[]):
-    global i  # Use the global variable i
+    global z  # Use the global variable i
     json_file_path = "our_code/path_algorithms/map1.json"
     planning_env = MapEnvironment(json_file=json_file_path)
     # Initialize the map environment with the JSON file path
@@ -185,9 +182,9 @@ def get_path_to_target(start_pos, goal_pos, cube_obstacles=[]):
     plan = planner.plan()
 
     # Visualize the map with the computed plan and expanded nodes
-    planner.planning_env.visualize_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(), name=str(i))  # Convert i to string
+    planner.planning_env.visualize_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(), name=str(z))  # Convert i to string
     print('successfully planned path')
-    i += 1  # Increment the global variable i
+    z += 1  # Increment the global variable i
     return plan
     
 try:
@@ -200,6 +197,7 @@ try:
         time.sleep(1)  # Allow some time for the client to start and receive data
         print("Streaming started. Waiting for data...")
         plan = []
+        # GoBack()
         plan=get_path_to_target(c_pos, t_pos2,[t_pos])  # Pass t_pos2 as a dynamic obstacle
 
         #iteration over the plan
@@ -226,7 +224,8 @@ try:
             GoToTarget(False, go_to_pos)
         turnToTarget(False, [go_to_pos[0]+0.3,0.09, 0.28])
         GoToTarget(False, [go_to_pos[0]+0.3,0.09, 0.28])  # Move slightly forward after reaching the target
-        GoBack(False, [go_to_pos[0]+0.3,0.09, 0.28])
+        send_servo_request(30)
+        GoBack()
 
         # ##########################
         #plan for the second cube
@@ -239,8 +238,20 @@ try:
             # turnToTarget(False, go_to_pos)
             turnToTarget(False, go_to_pos)
             GoToTarget(False, go_to_pos)
+        send_servo_request(60)
+        plan=get_path_to_target(c_pos, base_pos2, [t_pos2])  # Pass t_pos2 as a dynamic obstacle
+        print("finished planening")
+        for i in range(len(plan) - 1):
+            go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
+            print("Current position:", go_to_pos)
+            # turnToTarget(False, go_to_pos)
+            turnToTarget(False, go_to_pos)
+            GoToTarget(False, go_to_pos)
+        turnToTarget(False, [go_to_pos[0]+0.3,0.09,- 0.09])
+        GoToTarget(False, [go_to_pos[0]+0.3,0.09, -0.09])  # Move slightly forward after reaching the target
+        send_servo_request(30)
+        GoBack()
 
-        
         
         # turnToTarget(False, base_pos)
         # turnToTarget(False, base_pos)

@@ -116,7 +116,7 @@ def GoToTarget(is_cube = True, curr_t_pos = t_pos):
             streaming_client.update_sync()
             if is_cube:
                 curr_t_pos = t_pos
-            if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) < 0.15:
+            if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) < 0.21:
                 send_stop_request()
                 break
             angle = angle_between_points(c_pos, curr_t_pos)
