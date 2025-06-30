@@ -54,12 +54,12 @@ def receive_new_frame(data_frame: DataFrame):
         if ms.id_num == 605:
             # Handle the chaser's data
             c_pos, c_rot, c_rad = chaser_data_handling.handle_frame(ms, "ctf_car")
-        if ms.id_num == 604:
+        if ms.id_num == 606: #604:
             # Handle the target's data (ctf_cube)
             t_pos, t_rot, t_rad = chaser_data_handling.handle_frame(ms, "ctf_cube")
-        if ms.id_num == 606:
-            # Handle the second cube's data (ctf_cube2)
-            t_pos2, t_rot2, t_rad2 = chaser_data_handling.handle_frame(ms, "ctf_cube2")
+        # if ms.id_num == 606:
+        #     # Handle the second cube's data (ctf_cube2)
+        #     t_pos2, t_rot2, t_rad2 = chaser_data_handling.handle_frame(ms, "ctf_cube2")
         
     #print("received new frame")
 
@@ -104,11 +104,11 @@ def turnToTarget(is_cube = True, curr_t_pos = t_pos):
         elif normalized_angle < 0:
             if not turning_state == left:
                 turning_state = left
-                send_lift_request(60)
+                send_lift_request(20)
         else:
             if not turning_state == right:
                 turning_state = right
-                send_right_request(60)
+                send_right_request(20)
     time.sleep(1)
 
 def GoToTarget(is_cube = True, curr_t_pos = t_pos):
@@ -129,6 +129,96 @@ def GoToTarget(is_cube = True, curr_t_pos = t_pos):
                 send_go_request()
 
     time.sleep(1)
+
+
+
+
+from scipy.interpolate import splprep, splev
+#import numpy as np
+
+def interpolate_path(path, num_points=100):
+    path = np.array(path).T  # Shape (2, N)
+    if len(path[0]) < 3:  # Too few points, skip interpolation
+        return np.array(path).T.tolist()
+
+    tck, u = splprep(path, s=0)
+    unew = np.linspace(0, 1, num_points)
+    out = splev(unew, tck)
+    return np.vstack(out).T.tolist()  # Convert to list of [x, y]
+
+
+def follow_path_with_steer(path, lookahead_distance=0.3, stop_threshold=0.12):
+    streaming_client.update_sync()
+    robot_pos = np.array([c_pos[0], c_pos[2]])
+    path_index = 0
+
+    while path_index < len(path):
+        streaming_client.update_sync()
+        robot_pos = np.array([c_pos[0], c_pos[2]])
+
+        # Find next lookahead point
+        for i in range(path_index, len(path)):
+            if np.linalg.norm(np.array(path[i]) - robot_pos) >= lookahead_distance:
+                lookahead_point = np.array(path[i])
+                path_index = i
+                break
+        else:
+            break  # No more lookahead points
+
+        # Compute steering
+        target_angle = math.atan2(lookahead_point[1] - c_pos[2], lookahead_point[0] - c_pos[0])
+        angle_error = normalize_angle(target_angle - c_rad)
+
+        # Proportional control
+        base_speed = 100
+        k = 100
+        steer_left = int(base_speed - k * angle_error)
+        steer_right = int(base_speed + k * angle_error)
+
+        # Clamp to 0–255
+        steer_left = max(0, min(255, steer_left))
+        steer_right = max(0, min(255, steer_right))
+
+        send_steer_request(steer_left, steer_right)
+        time.sleep(0.05)
+
+        # Stop if we're near the final point
+        if np.linalg.norm(np.array(path[-1]) - robot_pos) < stop_threshold:
+            break
+
+    send_stop_request()
+
+
+# def follow_path_with_steer(path, lookahead_distance=0.3):
+#     path_index = 0
+#     while path_index < len(path) - 1:
+#         streaming_client.update_sync()
+#         robot_pos = np.array([c_pos[0], c_pos[2]])
+
+#         # Find lookahead point
+#         for i in range(path_index, len(path)):
+#             if np.linalg.norm(np.array(path[i]) - robot_pos) >= lookahead_distance:
+#                 lookahead_point = np.array(path[i])
+#                 path_index = i
+#                 break
+#         else:
+#             break  # We're at the end of the path
+
+#         target_angle = math.atan2(lookahead_point[1] - c_pos[2], lookahead_point[0] - c_pos[0])
+#         angle_error = normalize_angle(target_angle - c_rad)
+
+#         # Proportional controller for wheel speed difference
+#         base_speed = 200
+#         k = 300  # tuning parameter
+#         steer_left = int(base_speed - k * angle_error)
+#         steer_right = int(base_speed + k * angle_error)
+#         steer_left = max(min(steer_left, 255), 0)
+#         steer_right = max(min(steer_right, 255), 0)
+
+#         send_steer_request(steer_left, steer_right)
+#         time.sleep(0.05)
+
+#     send_stop_request()
 
 
 
@@ -165,13 +255,17 @@ try:
         plan = []
         plan=get_path_to_target(c_pos, t_pos)
 
+        # Smooth the plan
+        smoothed_plan = interpolate_path(plan, num_points=100)
+        follow_path_with_steer(smoothed_plan)
+
         #iteration nover the plan
-        for i in range(len(plan) - 1):
-            go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
-            print("Current position:", go_to_pos)
-            turnToTarget(False, go_to_pos)
-            turnToTarget(False, go_to_pos)
-            GoToTarget(False, go_to_pos)
+        # for i in range(len(plan) - 1):
+        #     go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
+        #     print("Current position:", go_to_pos)
+        #     turnToTarget(False, go_to_pos)
+        #     turnToTarget(False, go_to_pos)
+        #     GoToTarget(False, go_to_pos)
 
         # turnToTarget()
         # turnToTarget()
@@ -181,17 +275,20 @@ try:
         send_servo_request(57)
         plan=get_path_to_target(c_pos, base_pos)
         print("finished planening")
-        for i in range(len(plan) - 1):
-            go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
-            print("Current position:", go_to_pos)
-            turnToTarget(False, go_to_pos)
-            turnToTarget(False, go_to_pos)
-            GoToTarget(False, go_to_pos)
+        # for i in range(len(plan) - 1):
+        #     go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
+        #     print("Current position:", go_to_pos)
+        #     turnToTarget(False, go_to_pos)
+        #     turnToTarget(False, go_to_pos)
+        #     GoToTarget(False, go_to_pos)
+
+        smoothed_plan = interpolate_path(plan, num_points=100)
+        follow_path_with_steer(smoothed_plan)
         
         # turnToTarget(False, base_pos)
         # turnToTarget(False, base_pos)
         # GoToTarget(False, base_pos)
-        print("KNOW WE CAN GO TO THE TARGET POSITION")
+        print("NOW WE CAN GO TO THE TARGET POSITION")
 
         
     send_servo_request(30)
