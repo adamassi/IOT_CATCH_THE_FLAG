@@ -39,6 +39,14 @@ def receive_new_desc(desc: DataDescriptions):
     
 
 
+import conversion
+def handle_frame(ms):
+    location_yup = np.array(ms.pos)
+    quaternion_yup = np.array(ms.rot)
+    location_zup, euler_angles_zup = conversion.convert_yup_to_zup(location_yup, quaternion_yup)
+    conversion.only2(ms.pos)
+    rad = round(math.radians(euler_angles_zup[2]), 2)
+    return conversion.only2(ms.pos), euler_angles_zup, rad
 
 def receive_new_frame(data_frame: DataFrame):
 
