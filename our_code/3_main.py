@@ -202,7 +202,7 @@ try:
         plan = []
         plan=get_path_to_target(c_pos, t_pos2,[t_pos])  # Pass t_pos2 as a dynamic obstacle
 
-        #iteration nover the plan
+        #iteration over the plan
         for i in range(len(plan) - 1):
             go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
             print("Current position:", go_to_pos)
@@ -227,6 +227,19 @@ try:
         turnToTarget(False, [go_to_pos[0]+0.3,0.09, 0.28])
         GoToTarget(False, [go_to_pos[0]+0.3,0.09, 0.28])  # Move slightly forward after reaching the target
         GoBack(False, [go_to_pos[0]+0.3,0.09, 0.28])
+
+        # ##########################
+        #plan for the second cube
+        plan=get_path_to_target(c_pos, t_pos,[t_pos2])  # Pass t_pos2 as a dynamic obstacle
+
+        #iteration over the plan
+        for i in range(len(plan) - 1):
+            go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
+            print("Current position:", go_to_pos)
+            # turnToTarget(False, go_to_pos)
+            turnToTarget(False, go_to_pos)
+            GoToTarget(False, go_to_pos)
+
         
         
         # turnToTarget(False, base_pos)
