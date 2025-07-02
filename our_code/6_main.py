@@ -54,24 +54,21 @@ def receive_new_frame(data_frame: DataFrame):
     global t_pos, t_rot, t_rad
     global car_positions  # Declare car_positions as global
 
-
-
     for ms in data_frame.rigid_bodies:
             
             if ms.id_num == 605:
                 # Handle the chaser's data
-                c_pos, c_rot, c_rad = chaser_data_handling.handle_frame(ms, "ctf_car")
+                c_pos, c_rot, c_rad = handle_frame(ms)
                 # Append the current position of the car to car_positions
                 # car_positions.append((c_pos[0], c_pos[2]))
                 #print(f"Chaser rad: {c_rad}")
                 #print(f"Type of c_pos600: {type(c_pos)}")
-            if ms.id_num == 604:
+            if ms.id_num == 606:
                 # Handle the target's data
-                t_pos, t_rot, t_rad = chaser_data_handling.handle_frame(ms, "ctf_cube")
+                t_pos, t_rot, t_rad = handle_frame(ms)
                 
     
-    #print("received new frame")
-
+ 
 
 
 

@@ -10,7 +10,7 @@ import algorithms as al
 import matplotlib.pyplot as plt
 from commands import send_led_error_command
 import requests
-from stam import send_servo_request, send_go_request, send_stop_request, send_lift_request, send_right_request ,angle_between_points, send_beep_request
+from stam import send_servo_request, send_go_request, send_stop_request, send_lift_request, send_right_request ,angle_between_points, send_beep_request, send_steer_request
 from conversion import normalize_angle
 
 
@@ -57,9 +57,12 @@ def receive_new_frame(data_frame: DataFrame):
                 # car_positions.append((c_pos[0], c_pos[2]))
                 #print(f"Chaser rad: {c_rad}")
                 #print(f"Type of c_pos600: {type(c_pos)}")
-            if ms.id_num == 604:
+            # if ms.id_num == 604:
+            #     # Handle the target's data
+            #     t_pos, t_rot, t_rad = chaser_data_handling.handle_frame(ms, "ctf_cube")
+            if ms.id_num == 606:
                 # Handle the target's data
-                t_pos, t_rot, t_rad = chaser_data_handling.handle_frame(ms, "ctf_cube")
+                t_pos, t_rot, t_rad = chaser_data_handling.handle_frame(ms, "ctf_cube2")
                 
     
     #print("received new frame")
@@ -111,7 +114,32 @@ def turnToTarget(is_cube = True, curr_t_pos = t_pos):
             if not turning_state == right:
                 turning_state = right
                 send_right_request(150)
-    time.sleep(1)
+    time.sleep(1)######################################################??????????????????????????????????
+
+def turnToTargetWhileMoving(is_cube = True, curr_t_pos = t_pos):
+    left, right, stop = 1, 2, 3
+    turning_state = stop
+    while True:
+        streaming_client.update_sync()
+        curr_c_pos, curr_c_rad = c_pos, c_rad
+        if is_cube:
+            curr_t_pos = t_pos
+        angle = angle_between_points(curr_c_pos, curr_t_pos)
+        normalized_angle = normalize_angle(angle - curr_c_rad)
+        if abs(normalized_angle) < 0.07:
+            send_go_request()
+            break
+        elif normalized_angle < 0:
+            if not turning_state == left:
+                turning_state = left
+                send_steer_request(left=10, right=120)
+                #send_lift_request(150)
+        else:
+            if not turning_state == right:
+                turning_state = right
+                send_steer_request(left=120, right=10)
+                # send_right_request(150)
+    #time.sleep(0.01)
 
 def GoToTarget(is_cube = True, curr_t_pos = t_pos):
     if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) >= 0.15:
@@ -125,10 +153,11 @@ def GoToTarget(is_cube = True, curr_t_pos = t_pos):
                 break
             angle = angle_between_points(c_pos, curr_t_pos)
             normalized_angle = normalize_angle(angle - c_rad)
-            if abs(normalized_angle) > 0.15:
-                send_stop_request()
-                turnToTarget()###TODO:add a parameter to turnToTarget
-                send_go_request()
+            if abs(normalized_angle) > 0.20:
+                #send_stop_request()
+                turnToTargetWhileMoving(is_cube, curr_t_pos)
+                # turnToTarget(is_cube, curr_t_pos)###TODO:add a parameter to turnToTarget
+                # send_go_request()
 
     time.sleep(1)
 def plot_positions(car_positions, ctf_positions):
@@ -190,6 +219,7 @@ try:
         #streaming_client.run_async()
         time.sleep(1)  # Allow some time for the client to start and receive data
         print("Streaming started. Waiting for data...")
+        #GoToTarget(False, [0, 0, 0])
         turnToTarget()
         turnToTarget()
         GoToTarget()
