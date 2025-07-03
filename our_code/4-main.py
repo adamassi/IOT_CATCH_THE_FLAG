@@ -116,7 +116,7 @@ def turnToTarget(is_cube = True, curr_t_pos = t_pos):
             if not turning_state == right:
                 turning_state = right
                 send_right_request(60)
-    time.sleep(1)
+    # time.sleep(1)
 
 def GoToTarget(is_cube = True, curr_t_pos = t_pos):
     if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) >= 0.15:
@@ -147,7 +147,7 @@ def GoBack( ):
                 break
             
 
-    time.sleep(1)
+    # time.sleep(1)
 
 
 
