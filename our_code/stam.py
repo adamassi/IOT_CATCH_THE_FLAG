@@ -57,7 +57,7 @@ def send_steer_request(left=250, right = 250):
         print("Error sending STEER request:", e)
 def send_beep_request(duration=500):
     try:
-        response = requests.get(f"{ESP_IP}/beep?duration="+str(duration))
+        response = requests.get(f"{ESP_IP}/beep?duration="+str(duration), timeout=0.1)
         print("BEEP request sent. Response:", response.text)
     except Exception as e:
         print("Error sending BEEP request:", e)

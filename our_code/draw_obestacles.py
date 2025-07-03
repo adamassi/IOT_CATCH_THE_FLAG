@@ -18,8 +18,21 @@ from path_algorithms.RRTPlanner import RRTPlanner
 from path_algorithms.RRTStarPlanner import RRTStarPlanner
 from shapely.geometry import Polygon  # Ensure this is imported
 
+# 2.71, 0.14, 1.06
+# add circle obstacles function
+def add_circle_obstacle(env, circle_pos, radius=0.1):
+    """
+    Adds a circular obstacle to the environment.
 
-
+    Args:
+        env (MapEnvironment): The planning environment object.
+        circle_pos (list): The [x, y, z] position of the circle (only x and z used).
+        radius (float): The radius of the circle in meters.
+    """
+    cx, cz = circle_pos[0], circle_pos[2]
+    obstacle = Polygon([(cx + radius * np.cos(theta), cz + radius * np.sin(theta)) for theta in np.linspace(0, 2 * np.pi, 100)])
+    env.obstacles.append(obstacle)
+    print(f"Added circle obstacle at position {circle_pos} with radius {radius}m.")
 
 c_pos, c_rot, c_rad = [0,0,0], 0, 0
 t_pos2, t_rot2, t_rad2 = [0,0,0], 0, 0

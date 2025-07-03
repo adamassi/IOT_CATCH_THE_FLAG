@@ -417,6 +417,32 @@ void setup() {
     }
   });
 
+  server.on("/beep_start", HTTP_GET, [](AsyncWebServerRequest *request) {
+    if (request->hasParam("duration")) {
+      int duration = request->getParam("duration")->value().toInt();
+      duration = constrain(duration, 1, 5000);  // Max 5 seconds safety limit
+
+      digitalWrite(beeperPin, HIGH);  // Turn beeper on
+      Serial.printf("Beeping for %d ms\n", duration);
+
+      // Use a timer (non-blocking) via a task or schedule
+      // For now, use delay in a simple task
+      xTaskCreatePinnedToCore(
+        [](void *param) {
+          int d = *((int *)param);
+          vTaskDelay(d / portTICK_PERIOD_MS);
+          digitalWrite(beeperPin, LOW);  // Turn it off
+          delete (int *)param;
+          vTaskDelete(NULL);
+        },
+        "BeeperTask", 2048, new int(duration), 1, NULL, 1);
+
+      request->send(200, "text/plain", "Beeping for " + String(duration) + " ms");
+    } else {
+      request->send(400, "text/plain", "Missing 'duration' parameter");
+    }
+  });
+
 
 
 

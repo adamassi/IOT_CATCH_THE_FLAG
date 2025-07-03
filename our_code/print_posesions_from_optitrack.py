@@ -57,7 +57,7 @@ def receive_new_frame(data_frame: DataFrame):
                 # car_positions.append((c_pos[0], c_pos[2]))
                 #print(f"Chaser rad: {c_rad}")
                 #print(f"Type of c_pos600: {type(c_pos)}")
-            if ms.id_num == 604:
+            if ms.id_num == 606:
                 # Handle the target's data
                 t_pos, t_rot, t_rad = chaser_data_handling.handle_frame(ms, "ctf_cube")
     #print(f"ctf_car:  c_pos: {str(c_pos):<25} c_rot: {str(c_rot):<25} c_rad: {str(c_rad):<10}")

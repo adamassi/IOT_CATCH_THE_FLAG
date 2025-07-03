@@ -10,6 +10,40 @@ from matplotlib import collections as coll
 from numpy.core.fromnumeric import size
 from shapely.geometry import Point, LineString, Polygon
 import imageio
+# 2.71, 0.14, 1.06
+# add circle obstacles function
+def add_circle_obstacle(env, circle_pos, radius=0.16):
+    """
+    Adds a circular obstacle to the environment.
+
+    Args:
+        env (MapEnvironment): The planning environment object.
+        circle_pos (list): The [x, y, z] position of the circle (only x and z used).
+        radius (float): The radius of the circle in meters.
+    """
+    cx, cz = circle_pos[0], circle_pos[2]
+    obstacle = Polygon([(cx + radius * np.cos(theta), cz + radius * np.sin(theta)) for theta in np.linspace(0, 2 * np.pi, 100)])
+    env.obstacles.append(obstacle)
+    print(f"Added circle obstacle at position {circle_pos} with radius {radius}m.")
+def add_cube_obstacle(env, cube_pos, size=0.23):
+    """
+    Adds a square obstacle representing a cube to the environment.
+
+    Args:
+        env (MapEnvironment): The planning environment object.
+        cube_pos (list): The [x, y, z] position of the cube (only x and z used).
+        size (float): The size of the cube (side length in meters).
+    """
+    cx, cz = cube_pos[0], cube_pos[2]
+    half = size / 2
+    obstacle = [
+        [cx - half, cz - half],
+        [cx + half, cz - half],
+        [cx + half, cz + half],
+        [cx - half, cz + half],
+        [cx - half, cz - half]
+    ]
+    env.obstacles.append(Polygon(obstacle))
 
 class MapEnvironment(object):
     
@@ -31,6 +65,9 @@ class MapEnvironment(object):
         self.start = np.array(json_dict['START'])
         self.goal = np.array(json_dict['GOAL'])
         self.load_obstacles(obstacles=json_dict['OBSTACLES'])
+        # add circle obstacles in the map in  [2.71, 1.06]
+        # add_circle_obstacle(self, [2.71, 0.14, 1.06])
+        add_cube_obstacle(self, [2.71, 0.14, 1.06])
 
         # check that the start location is within limits and collision free
         if not self.state_validity_checker(state=self.start):

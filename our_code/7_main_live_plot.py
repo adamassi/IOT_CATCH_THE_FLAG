@@ -163,7 +163,50 @@ def GoToTarget(is_cube = True, curr_t_pos = t_pos):
                 # send_go_request()
 
     time.sleep(1)
+# def plot_positions(car_positions, ctf_positions):
+#     """
+#     Plots the chaser and target positions over time.
 
+#     Args:
+#         car_positions (list of tuples): The tracked chaser positions, each tuple is (x, y).
+#         ctf_positions (list of tuples): The tracked target positions, each tuple is (x, y).
+#     """
+#     plt.figure(figsize=(6, 10))  # Set the figure size to 6x10 inches
+
+#     # Unpack chaser and target positions into x and y components
+#     chaser_x, chaser_y = car_positions[-1]
+#     target_x, target_y = ctf_positions[-1]
+
+#     # Plot chaser path with 'o' markers
+#     plt.plot(chaser_y, chaser_x, label="Chaser Path", marker='o')
+
+#     # Plot target path with 'x' markers
+#     plt.plot(target_y, target_x, label="Target Path", marker='x')
+
+#     # Label the x-axis and y-axis
+#     plt.xlabel('X Position')
+#     plt.ylabel('Y Position')
+
+#     # Set the plot title
+#     plt.title('Chaser and Target Paths Over Time')
+
+#     # Add legend to the plot for clarity
+#     plt.legend()
+
+#     # Add grid lines to the plot for better readability
+#     plt.grid(True)
+
+#     # Set the x-axis limits from -3 to 3
+#     plt.xlim(-3.33, 4.3)
+
+#     # Set the y-axis limits from -5 to 5
+#     plt.ylim(-1.9, 1.97)
+
+#     # Adjust the aspect ratio of the plot to fit the specified limits
+#     plt.gca().set_aspect('auto')
+
+#     # Display the plot
+#     plt.show()
 
 
 
@@ -263,13 +306,25 @@ def update_live_plot(chaser_plot, target_plot, arrow_artist, car_positions, curr
 
 
 
+# import threading
+# stop_plot_event = threading.Event()
+
+# def show_live_plot():
+#     while not stop_plot_event.is_set():
+#         update_live_plot(chaser_plot, target_plot, arrow_artist, car_positions, [t_pos[0], t_pos[2]], c_rad)
+#         time.sleep(0.05)
+
+# fig, ax, chaser_plot, target_plot, arrow_artist = live_plot_init()
+# # Start plot in a background thread
+# plot_thread = threading.Thread(target=show_live_plot, daemon=True)
+# plot_thread.start()
 
 
 try:
     
     send_servo_request(30)
     with streaming_client:
-        streaming_client.request_modeldef()
+        # streaming_client.request_modeldef()
         # for _ in range(500):
         #     streaming_client.update_sync()
         #     update_live_plot(chaser_plot, target_plot, arrow_artist, car_positions, [t_pos[0], t_pos[2]], c_rad)
@@ -280,6 +335,32 @@ try:
         #streaming_client.run_async()
         time.sleep(1)  # Allow some time for the client to start and receive data
         print("Streaming started. Waiting for data...")
+
+
+
+        if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) >= 0.15:
+            send_go_request()
+            while True:
+                streaming_client.update_sync()
+                if is_cube:
+                    curr_t_pos = t_pos
+                if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) < 0.15:
+                    send_stop_request()
+                    break
+                angle = angle_between_points(c_pos, curr_t_pos)
+                normalized_angle = normalize_angle(angle - c_rad)
+                if abs(normalized_angle) > 0.20:
+                    #send_stop_request()
+                    turnToTargetWhileMoving(is_cube, curr_t_pos)
+
+
+
+
+
+
+
+
+
         #GoToTarget(False, [0, 0, 0])
         turnToTarget()
         turnToTarget()
@@ -307,7 +388,11 @@ try:
     print("t_pos: ", t_pos, "t_rot: ", t_rot, "t_rad: ", t_rad)
     #print(car_positions)
     #plot_positions(car_positions, [[t_pos[0], t_pos[2]]])
-    
+    # stop_plot_event.set()  # Signal the thread to stop
+    # plot_thread.join(timeout=1)  # Wait briefly for the thread to finish
+
+    # plt.ioff()
+    # plt.show()  # Show final frame and block until user closes window
 
 
 
