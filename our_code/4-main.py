@@ -22,12 +22,14 @@ from shapely.geometry import Polygon  # Ensure this is imported
 
 
 c_pos, c_rot, c_rad = [0,0,0], 0, 0
+t_pos1, t_rot1, t_rad1 = [0,0,0], 0, 0
 t_pos2, t_rot2, t_rad2 = [0,0,0], 0, 0
 t_pos, t_rot, t_rad = [0,0,0], 0, 0
 base_pos = [3.9, 0.09, 0.28]
 base_pos2 = [3.9, 0.09, -0.09]  # Define a second base position for the second cube
 z = 1  # Initialize a global variable for iteration count
 w=1
+y=606
 
 
 def receive_new_desc(desc: DataDescriptions):
@@ -56,9 +58,12 @@ def receive_new_frame(data_frame: DataFrame):
         if ms.id_num == 605:
             # Handle the chaser's data
             c_pos, c_rot, c_rad = chaser_data_handling.handle_frame(ms, "ctf_car")
-        if ms.id_num == 604:
+        if ms.id_num == y:
             # Handle the target's data (ctf_cube)
             t_pos, t_rot, t_rad = chaser_data_handling.handle_frame(ms, "ctf_cube")
+        if ms.id_num == 604:
+            # Handle the second cube's data (ctf_cube2)
+            t_pos1, t_rot1, t_rad1 = chaser_data_handling.handle_frame(ms)
         if ms.id_num == 606:
             # Handle the second cube's data (ctf_cube2)
             t_pos2, t_rot2, t_rad2 = chaser_data_handling.handle_frame(ms, "ctf_cube2")
@@ -111,7 +116,7 @@ def turnToTarget(is_cube = True, curr_t_pos = t_pos):
             if not turning_state == right:
                 turning_state = right
                 send_right_request(60)
-    time.sleep(1)
+    # time.sleep(1)
 
 def GoToTarget(is_cube = True, curr_t_pos = t_pos):
     if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) >= 0.15:
@@ -142,7 +147,7 @@ def GoBack( ):
                 break
             
 
-    time.sleep(1)
+    # time.sleep(1)
 
 
 
@@ -200,14 +205,14 @@ def go_to_goal(goal_pos):
         streaming_client.update_sync()
         cur_t_pos = t_pos
         cur_t_pos2 = t_pos2  # Use the current position of t_pos2
-        plan = get_path_to_goal(c_pos, goal_pos, [t_pos, t_pos2])
+        plan = get_path_to_goal(c_pos, goal_pos, [t_pos1, t_pos2])
         finshed = True
         for i in range(len(plan) - 1):
             go_to_pos = [plan[i+1][0], 0, plan[i+1][1]]
             print("Current position:", go_to_pos)
             turnToTarget(False, go_to_pos)
             GoToTarget(False, go_to_pos)
-            if dist(t_pos[0], cur_t_pos[0], t_pos[2], cur_t_pos[2]) > 0.1 or dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1:
+            if dist(t_pos1[0], cur_t_pos[0], t_pos1[2], cur_t_pos[2]) > 0.1 or dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1:
                 print("continue")
                 finshed = False
                 break
@@ -216,7 +221,7 @@ def go_to_goal(goal_pos):
 
 
 
-def get_path_to_target2():
+def get_path_to_target():
     # plan = []
         # GoBack()
     finshed = False
@@ -224,16 +229,16 @@ def get_path_to_target2():
         streaming_client.update_sync()
         cur_t_pos2 = t_pos2  # Use the current position of t_pos2
         cur_t_pos = t_pos  # Use the current position of t_pos
-        plan = get_path_to_goal(c_pos,t_pos2, [t_pos])  # Pass t_pos2 as a dynamic obstacle
+        plan = get_path_to_goal(c_pos, t_pos, [t_pos1])  # Pass t_pos1 as a dynamic obstacle
         finshed = True
         for i in range(len(plan) - 1):
            
-            go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
+            go_to_pos = [plan[i+1][0], 0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
             print("Current position:", go_to_pos)
             # turnToTarget(False, go_to_pos)
             turnToTarget(False, go_to_pos)
             GoToTarget(False, go_to_pos)
-            if dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1 or dist(t_pos[0], cur_t_pos[0], t_pos[2], cur_t_pos[2]) > 0.1:
+            if dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1 or dist(t_pos1[0], cur_t_pos[0], t_pos1[2], cur_t_pos[2]) > 0.1:
                 print("continue")
                 finshed = False
                 break
@@ -252,7 +257,7 @@ try:
         # GoBack()
         
         # # plan=get_path_to_target(c_pos, t_pos2,[t_pos])  # Pass t_pos2 as a dynamic obstacle
-        get_path_to_target2()  # Use a lambda to get the current position of t_pos2
+        get_path_to_target()  # Use a lambda to get the current position of t_pos
         # go_to_goal(t_pos2)  # Move to the base position first
         print("Chaser is facing the target.")
     
@@ -266,10 +271,12 @@ try:
         #     # turnToTarget(False, go_to_pos)
         #     turnToTarget(False, go_to_pos)
         #     GoToTarget(False, go_to_pos)
-        # turnToTarget(False, [go_to_pos[0]+0.3,0.09, 0.28])
-        # GoToTarget(False, [go_to_pos[0]+0.3,0.09, 0.28])  # Move slightly forward after reaching the target
+        turnToTarget(False, [plan[-1][0]+0.3,0.09, 0.28])
+        GoToTarget(False, [plan[-1][0]+0.3,0.09, 0.28])  # Move slightly forward after reaching the target
         send_servo_request(30)
         GoBack()
+        y = 606  # Reset y to the ID of the second cube
+        get_path_to_target()  # Get the path to the target position again
 
     #     # ##########################
     #     #plan for the second cube
