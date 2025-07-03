@@ -58,9 +58,15 @@ def receive_new_frame(data_frame: DataFrame):
         if ms.id_num == 605:
             # Handle the chaser's data
             c_pos, c_rot, c_rad = chaser_data_handling.handle_frame(ms, "ctf_car")
-        # if ms.id_num == 604:
-        #     # Handle the target's data (ctf_cube)
-        #     t_pos, t_rot, t_rad = chaser_data_handling.handle_frame(ms, "ctf_cube")
+        if ms.id_num == 604:
+            # Handle the target's data (ctf_cube)
+            t_pos, t_rot, t_rad = chaser_data_handling.handle_frame(ms, "ctf_cube")
+        if ms.id_num == 606:
+            # Handle the second cube's data (ctf_cube2)
+            # Check if the marker set ID matches the second cube's ID
+            # This assumes that the second cube has an ID of 606
+            # You can change this ID based on your setup
+            t_pos2, t_rot2, t_rad2 = chaser_data_handling.handle_frame(ms, "ctf_cube2")
         if ms.id_num == y:
             # Handle the second cube's data (ctf_cube2)
             t_pos2, t_rot2, t_rad2 = chaser_data_handling.handle_frame(ms, "ctf_cube2")
