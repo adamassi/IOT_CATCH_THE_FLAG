@@ -199,13 +199,17 @@ def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
     print('Successfully planned path')
     z += 1  # Increment the global variable z
     return plan
-def go_to_goal(goal_pos):
+def go_to_goal(goal_pos,w_cube_pos):
 
     finshed = False
     while not finshed:
         streaming_client.update_sync()
-        cur_t_pos = t_pos
+        cur_t_pos = t_pos1
         cur_t_pos2 = t_pos2  # Use the current position of t_pos2
+        obsticles = [t_pos1, t_pos2]  
+        for ob in obsticles:
+            if ob == w_cube_pos:
+                obsticles.remove(ob)
         plan = get_path_to_goal(c_pos, goal_pos, [t_pos1, t_pos2])
         finshed = True
         for i in range(len(plan) - 1):
@@ -230,7 +234,7 @@ def get_path_to_target():
         streaming_client.update_sync()
         cur_t_pos2 = t_pos2  # Use the current position of t_pos2
         cur_t_pos = t_pos1  # Use the current position of t_pos
-        plan = get_path_to_goal(c_pos, t_pos, [t_pos1])  # Pass t_pos1 as a dynamic obstacle
+        plan = get_path_to_goal(c_pos, t_pos, [t_pos1,t_pos2])  # Pass t_pos1 as a dynamic obstacle
         finshed = True
         for i in range(len(plan) - 1):
            
@@ -264,7 +268,7 @@ try:
         print("Chaser is facing the target.")
     
         send_servo_request(80)
-        plan=go_to_goal(base_pos)
+        plan=go_to_goal(base_pos,t_pos2)
         # plan=get_path_to_target(c_pos, base_pos, [t_pos])  # Pass t_pos2 as a dynamic obstacle
         # print("finished planening")
         # for i in range(len(plan) - 1):
