@@ -45,6 +45,28 @@ def add_cube_obstacle(env, cube_pos, size=0.23):
     ]
     env.obstacles.append(Polygon(obstacle))
 
+def add_rectangle_obstacle(env, center_pos, width=0.25, height=0.7):
+    """
+    Adds a rectangular obstacle to the environment.
+
+    Args:
+        env (MapEnvironment): The planning environment object.
+        center_pos (list): The [x, y, z] position of the rectangle's center (only x and z used).
+        width (float): The width of the rectangle along the x-axis.
+        height (float): The height of the rectangle along the z-axis.
+    """
+    cx, cz = center_pos[0], center_pos[2]
+    half_w, half_h = width / 2, height / 2
+    obstacle = [
+        [cx - half_w, cz - half_h],
+        [cx + half_w, cz - half_h],
+        [cx + half_w, cz + half_h],
+        [cx - half_w, cz + half_h],
+        [cx - half_w, cz - half_h]  # Close the loop
+    ]
+    env.obstacles.append(Polygon(obstacle))
+
+
 class MapEnvironment(object):
     
     def __init__(self, json_file):
@@ -69,6 +91,7 @@ class MapEnvironment(object):
         add_circle_obstacle(self, [2.71, 0.14, 1.06])
         # add_cube_obstacle(self, [2.71, 0.14, 1.06])
 
+        add_rectangle_obstacle(self, [1.6, 0.24, 0.06], width=0.25, height=0.7)
         # check that the start location is within limits and collision free
         if not self.state_validity_checker(state=self.start):
             raise ValueError('Start state must be within the map limits');
@@ -158,43 +181,111 @@ class MapEnvironment(object):
     # Visualization Functions
     # ------------------------#
 
-    def visualize_map(self, show_map=False, plan=None, tree_edges=None, expanded_nodes=None,name=""):
-        '''
-        Visualize map with current state of robot and obstacles in the map.
+    # def visualize_map(self, show_map=False, plan=None, tree_edges=None, expanded_nodes=None,name=""):
+    #     '''
+    #     Visualize map with current state of robot and obstacles in the map.
+    #     @param show_map If to show the map or save it.
+    #     @param plan A given plan to draw for the robot.
+    #     @param tree_edges A set of tree edges to draw.
+    #     @param expanded_nodes A set of expanded nodes to draw.
+    #     '''
+    #     # create empty background
+    #     plt = self.create_map_visualization()
+
+    #     # add obstacles
+    #     plt = self.visualize_obstacles(plt=plt)
+
+    #     # add plan if given
+    #     if plan is not None:
+    #         plt = self.visualize_plan(plt=plt, plan=plan, color='navy')
+
+    #     # add tree edges if given
+    #     if tree_edges is not None:
+    #         plt = self.visualize_tree_edges(plt=plt, tree_edges=tree_edges, color='lightgrey')
+
+    #     # add expanded nodes if given
+    #     if expanded_nodes is not None:
+    #         plt = self.visualize_expanded_nodes(plt=plt, expanded_nodes=expanded_nodes, color='lightgrey')
+
+    #     # add start
+    #     plt = self.visualize_point_location(plt=plt, state=self.start, color='r')
+
+    #     # add goal or inspection points
+    #     plt = self.visualize_point_location(plt=plt, state=self.goal, color='g')
+
+    #     # show map
+    #     if show_map:
+    #         plt.show()
+    #     else:
+    #         plt.savefig('map-RRT'+name+'.png')
+
+    #     return plt
+
+    def visualize_map(self, show_map=False, plan=None, tree_edges=None, expanded_nodes=None, name=""):
+        """
+        Visualize the map with current state of robot and obstacles in the map (X is vertical, Y is horizontal).
         @param show_map If to show the map or save it.
         @param plan A given plan to draw for the robot.
         @param tree_edges A set of tree edges to draw.
         @param expanded_nodes A set of expanded nodes to draw.
-        '''
-        # create empty background
-        plt = self.create_map_visualization()
+        """
+        plt.figure(figsize=(6, 10))  # Adjusted to match your preferred dimensions
 
-        # add obstacles
-        plt = self.visualize_obstacles(plt=plt)
+        # Draw background
+        back_img = np.zeros((self.ylimit[1] + 1, self.xlimit[1] + 1))
+        plt.imshow(
+            back_img.T,  # Transposed to reflect axis swap
+            origin='lower',
+            extent=(self.ylimit[0], self.ylimit[1], self.xlimit[0], self.xlimit[1]),
+            zorder=0
+        )
 
-        # add plan if given
+        # Draw obstacles (with axis swap)
+        for obstacle in self.obstacles:
+            coords = list(obstacle.exterior.coords)
+            swapped = [(y, x) for x, y in coords]  # Swap X and Y
+            xs, ys = zip(*swapped)
+            plt.fill(xs, ys, "y", zorder=5)
+
+        # Plot the plan if given
         if plan is not None:
-            plt = self.visualize_plan(plt=plt, plan=plan, color='navy')
+            for i in range(len(plan) - 1):
+                x0, y0 = plan[i][1], plan[i][0]
+                x1, y1 = plan[i+1][1], plan[i+1][0]
+                plt.plot([x0, x1], [y0, y1], color='navy', linewidth=1, zorder=20)
 
-        # add tree edges if given
+        # Plot tree edges if given
         if tree_edges is not None:
-            plt = self.visualize_tree_edges(plt=plt, tree_edges=tree_edges, color='lightgrey')
+            for edge in tree_edges:
+                x0, y0 = edge[0][1], edge[0][0]
+                x1, y1 = edge[1][1], edge[1][0]
+                plt.plot([x0, x1], [y0, y1], color='lightgrey', zorder=10)
 
-        # add expanded nodes if given
+        # Plot expanded nodes if given
         if expanded_nodes is not None:
-            plt = self.visualize_expanded_nodes(plt=plt, expanded_nodes=expanded_nodes, color='lightgrey')
+            for node in expanded_nodes:
+                cx, cy = node[1], node[0]
+                point_circ = plt.Circle((cx, cy), radius=0.1, color='lightgrey', zorder=10)
+                plt.gca().add_patch(point_circ)
 
-        # add start
-        plt = self.visualize_point_location(plt=plt, state=self.start, color='r')
+        # Plot start and goal
+        for state, color in [(self.start, 'r'), (self.goal, 'g')]:
+            cx, cy = state[1], state[0]
+            point_circ = plt.Circle((cx, cy), radius=0.1, color=color, zorder=30)
+            plt.gca().add_patch(point_circ)
 
-        # add goal or inspection points
-        plt = self.visualize_point_location(plt=plt, state=self.goal, color='g')
+        # Set labels and limits
+        plt.xlabel('Y Position →')
+        plt.ylabel('X Position ↑')
+        plt.xlim(-2, 2)
+        plt.ylim(-3.33, 4.5)
+        #plt.gca().set_aspect('auto')
+        plt.gca().set_aspect('equal', adjustable='box')
 
-        # show map
         if show_map:
             plt.show()
         else:
-            plt.savefig('map-RRT'+name+'.png')
+            plt.savefig(f'map-RRT{name}.png')
 
         return plt
 

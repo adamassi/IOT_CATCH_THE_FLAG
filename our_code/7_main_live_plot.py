@@ -257,6 +257,8 @@ def plot_positions(car_positions, ctf_positions):
 
 
 
+
+
 import matplotlib.pyplot as plt
 import time
 
