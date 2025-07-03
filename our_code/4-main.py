@@ -168,17 +168,20 @@ def add_cube_obstacle(env, cube_pos, size=0.2):
 
 
 # Function get data where the  robot car and where the cube is and calculate the path to the cube
-def get_path_to_target(start_pos, goal_pos, cube_obstacles=[]):
-    global z  # Use the global variable i
+def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
+    global z  # Use the global variable z
     json_file_path = "our_code/path_algorithms/map1.json"
     planning_env = MapEnvironment(json_file=json_file_path)
     # Initialize the map environment with the JSON file path
     planning_env.start = np.array([start_pos[0], start_pos[2]])  # Use x and y coordinates for the start position
     planning_env.goal = np.array([goal_pos[0], goal_pos[2]])  # Use x and y coordinates for the goal position
-# Add dynamic obstacles (e.g., cubes detected in the environment)
+
+    # Add dynamic obstacles (e.g., cubes detected in the environment)
     for cube_pos in cube_obstacles:
-        print(f"BBBBBBBBBBAdding cube obstacle at position {cube_pos}.")
-        add_cube_obstacle(planning_env, cube_pos)
+        if cube_pos != goal_pos:  # Skip if cube_pos matches goal_pos
+            print(f"Adding cube obstacle at position {cube_pos}.")
+            add_cube_obstacle(planning_env, cube_pos)
+
     # Create an instance of the RCSPlanner with the planning environment
     planner = RRTStarPlanner(planning_env=planning_env, ext_mode='E2', goal_prob=0.40, k=10)
     print(f"Planning path from {planning_env.start} to {planning_env.goal}...")
@@ -186,65 +189,33 @@ def get_path_to_target(start_pos, goal_pos, cube_obstacles=[]):
     plan = planner.plan()
 
     # Visualize the map with the computed plan and expanded nodes
-    planner.planning_env.visualize_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(), name=str(z))  # Convert i to string
-    print('successfully planned path')
-    z += 1  # Increment the global variable i
+    planner.planning_env.visualize_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(), name=str(z))  # Convert z to string
+    print('Successfully planned path')
+    z += 1  # Increment the global variable z
     return plan
-def get_path_to_target1(start_pos, target_getter_func, cube_obstacles=[]):
-    """
-    Continuously updates the path to a moving target using RRT*.
-    
-    Args:
-        start_pos (list): The starting position of the robot.
-        target_getter_func (function): A function that returns the current position of the target.
-        cube_obstacles (list): List of other cube positions to be treated as obstacles.
-    """
-    json_file_path = "our_code/path_algorithms/map1.json"
-    planning_env = MapEnvironment(json_file=json_file_path)
-    planning_env.start = np.array([start_pos[0], start_pos[2]])
+def go_to_goal(goal_pos):
 
-    prev_target_pos = target_getter_func
-    
-
-    # while True:
-    
-    current_target_pos = target_getter_func
-    
-    print("SSSSSSSSTART")
-
-    while  dist(c_pos[0], current_target_pos[0], c_pos[2], current_target_pos[2]) > 0.1:
-            print(f"Target moved to {current_target_pos}, re-planning path...")
-            streaming_client.update_sync()
-            plan = []
-            current_target_pos = t_pos2
-            goal_xy = np.array([current_target_pos[0], current_target_pos[2]])
-            # Reset the environment to clear old obstacles
-            planning_env.goal = goal_xy
-            planning_env.obstacles = []
-            planning_env.load_obstacles([[[3.5,-0.2],[3.5,-0.25],[4.5,-0.25] ,[4.5,1],[3.5,1],[3.5,0.85],[4.1,0.85],[4.1,-0.2]]])  # reload static obstacles
-
-            for cube_pos in cube_obstacles:
-                add_cube_obstacle(planning_env, cube_pos)
-
-            planner = RRTStarPlanner(planning_env=planning_env, ext_mode='E2', goal_prob=0.4, k=10)
-            print(f"Planning path from {planning_env.start} to {planning_env.goal}...")
-            plan = planner.plan()
-
-            for i in range(len(plan) - 1):
-                if dist(prev_target_pos[0], current_target_pos[0], prev_target_pos[2], current_target_pos[2]) > 0.1:
-                   print("BRRRRRRRREK")
-                #    send_stop_request()
-                   break
+    finshed = False
+    while not finshed:
+        streaming_client.update_sync()
+        cur_t_pos = t_pos
+        cur_t_pos2 = t_pos2  # Use the current position of t_pos2
+        plan = get_path_to_goal(c_pos, goal_pos, [t_pos, t_pos2])
+        finshed = True
+        for i in range(len(plan) - 1):
+            go_to_pos = [plan[i+1][0], 0, plan[i+1][1]]
+            print("Current position:", go_to_pos)
+            turnToTarget(False, go_to_pos)
+            GoToTarget(False, go_to_pos)
+            if dist(t_pos[0], cur_t_pos[0], t_pos[2], cur_t_pos[2]) > 0.1 or dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1:
+                print("continue")
+                finshed = False
+                break
+    return plan  # Return the planned path for further use or analysis
+# Function to get the path to the target position, considering t_pos2 as a dynamic obstacle
 
 
-                go_to_pos = [plan[i + 1][0], 0, plan[i + 1][1]]
-                turnToTarget(False, go_to_pos)
-                GoToTarget(False, go_to_pos)
 
-            prev_target_pos = current_target_pos
-
-        # time.sleep(0.5)
-    return plan
 def get_path_to_target2():
     # plan = []
         # GoBack()
@@ -252,19 +223,20 @@ def get_path_to_target2():
     while not finshed:
         streaming_client.update_sync()
         cur_t_pos2 = t_pos2  # Use the current position of t_pos2
-        plan = get_path_to_target(c_pos,t_pos2, [t_pos])  # Pass t_pos2 as a dynamic obstacle
+        cur_t_pos = t_pos  # Use the current position of t_pos
+        plan = get_path_to_goal(c_pos,t_pos2, [t_pos])  # Pass t_pos2 as a dynamic obstacle
         finshed = True
         for i in range(len(plan) - 1):
-            if  dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1:
-                print("continue")
-                finshed = False
-
-                continue
+           
             go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
             print("Current position:", go_to_pos)
             # turnToTarget(False, go_to_pos)
             turnToTarget(False, go_to_pos)
             GoToTarget(False, go_to_pos)
+            if dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1 or dist(t_pos[0], cur_t_pos[0], t_pos[2], cur_t_pos[2]) > 0.1:
+                print("continue")
+                finshed = False
+                break
           
 
 try:
@@ -279,69 +251,59 @@ try:
         plan = []
         # GoBack()
         
-        # plan=get_path_to_target(c_pos, t_pos2,[t_pos])  # Pass t_pos2 as a dynamic obstacle
+        # # plan=get_path_to_target(c_pos, t_pos2,[t_pos])  # Pass t_pos2 as a dynamic obstacle
         get_path_to_target2()  # Use a lambda to get the current position of t_pos2
-
-        #iteration over the plan
+        # go_to_goal(t_pos2)  # Move to the base position first
+        print("Chaser is facing the target.")
+    
+        send_servo_request(80)
+        plan=go_to_goal(base_pos)
+        # plan=get_path_to_target(c_pos, base_pos, [t_pos])  # Pass t_pos2 as a dynamic obstacle
+        # print("finished planening")
         # for i in range(len(plan) - 1):
         #     go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
         #     print("Current position:", go_to_pos)
         #     # turnToTarget(False, go_to_pos)
         #     turnToTarget(False, go_to_pos)
         #     GoToTarget(False, go_to_pos)
-
-        # turnToTarget()
-        # turnToTarget()
-        # GoToTarget()
-        print("Chaser is facing the target.")
-    
-        send_servo_request(80)
-        plan=get_path_to_target(c_pos, base_pos, [t_pos])  # Pass t_pos2 as a dynamic obstacle
-        print("finished planening")
-        for i in range(len(plan) - 1):
-            go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
-            print("Current position:", go_to_pos)
-            # turnToTarget(False, go_to_pos)
-            turnToTarget(False, go_to_pos)
-            GoToTarget(False, go_to_pos)
-        turnToTarget(False, [go_to_pos[0]+0.3,0.09, 0.28])
-        GoToTarget(False, [go_to_pos[0]+0.3,0.09, 0.28])  # Move slightly forward after reaching the target
+        # turnToTarget(False, [go_to_pos[0]+0.3,0.09, 0.28])
+        # GoToTarget(False, [go_to_pos[0]+0.3,0.09, 0.28])  # Move slightly forward after reaching the target
         send_servo_request(30)
         GoBack()
 
-        # ##########################
-        #plan for the second cube
-        plan=get_path_to_target(c_pos, t_pos,[t_pos2])  # Pass t_pos2 as a dynamic obstacle
+    #     # ##########################
+    #     #plan for the second cube
+    #     plan=get_path_to_target(c_pos, t_pos,[t_pos2])  # Pass t_pos2 as a dynamic obstacle
 
-        #iteration over the plan
-        for i in range(len(plan) - 1):
-            go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
-            print("Current position:", go_to_pos)
-            # turnToTarget(False, go_to_pos)
-            turnToTarget(False, go_to_pos)
-            GoToTarget(False, go_to_pos)
-        send_servo_request(60)
-        plan=get_path_to_target(c_pos, base_pos2, [t_pos2])  # Pass t_pos2 as a dynamic obstacle
-        print("finished planening")
-        for i in range(len(plan) - 1):
-            go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
-            print("Current position:", go_to_pos)
-            # turnToTarget(False, go_to_pos)
-            turnToTarget(False, go_to_pos)
-            GoToTarget(False, go_to_pos)
-        turnToTarget(False, [go_to_pos[0]+0.3,0.09,- 0.09])
-        GoToTarget(False, [go_to_pos[0]+0.3,0.09, -0.09])  # Move slightly forward after reaching the target
-        send_servo_request(30)
-        GoBack()
-
-        
-        # turnToTarget(False, base_pos)
-        # turnToTarget(False, base_pos)
-        # GoToTarget(False, base_pos)
-        print("KNOW WE CAN GO TO THE TARGET POSITION")
+    #     #iteration over the plan
+    #     for i in range(len(plan) - 1):
+    #         go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
+    #         print("Current position:", go_to_pos)
+    #         # turnToTarget(False, go_to_pos)
+    #         turnToTarget(False, go_to_pos)
+    #         GoToTarget(False, go_to_pos)
+    #     send_servo_request(60)
+    #     plan=get_path_to_target(c_pos, base_pos2, [t_pos2])  # Pass t_pos2 as a dynamic obstacle
+    #     print("finished planening")
+    #     for i in range(len(plan) - 1):
+    #         go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
+    #         print("Current position:", go_to_pos)
+    #         # turnToTarget(False, go_to_pos)
+    #         turnToTarget(False, go_to_pos)
+    #         GoToTarget(False, go_to_pos)
+    #     turnToTarget(False, [go_to_pos[0]+0.3,0.09,- 0.09])
+    #     GoToTarget(False, [go_to_pos[0]+0.3,0.09, -0.09])  # Move slightly forward after reaching the target
+    #     send_servo_request(30)
+    #     GoBack()
 
         
-    send_servo_request(30)
+    #     # turnToTarget(False, base_pos)
+    #     # turnToTarget(False, base_pos)
+    #     # GoToTarget(False, base_pos)
+    #     print("KNOW WE CAN GO TO THE TARGET POSITION")
+
+        
+    # send_servo_request(30)
     print("c_pos: ", c_pos, "c_rot: ", c_rot, "c_rad: ", c_rad)
     print("t_pos: ", t_pos, "t_rot: ", t_rot, "t_rad: ", t_rad)
 

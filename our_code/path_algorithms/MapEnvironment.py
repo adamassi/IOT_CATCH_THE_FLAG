@@ -66,8 +66,8 @@ class MapEnvironment(object):
         self.goal = np.array(json_dict['GOAL'])
         self.load_obstacles(obstacles=json_dict['OBSTACLES'])
         # add circle obstacles in the map in  [2.71, 1.06]
-        # add_circle_obstacle(self, [2.71, 0.14, 1.06])
-        add_cube_obstacle(self, [2.71, 0.14, 1.06])
+        add_circle_obstacle(self, [2.71, 0.14, 1.06])
+        # add_cube_obstacle(self, [2.71, 0.14, 1.06])
 
         # check that the start location is within limits and collision free
         if not self.state_validity_checker(state=self.start):

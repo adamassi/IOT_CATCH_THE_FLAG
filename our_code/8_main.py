@@ -1,3 +1,4 @@
+
 import time
 import socket
 from natnet_client import DataDescriptions, DataFrame, NatNetClient
@@ -306,80 +307,54 @@ def update_live_plot(chaser_plot, target_plot, arrow_artist, car_positions, curr
 
 
 
-# import threading
-# stop_plot_event = threading.Event()
 
-# def show_live_plot():
-#     while not stop_plot_event.is_set():
-#         update_live_plot(chaser_plot, target_plot, arrow_artist, car_positions, [t_pos[0], t_pos[2]], c_rad)
-#         time.sleep(0.05)
-
-# fig, ax, chaser_plot, target_plot, arrow_artist = live_plot_init()
-# # Start plot in a background thread
-# plot_thread = threading.Thread(target=show_live_plot, daemon=True)
-# plot_thread.start()
-
-
+fig, ax, chaser_plot, target_plot, arrow_artist = live_plot_init()
+def show_live_plot():
+    while True:
+        update_live_plot(chaser_plot, target_plot, arrow_artist, car_positions, [t_pos[0], t_pos[2]], c_rad)
+        time.sleep(0.05)
 try:
     
     send_servo_request(30)
     with streaming_client:
-        # streaming_client.request_modeldef()
-        # for _ in range(500):
-        #     streaming_client.update_sync()
-        #     update_live_plot(chaser_plot, target_plot, arrow_artist, car_positions, [t_pos[0], t_pos[2]], c_rad)
-
         streaming_client.request_modeldef()
+        for _ in range(500):
+            streaming_client.update_sync()
+            update_live_plot(chaser_plot, target_plot, arrow_artist, car_positions, [t_pos[0], t_pos[2]], c_rad)
 
-        streaming_client.update_sync()
-        #streaming_client.run_async()
-        time.sleep(1)  # Allow some time for the client to start and receive data
-        print("Streaming started. Waiting for data...")
+    #     streaming_client.request_modeldef()
 
-
-
-
-
-
-
-
-
-
-
-
-        
-        #GoToTarget(False, [0, 0, 0])
-        turnToTarget()
-        turnToTarget()
-        GoToTarget()
-        print("Chaser is facing the target.")
+    #     streaming_client.update_sync()
+    #     #streaming_client.run_async()
+    #     time.sleep(1)  # Allow some time for the client to start and receive data
+    #     print("Streaming started. Waiting for data...")
+    #     #GoToTarget(False, [0, 0, 0])
+    #     turnToTarget()
+    #     turnToTarget()
+    #     GoToTarget()
+    #     print("Chaser is facing the target.")
     
-        send_servo_request(80)
-        send_beep_request(50)
-        time.sleep(0.1)
-        send_beep_request(50)
-        time.sleep(1)
-        turnToTarget(False, base_pos)
-        turnToTarget(False, base_pos)
-        GoToTarget(False, base_pos)
+    #     send_servo_request(80)
+    #     send_beep_request(50)
+    #     time.sleep(0.1)
+    #     send_beep_request(50)
+    #     time.sleep(1)
+    #     turnToTarget(False, base_pos)
+    #     turnToTarget(False, base_pos)
+    #     GoToTarget(False, base_pos)
 
 
         
-    send_servo_request(30)
-    send_beep_request(50)
-    time.sleep(0.1)
-    send_beep_request(50)
-    time.sleep(0.1)
-    send_beep_request(50)
-    print("c_pos: ", c_pos, "c_rot: ", c_rot, "c_rad: ", c_rad)
-    print("t_pos: ", t_pos, "t_rot: ", t_rot, "t_rad: ", t_rad)
-    #print(car_positions)
-    #plot_positions(car_positions, [[t_pos[0], t_pos[2]]])
-    # stop_plot_event.set()  # Signal the thread to stop
-    # plot_thread.join(timeout=1)  # Wait briefly for the thread to finish
-
-    # plt.ioff()
-    # plt.show()  # Show final frame and block until user closes window
+    # send_servo_request(30)
+    # send_beep_request(50)
+    # time.sleep(0.1)
+    # send_beep_request(50)
+    # time.sleep(0.1)
+    # send_beep_request(50)
+    # print("c_pos: ", c_pos, "c_rot: ", c_rot, "c_rad: ", c_rad)
+    # print("t_pos: ", t_pos, "t_rot: ", t_rot, "t_rad: ", t_rad)
+    # #print(car_positions)
+    # #plot_positions(car_positions, [[t_pos[0], t_pos[2]]])
 
 
 
@@ -398,4 +373,3 @@ except ConnectionResetError as e:
 except Exception as e:
     print(f"An unexpected error occurred: {e}")
     # Handle other exceptions, possibly with logging or retry logic here
-
