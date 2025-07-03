@@ -53,20 +53,21 @@ def receive_new_frame(data_frame: DataFrame):
     global c_pos, c_rot, c_rad
     global t_pos, t_rot, t_rad
     global t_pos2, t_rot2, t_rad2  # Add variables for ctf_cube2
+    global t_pos1, t_rot1, t_rad1  # Add variables for ctf_cube1
 
     for ms in data_frame.rigid_bodies:
         if ms.id_num == 605:
             # Handle the chaser's data
-            c_pos, c_rot, c_rad = chaser_data_handling.handle_frame(ms, "ctf_car")
+            c_pos, c_rot, c_rad = chaser_data_handling.handle_frame(ms)
         if ms.id_num == y:
             # Handle the target's data (ctf_cube)
-            t_pos, t_rot, t_rad = chaser_data_handling.handle_frame(ms, "ctf_cube")
+            t_pos, t_rot, t_rad = chaser_data_handling.handle_frame(ms)
         if ms.id_num == 604:
             # Handle the second cube's data (ctf_cube2)
             t_pos1, t_rot1, t_rad1 = chaser_data_handling.handle_frame(ms)
         if ms.id_num == 606:
             # Handle the second cube's data (ctf_cube2)
-            t_pos2, t_rot2, t_rad2 = chaser_data_handling.handle_frame(ms, "ctf_cube2")
+            t_pos2, t_rot2, t_rad2 = chaser_data_handling.handle_frame(ms)
         
     #print("received new frame")
 
@@ -212,7 +213,7 @@ def go_to_goal(goal_pos):
             print("Current position:", go_to_pos)
             turnToTarget(False, go_to_pos)
             GoToTarget(False, go_to_pos)
-            if dist(t_pos1[0], cur_t_pos[0], t_pos1[2], cur_t_pos[2]) > 0.1 or dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1:
+            if dist(t_pos1[0], cur_t_pos[0], t_pos1[2], cur_t_pos[2]) > 0.1 or( dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1 and goal_pos[2] != 0.28):
                 print("continue")
                 finshed = False
                 break
@@ -228,7 +229,7 @@ def get_path_to_target():
     while not finshed:
         streaming_client.update_sync()
         cur_t_pos2 = t_pos2  # Use the current position of t_pos2
-        cur_t_pos = t_pos  # Use the current position of t_pos
+        cur_t_pos = t_pos1  # Use the current position of t_pos
         plan = get_path_to_goal(c_pos, t_pos, [t_pos1])  # Pass t_pos1 as a dynamic obstacle
         finshed = True
         for i in range(len(plan) - 1):
@@ -242,6 +243,7 @@ def get_path_to_target():
                 print("continue")
                 finshed = False
                 break
+        print(f"{finshed}AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
           
 
 try:
