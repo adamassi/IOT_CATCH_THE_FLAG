@@ -161,42 +161,22 @@ class MapEnvironment(object):
 
     def edge_validity_checker(self, state1, state2):
         '''
-        Check if the edge between two states is collision-free and that the robot can be in state2 facing state1 without colliding with obstacles.
+        A function to check if the edge between two states is free from collisions. The function will return False if the edge intersects another obstacle.
         @param state1 The source state of the robot.
         @param state2 The destination state of the robot.
         '''
 
-        # Define undirected edge
+        # define undirected edge
         given_edge = LineString([state1, state2])
 
-        # Check collision along the edge
+        # verify that the robot does not crossing any obstacle
         for obstacle in self.obstacles:
             if given_edge.intersects(obstacle):
                 return False
-
-        # Check if the car can be at state2 facing toward state1
-        orientation_angle = np.arctan2(state1[1] - state2[1], state1[0] - state2[0])  # Angle in radians
-        car_length = 0.28  # Meters (adjust according to your car's footprint)
-        car_width = 0.17   # Meters
-
-        # Define car rectangle at state2 facing state1
-        cos_o, sin_o = np.cos(orientation_angle), np.sin(orientation_angle)
-        dx, dy = car_length / 2, car_width / 2
-
-        # Define corners of the car
-        corners = [
-            [state2[0] + dx * cos_o - dy * sin_o, state2[1] + dx * sin_o + dy * cos_o],
-            [state2[0] + dx * cos_o + dy * sin_o, state2[1] + dx * sin_o - dy * cos_o],
-            [state2[0] - dx * cos_o + dy * sin_o, state2[1] - dx * sin_o - dy * cos_o],
-            [state2[0] - dx * cos_o - dy * sin_o, state2[1] - dx * sin_o + dy * cos_o],
-            [state2[0] + dx * cos_o - dy * sin_o, state2[1] + dx * sin_o + dy * cos_o]  # Close the polygon
-        ]
-
-        car_polygon = Polygon(corners)
-
-        # Check collision with car footprint
+        # Check collision of a circle around state2
+        circle_at_state2 = Point(state2[0], state2[1]).buffer(0.3)  # Circle with radius 0.2 around state2
         for obstacle in self.obstacles:
-            if car_polygon.intersects(obstacle):
+            if circle_at_state2.intersects(obstacle):
                 return False
 
         return True
@@ -253,7 +233,7 @@ class MapEnvironment(object):
     #         plt.savefig('map-RRT'+name+'.png')
 
     #     return plt
-
+# firas 
     def visualize_map(self, show_map=False, plan=None, tree_edges=None, expanded_nodes=None, name=""):
         """
         Visualize the map with current state of robot and obstacles in the map (X is vertical, Y is horizontal).

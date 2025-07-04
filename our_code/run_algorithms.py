@@ -4,6 +4,7 @@ from path_algorithms.RRTStarPlanner import RRTStarPlanner
 from shapely.geometry import Polygon  # Ensure this is imported
 
 
+
 def add_cube_obstacle(env, cube_pos, size=0.3):
     """
     Adds a square obstacle representing a cube to the environment.
