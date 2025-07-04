@@ -3,3 +3,8 @@ in sted of
         for i in range(100):
 while True
 https://prod.liveshare.vsengsaas.visualstudio.com/join?AD0CC32A4C521705E73D7146CE74B6064496
+
+
+
+- put the code files in the main repository
+- remove all unnecessary/ not used files
