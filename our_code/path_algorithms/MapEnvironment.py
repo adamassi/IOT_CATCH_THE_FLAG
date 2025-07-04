@@ -92,8 +92,14 @@ class MapEnvironment(object):
         # add_cube_obstacle(self, [2.71, 0.14, 1.06])
 
         add_rectangle_obstacle(self, [1.6, 0.24, 0.06], width=0.25, height=0.7)
+
+
+
+        # test ithe valueError
+        add_cube_obstacle(self, [-4.14, 0.14, 1.06])
         # check that the start location is within limits and collision free
         if not self.state_validity_checker(state=self.start):
+            
             raise ValueError('Start state must be within the map limits');
 
         # check that the goal location is within limits and collision free
@@ -113,6 +119,8 @@ class MapEnvironment(object):
         for obstacle in obstacles:
             non_applicable_vertices = [x[0] < self.xlimit[0] or x[0] > self.xlimit[1] or x[1] < self.ylimit[0] or x[1] > self.ylimit[1] for x in obstacle]
             if any(non_applicable_vertices):
+                # Raise an error if any obstacle overlaps with the map boundaries, ensuring all obstacles are within valid limits.
+                # print(f'OOOOObstacle {obstacle} overlaps with the map boundaries: {self.xlimit}, {self.ylimit}')
                 raise ValueError('An obstacle coincides with the maps boundaries!');
             
             # make sure that the obstacle is a closed form
@@ -276,7 +284,7 @@ class MapEnvironment(object):
 
         # Set labels and limits
         plt.xlabel('Y Position →')
-        plt.ylabel('X Position ↑')
+        plt.ylabel('X Position →')
         plt.xlim(-2, 2)
         plt.ylim(-3.33, 4.5)
         #plt.gca().set_aspect('auto')

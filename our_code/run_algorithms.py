@@ -2,7 +2,7 @@ from path_algorithms.RCSPlanner import RCSPlanner
 from path_algorithms.MapEnvironment import MapEnvironment
 from path_algorithms.RRTStarPlanner import RRTStarPlanner
 from shapely.geometry import Polygon  # Ensure this is imported
-from shapely.geometry import Polygon  # Ensure this is imported
+
 
 def add_cube_obstacle(env, cube_pos, size=0.3):
     """
@@ -40,7 +40,7 @@ planner = RRTStarPlanner(planning_env=planning_env,ext_mode='E2',goal_prob=0.05,
 plan = planner.plan()
 
 # Visualize the map with the computed plan and expanded nodes
-planner.planning_env.visualize_map(plan=plan, tree_edges=planner.tree.get_edges_as_states())
+planner.planning_env.visualize_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(),name='run_algorithms')
 
 
 
