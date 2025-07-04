@@ -5,3 +5,11 @@ https://prod.liveshare.vsengsaas.visualstudio.com/join?AD0CC32A4C521705E73D7146C
 
 - put the code files in the main repository
 - remove all unnecessary/ not used files
+
+README: !!!(look at https://docs.google.com/document/d/12zH31_RhYnS6SasSdN8nZV-M_MSXaCOH70FLaj2zVzE/edit?tab=t.0)
+- descreption
+- Group members
+- list of all HW components + quantities
+- connections diagram
+- PARAMETERS file for all the HARD CODED parameters
+- SECRETS file for wifi passwords, tokens....
