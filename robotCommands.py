@@ -75,11 +75,12 @@ def send_stop_beeping_request():
         print("Error sending STOP BEEPING request:", e)
 
 
+
 # def angle_between_points(p1, p2):
     
 #     return math.atan2(p2[2] - p1[2], p2[0] - p1[0])
     
-    
+
 # send_beep_request(50)
 # time.sleep(0.1)  # Wait for the beep to finish
 # send_beep_request(50)
