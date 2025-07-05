@@ -113,6 +113,6 @@ def angle_between_points(p1, p2):
 
 # send_stop_request()
 
-send_start_beeping_request(300, 300)
-time.sleep(5)  # Beep for 5 seconds
-send_stop_beeping_request()
+# send_start_beeping_request(300, 300)
+# time.sleep(5)  # Beep for 5 seconds
+# send_stop_beeping_request()

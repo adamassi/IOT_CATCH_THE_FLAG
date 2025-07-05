@@ -13,3 +13,6 @@ README: !!!(look at https://docs.google.com/document/d/12zH31_RhYnS6SasSdN8nZV-M
 - connections diagram
 - PARAMETERS file for all the HARD CODED parameters
 - SECRETS file for wifi passwords, tokens....
+
+
+check the conversion file and the handle optitrack
