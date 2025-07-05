@@ -128,7 +128,7 @@ st.title('Simple Streamlit Example')
 
 st.write("Current assembled word:")
 st.info(f'{st.session_state.word}')
-image = Image.open("./map-RRT1.png")
+image = Image.open("./map-RRTrun_algorithms_for_web.png")
 # Buttons to assemble the word
 left, middle, right = st.columns(3)
 left.button("I", on_click=click_i, disabled=st.session_state.clicked_i, use_container_width=True)
@@ -142,7 +142,7 @@ if submit_col.button("Submit", disabled=st.session_state.clicked_submit):
     if are_permutations(st.session_state.word):
         st.success(f'Assembling the word: {st.session_state.word}!')
         process = subprocess.Popen(
-            ['python', 'our_code/my_script.py', st.session_state.word],
+            ['python', 'our_code/run_algorithms.py'],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
