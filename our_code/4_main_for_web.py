@@ -103,7 +103,7 @@ def receive_new_frame(data_frame: DataFrame):
 
 
 streaming_client = NatNetClient(
-    server_ip_address="132.68.35.255",  # IP address of the OptiTrack server
+    server_ip_address="132.68.35.2",  # IP address of the OptiTrack server
     local_ip_address=socket.gethostbyname(socket.gethostname()),  # Local IP address
     use_multicast=False  # Use unicast instead of multicast for communication
 )

@@ -116,6 +116,7 @@ import threading
 from PIL import Image
 import os
 
+
 thread = None
 # Initialize session state
 if "word" not in st.session_state:
@@ -134,6 +135,8 @@ if "output_placeholder" not in st.session_state:
     st.session_state.output_placeholder = None
 if "error_placeholder" not in st.session_state:
     st.session_state.error_placeholder = None
+if "stop_event" not in st.session_state:
+    st.session_state.stop_event = threading.Event()
 
 # Function to check if the word is a permutation of "IOT"
 def are_permutations(str2):
@@ -166,23 +169,47 @@ st.title('Simple Streamlit Example')
 
 
 def run_script(output_dict, word):
-    result = subprocess.run(["python", "our_code/4_main_for_web.py", word], capture_output=True, text=True)
-    output_dict["returncode"] = result.returncode
-    output_dict["stdout"] = result.stdout
-    output_dict["stderr"] = result.stderr
-    output_dict["finished"] = True
+    # result = subprocess.run(["python", "our_code/4_main_for_web.py", word], capture_output=True, text=True)
+    # output_dict["returncode"] = result.returncode
+    # output_dict["stdout"] = result.stdout
+    # output_dict["stderr"] = result.stderr
+    # output_dict["finished"] = True
+    process = subprocess.Popen(
+        ["python", "our_code/4_main_for_web.py", word],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+    st.session_state.process = process  # Save it just in case
 
+    while True:
+        if st.session_state.stop_event.is_set():
+            process.terminate()
+            output_dict["stdout"] = "Stopped by user"
+            output_dict["stderr"] = ""
+            output_dict["returncode"] = -1
+            output_dict["finished"] = True
+            return
+        if process.poll() is not None:
+            # Process finished
+            stdout, stderr = process.communicate()
+            output_dict["stdout"] = stdout
+            output_dict["stderr"] = stderr
+            output_dict["returncode"] = process.returncode
+            output_dict["finished"] = True
+            return
+        time.sleep(0.1)  # Prevent CPU hogging
 
 # stop everything
 def stop_all():
-    if thread is not None and thread.is_alive():
-        thread._stop()
+    st.session_state.stop_event.set()
+    st.warning("Stop requested. Attempting to terminate the process...")
     reset_all()
 
 
 st.write("Current assembled word:")
 st.info(f'{st.session_state.word}')
-image = Image.open("./map-RRTfor_web.png")
+# image = Image.open("./map-RRTfor_web.png")
 # Buttons to assemble the word
 left, middle, right = st.columns(3)
 left.button("I", on_click=click_i, disabled=st.session_state.clicked_i, use_container_width=True)
@@ -194,6 +221,7 @@ st.session_state.clicked_submit = not (st.session_state.clicked_i and st.session
 submit_col, stop_col, reset_col = st.columns(3)
 if submit_col.button("Submit", disabled=st.session_state.clicked_submit):
     if are_permutations(st.session_state.word):
+        st.session_state.stop_event.clear()
         st.success(f'Assembling the word: {st.session_state.word}!')
         timer_placeholder = st.empty()
         image_placeholder = st.empty()
@@ -201,7 +229,7 @@ if submit_col.button("Submit", disabled=st.session_state.clicked_submit):
         st.session_state.output_placeholder = st.empty()
         st.session_state.error_placeholder = st.empty()
          # Dictionary to share output state
-        output = {"finished": False}
+        output = {"finished": False, "returncode": None, "stdout": "", "stderr": ""}
 
         # Start algorithm in a thread
         thread = threading.Thread(target=run_script, args=(output,st.session_state.word))
@@ -216,6 +244,8 @@ if submit_col.button("Submit", disabled=st.session_state.clicked_submit):
             # Reload and display the image safely
             if os.path.exists("map-RRTfor_web.png"):
                 try:
+                    if output["stderr"] != "":
+                        st.session_state.error_placeholder.text(f"Error: {output['stderr']}")
                     image = Image.open("map-RRTfor_web.png")
                     image.load()  # Force load now, to catch incomplete files
                     width_percent = (target_width / float(image.width))

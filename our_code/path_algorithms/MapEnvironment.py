@@ -10,6 +10,7 @@ from matplotlib import collections as coll
 from numpy.core.fromnumeric import size
 from shapely.geometry import Point, LineString, Polygon
 import imageio
+import sys
 # 2.71, 0.14, 1.06
 # add circle obstacles function
 def add_circle_obstacle(env, circle_pos, radius=0.09):
@@ -125,7 +126,8 @@ class MapEnvironment(object):
             if any(non_applicable_vertices):
                 # Raise an error if any obstacle overlaps with the map boundaries, ensuring all obstacles are within valid limits.
                 # print(f'OOOOObstacle {obstacle} overlaps with the map boundaries: {self.xlimit}, {self.ylimit}')
-                raise ValueError('An obstacle coincides with the maps boundaries!');
+                print('An obstacle coincides with the maps boundaries!', file=sys.stderr)
+                raise ValueError('An obstacle coincides with the maps boundaries!')
             
             # make sure that the obstacle is a closed form
             if obstacle[0] != obstacle[-1]:
