@@ -218,7 +218,7 @@ def go_to_goal(goal_pos,n_cube):
             print("Current position:", go_to_pos)
             turnToTarget(False, go_to_pos)
             GoToTarget(False, go_to_pos)
-            if(dist(t_pos1[0], cur_t_pos[0], t_pos1[2], cur_t_pos[2]) > 0.1 and y!=604) or( dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1 and y!=606):
+            if(dist(t_pos1[0], cur_t_pos[0], t_pos1[2], cur_t_pos[2]) > 0.1 and n_cube !=1) or( dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1 and n_cube !=2):
                 print("continue")
                 finshed = False
                 break
@@ -242,8 +242,8 @@ def get_path_to_target():
             go_to_pos = [plan[i+1][0], 0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
             print("Current position:", go_to_pos)
             # turnToTarget(False, go_to_pos)
-            turnToTarget(False, go_to_pos)
-            GoToTarget(False, go_to_pos)
+            # turnToTarget(False, go_to_pos)
+            # GoToTarget(False, go_to_pos)
             if dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1 or dist(t_pos1[0], cur_t_pos[0], t_pos1[2], cur_t_pos[2]) > 0.1:
                 print("continue")
                 finshed = False
@@ -252,7 +252,7 @@ def get_path_to_target():
           
 
 try:
-    send_servo_request(30)
+    # send_servo_request(30)
     with streaming_client:
         streaming_client.request_modeldef()
 

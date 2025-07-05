@@ -61,6 +61,19 @@ def send_beep_request(duration=500):
         print("BEEP request sent. Response:", response.text)
     except Exception as e:
         print("Error sending BEEP request:", e)
+def send_start_beeping_request(on=300, off=300):
+    try:
+        response = requests.get(f"{ESP_IP}/start_beeping?on="+str(on)+"&off="+str(off))
+        print("START BEEPING request sent. Response:", response.text)
+    except Exception as e:
+        print("Error sending START BEEPING request:", e)
+def send_stop_beeping_request():
+    try:
+        response = requests.get(f"{ESP_IP}/stop_beeping")
+        print("STOP BEEPING request sent. Response:", response.text)
+    except Exception as e:
+        print("Error sending STOP BEEPING request:", e)
+
 
 def angle_between_points(p1, p2):
     
@@ -99,3 +112,7 @@ def angle_between_points(p1, p2):
 #     print(f"Steering command sent. left: {i}, right: 250")
 
 # send_stop_request()
+
+send_start_beeping_request(300, 300)
+time.sleep(5)  # Beep for 5 seconds
+send_stop_beeping_request()

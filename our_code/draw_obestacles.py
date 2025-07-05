@@ -192,6 +192,8 @@ def get_path_to_target(start_pos, goal_pos, cube_obstacles=[]):
     # planner = RRTStarPlanner(planning_env=planning_env, ext_mode='E2', goal_prob=0.05, k=10)
     # plan = planner.plan()
     # planning_env.visualize_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(),name='add_obstacles')
+
+    
     planning_env.visualize_map(name='add_obstacles')
 
     # return plan

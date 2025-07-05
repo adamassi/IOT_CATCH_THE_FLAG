@@ -19,8 +19,10 @@ int IN3 = 25;
 int IN4 = 33;
 
 const int servoPin = 15;
+//beeper
 const int beeperPin = 23;
-
+TaskHandle_t beepingTaskHandle = NULL;
+volatile bool keepBeeping = false;
 
 String slider_value = "0";
 int pwm_power_value = 45;
@@ -196,6 +198,28 @@ String processor(const String &var) {
   }
   return String();
 }
+
+
+//beeper
+void repeatedBeepTask(void *param) {
+  int *durations = (int *)param;
+  int onDuration = durations[0];
+  int offDuration = durations[1];
+  delete[] durations;
+
+  while (keepBeeping) {
+    digitalWrite(beeperPin, HIGH);
+    vTaskDelay(onDuration / portTICK_PERIOD_MS);
+    digitalWrite(beeperPin, LOW);
+    vTaskDelay(offDuration / portTICK_PERIOD_MS);
+  }
+
+  digitalWrite(beeperPin, LOW);  // Ensure off
+  beepingTaskHandle = NULL;
+  vTaskDelete(NULL);
+}
+
+
 
 void setup() {
   Serial.begin(115200);
@@ -417,31 +441,37 @@ void setup() {
     }
   });
 
-  server.on("/beep_start", HTTP_GET, [](AsyncWebServerRequest *request) {
-    if (request->hasParam("duration")) {
-      int duration = request->getParam("duration")->value().toInt();
-      duration = constrain(duration, 1, 5000);  // Max 5 seconds safety limit
+  server.on("/start_beeping", HTTP_GET, [](AsyncWebServerRequest *request) {
+    if (beepingTaskHandle != NULL) {
+      request->send(400, "text/plain", "Beeping already running");
+      return;
+    }
 
-      digitalWrite(beeperPin, HIGH);  // Turn beeper on
-      Serial.printf("Beeping for %d ms\n", duration);
+    if (request->hasParam("on") && request->hasParam("off")) {
+      int onTime = request->getParam("on")->value().toInt();
+      int offTime = request->getParam("off")->value().toInt();
 
-      // Use a timer (non-blocking) via a task or schedule
-      // For now, use delay in a simple task
+      onTime = constrain(onTime, 10, 5000);
+      offTime = constrain(offTime, 10, 5000);
+
+      keepBeeping = true;
+
+      int *durations = new int[2]{ onTime, offTime };
+
       xTaskCreatePinnedToCore(
-        [](void *param) {
-          int d = *((int *)param);
-          vTaskDelay(d / portTICK_PERIOD_MS);
-          digitalWrite(beeperPin, LOW);  // Turn it off
-          delete (int *)param;
-          vTaskDelete(NULL);
-        },
-        "BeeperTask", 2048, new int(duration), 1, NULL, 1);
+        repeatedBeepTask, "RepeatedBeepTask", 2048, durations, 1, &beepingTaskHandle, 1);
 
-      request->send(200, "text/plain", "Beeping for " + String(duration) + " ms");
+      request->send(200, "text/plain", "Started beeping");
     } else {
-      request->send(400, "text/plain", "Missing 'duration' parameter");
+      request->send(400, "text/plain", "Missing 'on' or 'off' parameter");
     }
   });
+
+  server.on("/stop_beeping", HTTP_GET, [](AsyncWebServerRequest *request) {
+    keepBeeping = false;
+    request->send(200, "text/plain", "Stopped beeping");
+  });
+
 
 
 

@@ -12,7 +12,7 @@ from shapely.geometry import Point, LineString, Polygon
 import imageio
 # 2.71, 0.14, 1.06
 # add circle obstacles function
-def add_circle_obstacle(env, circle_pos, radius=0.16):
+def add_circle_obstacle(env, circle_pos, radius=0.09):
     """
     Adds a circular obstacle to the environment.
 
@@ -64,6 +64,8 @@ def add_rectangle_obstacle(env, center_pos, width=0.25, height=0.7):
         [cx - half_w, cz + half_h],
         [cx - half_w, cz - half_h]  # Close the loop
     ]
+    print(f"Adding rectangle obstacle at position {center_pos} with width {width}m and height {height}m.")
+    print(obstacle)
     env.obstacles.append(Polygon(obstacle))
 
 
@@ -92,6 +94,8 @@ class MapEnvironment(object):
         # add_cube_obstacle(self, [2.71, 0.14, 1.06])
 
         add_rectangle_obstacle(self, [1.6, 0.24, 0.06], width=0.25, height=0.7)
+        # adding pyramid obstacle
+        add_rectangle_obstacle(self, [1.97, 0.12, 0.40], width=0.6, height=0.25)
 
 
 
@@ -166,18 +170,42 @@ class MapEnvironment(object):
         @param state2 The destination state of the robot.
         '''
 
-        # define undirected edge
-        given_edge = LineString([state1, state2])
+        # # define undirected edge
+        # given_edge = LineString([state1, state2])
 
-        # verify that the robot does not crossing any obstacle
+        # # verify that the robot does not crossing any obstacle
+        # for obstacle in self.obstacles:
+        #     if given_edge.intersects(obstacle):
+        #         return False
+        # Define undirected edge
+        edge = LineString([state1, state2])
+        
+        # Create a buffer around the edge to simulate the robot's footprint during movement
+        edge_buffer = edge.buffer(0.07)  # cap_style=2 for flat ends
+
+        # Check for intersection with any obstacle
         for obstacle in self.obstacles:
-            if given_edge.intersects(obstacle):
+            if edge_buffer.intersects(obstacle):
                 return False
-        # Check collision of a circle around state2
-        circle_at_state2 = Point(state2[0], state2[1]).buffer(0.3)  # Circle with radius 0.2 around state2
+        half_side = 0.07  # half the side length of the cube
+        x, y = state2[0], state2[1]
+        square_at_state2 = Polygon([
+            [x - half_side, y - half_side],
+            [x + half_side, y - half_side],
+            [x + half_side, y + half_side],
+            [x - half_side, y + half_side],
+            [x - half_side, y - half_side]
+        ])
+
+        # Check collision with obstacles
         for obstacle in self.obstacles:
-            if circle_at_state2.intersects(obstacle):
+            if square_at_state2.intersects(obstacle):
                 return False
+        # # Check collision of a circle around state2
+        # circle_at_state2 = Point(state2[0], state2[1]).buffer(0.07)  # Circle with radius  around state2
+        # for obstacle in self.obstacles:
+        #     if circle_at_state2.intersects(obstacle):
+        #         return False
 
         return True
 
