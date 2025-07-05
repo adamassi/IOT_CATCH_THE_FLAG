@@ -4,7 +4,6 @@ from path_algorithms.RRTStarPlanner import RRTStarPlanner
 from shapely.geometry import Polygon  # Ensure this is imported
 import time
 
-
 def add_cube_obstacle(env, cube_pos, size=0.3):
     """
     Adds a square obstacle representing a cube to the environment.
@@ -59,6 +58,21 @@ plan = planner.plan()
 # Visualize the map with the computed plan and expanded nodes
 planner.planning_env.visualize_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(),name='run_algorithms_for_web')  # Convert z to string
 
+for i in range(3):
+    # Pass the path to the MapEnvironment
+    planning_env = MapEnvironment(json_file=json_file_path)
+    cube_pos = [i*2, i*2, i*2]  
+    print(f"BBBBBBBBBBAdding cube obstacle at position {cube_pos}.")
+    add_cube_obstacle(planning_env, cube_pos)
+    # Create an instance of the RCSPlanner with the planning environment
+    planner = RRTStarPlanner(planning_env=planning_env,ext_mode='E2',goal_prob=0.05,k=10)
+
+    # Execute the planning algorithm to get the path
+    plan = planner.plan()
+
+    # Visualize the map with the computed plan and expanded nodes
+    planner.planning_env.visualize_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(),name='run_algorithms_for_web')  # Convert z to string
+    time.sleep(1)  # Sleep for 1 second before the next iteration
 
 
 

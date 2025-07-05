@@ -18,6 +18,12 @@ from path_algorithms.MapEnvironment import MapEnvironment
 from path_algorithms.RRTPlanner import RRTPlanner
 from path_algorithms.RRTStarPlanner import RRTStarPlanner
 from shapely.geometry import Polygon  # Ensure this is imported
+import sys
+
+word = sys.argv[1]
+arr=[]
+
+
 
 
 
@@ -30,6 +36,18 @@ base_pos2 = [3.9, 0.09, -0.09]  # Define a second base position for the second c
 z = 1  # Initialize a global variable for iteration count
 w=1
 y=606
+def extract_order(word):
+    """
+    Extracts the order of characters from the input word.
+    
+    """
+    for c in word:
+        if c=='I':
+            arr.append(604)
+        elif c=='O':
+            arr.append(606)
+        elif c=='T':
+            arr.append(607)
 
 
 def receive_new_desc(desc: DataDescriptions):
@@ -199,7 +217,7 @@ def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
     print('Successfully planned path')
     z += 1  # Increment the global variable z
     return plan
-def go_to_goal(goal_pos,n_cube):
+def go_to_goal(goal_pos):
 
     finshed = False
     while not finshed:
@@ -207,9 +225,9 @@ def go_to_goal(goal_pos,n_cube):
         cur_t_pos = t_pos1
         cur_t_pos2 = t_pos2  # Use the current position of t_pos2
         obsticles = [t_pos1, t_pos2] 
-        if n_cube == 1:
+        if y == 606:
             obsticles.remove(t_pos2)
-        elif n_cube == 2:
+        elif y == 604:
             obsticles.remove(t_pos1) 
         plan = get_path_to_goal(c_pos, goal_pos,obsticles)
         finshed = True
@@ -262,60 +280,17 @@ try:
         print("Streaming started. Waiting for data...")
         plan = []
         # GoBack()
-        y=604
-        # # plan=get_path_to_target(c_pos, t_pos2,[t_pos])  # Pass t_pos2 as a dynamic obstacle
-        get_path_to_target()  # Use a lambda to get the current position of t_pos
-        # go_to_goal(t_pos2)  # Move to the base position first
-        print("Chaser is facing the target.")
-    
-        send_servo_request(80)
-        plan=go_to_goal(base_pos,2)
-        # plan=get_path_to_target(c_pos, base_pos, [t_pos])  # Pass t_pos2 as a dynamic obstacle
-        # print("finished planening")
-        # for i in range(len(plan) - 1):
-        #     go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
-        #     print("Current position:", go_to_pos)
-        #     # turnToTarget(False, go_to_pos)
-        #     turnToTarget(False, go_to_pos)
-        #     GoToTarget(False, go_to_pos)
-        turnToTarget(False, [plan[-1][0]+0.3,0.09, 0.28])
-        GoToTarget(False, [plan[-1][0]+0.3,0.09, 0.28])  # Move slightly forward after reaching the target
-        send_servo_request(30)
-        GoBack()
-        y = 604  # Reset y to the ID of the second cube
-        get_path_to_target()  # Get the path to the target position again
-
-    #     # ##########################
-    #     #plan for the second cube
-    #     plan=get_path_to_target(c_pos, t_pos,[t_pos2])  # Pass t_pos2 as a dynamic obstacle
-
-    #     #iteration over the plan
-    #     for i in range(len(plan) - 1):
-    #         go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
-    #         print("Current position:", go_to_pos)
-    #         # turnToTarget(False, go_to_pos)
-    #         turnToTarget(False, go_to_pos)
-    #         GoToTarget(False, go_to_pos)
-    #     send_servo_request(60)
-    #     plan=get_path_to_target(c_pos, base_pos2, [t_pos2])  # Pass t_pos2 as a dynamic obstacle
-    #     print("finished planening")
-    #     for i in range(len(plan) - 1):
-    #         go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
-    #         print("Current position:", go_to_pos)
-    #         # turnToTarget(False, go_to_pos)
-    #         turnToTarget(False, go_to_pos)
-    #         GoToTarget(False, go_to_pos)
-    #     turnToTarget(False, [go_to_pos[0]+0.3,0.09,- 0.09])
-    #     GoToTarget(False, [go_to_pos[0]+0.3,0.09, -0.09])  # Move slightly forward after reaching the target
-    #     send_servo_request(30)
-    #     GoBack()
-
+        for i in range(1):
+            extract_order(word)
+            y = arr[i]  # Get the current target ID from the array
+            print("Current target ID:", y)
+            get_path_to_target()  # Get the path to the target position
+            send_servo_request(80)
+            plan = go_to_goal(base_pos)  # Move to the base position first
+            turnToTarget(False, [plan[-1][0]+0.3,0.09, 0.28])
+            GoToTarget(False, [plan[-1][0]+0.3,0.09, 0.28])  # Move slightly forward after reaching the target
+            send_servo_request(30)
         
-    #     # turnToTarget(False, base_pos)
-    #     # turnToTarget(False, base_pos)
-    #     # GoToTarget(False, base_pos)
-    #     print("KNOW WE CAN GO TO THE TARGET POSITION")
-
         
     # send_servo_request(30)
     print("c_pos: ", c_pos, "c_rot: ", c_rot, "c_rad: ", c_rad)
