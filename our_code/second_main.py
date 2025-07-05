@@ -54,7 +54,7 @@ def receive_new_frame(data_frame: DataFrame):
             
             if ms.id_num == 605:
                 # Handle the chaser's data
-                c_pos, c_rot, c_rad = chaser_data_handling.handle_frame(ms, "ctf_car")
+                c_pos, c_rot, c_rad = chaser_data_handling.handle_frame(ms)
                 # Append the current position of the car to car_positions
                 car_positions.append([c_pos[0], c_pos[2]])
                 #print(f"Chaser rad: {c_rad}")
@@ -64,7 +64,7 @@ def receive_new_frame(data_frame: DataFrame):
             #     t_pos, t_rot, t_rad = chaser_data_handling.handle_frame(ms, "ctf_cube")
             if ms.id_num == 606:
                 # Handle the target's data
-                t_pos, t_rot, t_rad = chaser_data_handling.handle_frame(ms, "ctf_cube2")
+                t_pos, t_rot, t_rad = chaser_data_handling.handle_frame(ms)
                 ctf_positions.append([t_pos[0], t_pos[2]])
                 
     
