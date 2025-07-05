@@ -1,4 +1,4 @@
-## XXXXX Project by :  
+## CAPTURE THE FLAG Project by :  Firas Hilu, Adam Assi, Jimmy Bittar
   
 ## Details about the project
  
