@@ -30,6 +30,7 @@ arr=[]
 c_pos, c_rot, c_rad = [0,0,0], 0, 0
 t_pos1, t_rot1, t_rad1 = [0,0,0], 0, 0
 t_pos2, t_rot2, t_rad2 = [0,0,0], 0, 0
+t_pos3, t_rot3, t_rad3 = [0,0,0], 0, 0
 t_pos, t_rot, t_rad = [0,0,0], 0, 0
 base_pos = [3.9, 0.09, 0.28]
 base_pos2 = [3.9, 0.09, -0.09]  # Define a second base position for the second cube
@@ -72,7 +73,7 @@ def receive_new_frame(data_frame: DataFrame):
     global t_pos, t_rot, t_rad
     global t_pos2, t_rot2, t_rad2  # Add variables for ctf_cube2
     global t_pos1, t_rot1, t_rad1  # Add variables for ctf_cube1
-
+    global t_pos3, t_rot3, t_rad3  # Add variables for ctf_cube3
     for ms in data_frame.rigid_bodies:
         if ms.id_num == 605:
             # Handle the chaser's data
@@ -86,7 +87,9 @@ def receive_new_frame(data_frame: DataFrame):
         if ms.id_num == 606:
             # Handle the second cube's data (ctf_cube2)
             t_pos2, t_rot2, t_rad2 = chaser_data_handling.handle_frame(ms)
-        
+        if ms.id_num == 607:
+            # Handle the third cube's data (ctf_cube3)
+            t_pos3, t_rot3, t_rad3 = chaser_data_handling.handle_frame(ms)
     #print("received new frame")
 
 
@@ -156,14 +159,15 @@ def GoToTarget(is_cube = True, curr_t_pos = t_pos):
 def GoBack( ):
     
     if c_pos[0] >= 3.9:
-        
         send_back_request()
+        send_start_beeping_request()
         while True:
-            send_beep_request(50)
+            
             streaming_client.update_sync()
             if c_pos[0] < 3.9:
                 send_stop_request()
                 break
+        send_stop_beeping_request()
             
 
     # time.sleep(1)
@@ -222,13 +226,16 @@ def go_to_goal(goal_pos):
     finshed = False
     while not finshed:
         streaming_client.update_sync()
-        cur_t_pos = t_pos1
+        cur_t_pos1 = t_pos1
         cur_t_pos2 = t_pos2  # Use the current position of t_pos2
-        obsticles = [t_pos1, t_pos2] 
+        cur_t_pos3 = t_pos3  # Use the current position of t_pos3
+        obsticles = [t_pos1, t_pos2, t_pos3]  # List of dynamic obstacles (cubes)
         if y == 606:
             obsticles.remove(t_pos2)
         elif y == 604:
             obsticles.remove(t_pos1) 
+        elif y == 607:
+            obsticles.remove(t_pos3)
         plan = get_path_to_goal(c_pos, goal_pos,obsticles)
         finshed = True
         for i in range(len(plan) - 1):
@@ -236,7 +243,7 @@ def go_to_goal(goal_pos):
             print("Current position:", go_to_pos)
             turnToTarget(False, go_to_pos)
             GoToTarget(False, go_to_pos)
-            if(dist(t_pos1[0], cur_t_pos[0], t_pos1[2], cur_t_pos[2]) > 0.1 and y!=604) or( dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1 and y!=606):
+            if(dist(t_pos1[0], cur_t_pos1[0], t_pos1[2], cur_t_pos1[2]) > 0.1 and y!=604) or( dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1 and y!=606) or dist(t_pos3[0], cur_t_pos3[0], t_pos3[2], cur_t_pos3[2]) > 0.1:
                 print("continue")
                 finshed = False
                 break
@@ -252,8 +259,9 @@ def get_path_to_target():
     while not finshed:
         streaming_client.update_sync()
         cur_t_pos2 = t_pos2  # Use the current position of t_pos2
-        cur_t_pos = t_pos1  # Use the current position of t_pos
-        plan = get_path_to_goal(c_pos, t_pos, [t_pos1,t_pos2])  # Pass t_pos1 as a dynamic obstacle
+        cur_t_pos1 = t_pos1  # Use the current position of t_pos1
+        cur_t_pos3 = t_pos3  # Use the current position of t_pos3
+        plan = get_path_to_goal(c_pos, t_pos, [t_pos1,t_pos2,t_pos3])  # Pass t_pos1 as a dynamic obstacle
         finshed = True
         for i in range(len(plan) - 1):
            
@@ -262,7 +270,7 @@ def get_path_to_target():
             # turnToTarget(False, go_to_pos)
             turnToTarget(False, go_to_pos)
             GoToTarget(False, go_to_pos)
-            if dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1 or dist(t_pos1[0], cur_t_pos[0], t_pos1[2], cur_t_pos[2]) > 0.1:
+            if dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1 or dist(t_pos1[0], cur_t_pos1[0], t_pos1[2], cur_t_pos1[2]) > 0.1 or dist(t_pos3[0], cur_t_pos3[0], t_pos3[2], cur_t_pos3[2]) > 0.1:    
                 print("continue")
                 finshed = False
                 break
@@ -290,6 +298,7 @@ try:
             turnToTarget(False, [plan[-1][0]+0.3,0.09, 0.28])
             GoToTarget(False, [plan[-1][0]+0.3,0.09, 0.28])  # Move slightly forward after reaching the target
             send_servo_request(30)
+            GoBack()
         
         
     # send_servo_request(30)

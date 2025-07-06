@@ -97,6 +97,7 @@ class MapEnvironment(object):
         add_rectangle_obstacle(self, [1.6, 0.24, 0.06], width=0.25, height=0.7)
         # adding pyramid obstacle
         add_rectangle_obstacle(self, [1.97, 0.12, 0.40], width=0.6, height=0.25)
+        add_circle_obstacle(self, [2.87, 0.14, -0.9])
 
 
 

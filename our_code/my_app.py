@@ -115,8 +115,9 @@ import time
 import threading
 from PIL import Image
 import os
-
-
+from stam import *
+global is_Stopped
+is_Stopped = False
 thread = None
 # Initialize session state
 if "word" not in st.session_state:
@@ -128,7 +129,9 @@ if "clicked_o" not in st.session_state:
 if "clicked_t" not in st.session_state:
     st.session_state.clicked_t = False
 if "clicked_submit" not in st.session_state:
-    st.session_state.clicked_submit = True
+    st.session_state.clicked_submit = False
+if "enable_submit" not in st.session_state:
+    st.session_state.enable_submit = False
 if "is_image" not in st.session_state:
     st.session_state.is_image = False
 if "output_placeholder" not in st.session_state:
@@ -137,6 +140,8 @@ if "error_placeholder" not in st.session_state:
     st.session_state.error_placeholder = None
 if "stop_event" not in st.session_state:
     st.session_state.stop_event = threading.Event()
+if "process" not in st.session_state:
+    st.session_state.process = None
 
 # Function to check if the word is a permutation of "IOT"
 def are_permutations(str2):
@@ -161,6 +166,7 @@ def reset_all():
     st.session_state.clicked_i = False
     st.session_state.clicked_o = False
     st.session_state.clicked_t = False
+    st.session_state.clicked_submit = False
 
 
 
@@ -181,10 +187,14 @@ def run_script(output_dict, word):
         text=True
     )
     st.session_state.process = process  # Save it just in case
-
+    # time.sleep(10)
+    # process.terminate()  # Terminate the process after 2 seconds to avoid hanging
+    # send_stop_request()  # Ensure we stop the process if needed
+    global is_Stopped
     while True:
-        if st.session_state.stop_event.is_set():
+        if st.session_state.stop_event.is_set() or is_Stopped:
             process.terminate()
+            send_stop_request()  # Ensure we stop the process if needed
             output_dict["stdout"] = "Stopped by user"
             output_dict["stderr"] = ""
             output_dict["returncode"] = -1
@@ -194,7 +204,7 @@ def run_script(output_dict, word):
             # Process finished
             stdout, stderr = process.communicate()
             output_dict["stdout"] = stdout
-            output_dict["stderr"] = stderr
+            output_dict["stderr"] = "fff{is_Stopped}"
             output_dict["returncode"] = process.returncode
             output_dict["finished"] = True
             return
@@ -202,6 +212,8 @@ def run_script(output_dict, word):
 
 # stop everything
 def stop_all():
+    global is_Stopped
+    is_Stopped = True
     st.session_state.stop_event.set()
     st.warning("Stop requested. Attempting to terminate the process...")
     reset_all()
@@ -216,11 +228,12 @@ left.button("I", on_click=click_i, disabled=st.session_state.clicked_i, use_cont
 middle.button("O", on_click=click_o, disabled=st.session_state.clicked_o, use_container_width=True)
 right.button("T", on_click=click_t, disabled=st.session_state.clicked_t, use_container_width=True)
 
-st.session_state.clicked_submit = not (st.session_state.clicked_i and st.session_state.clicked_o and st.session_state.clicked_t)
+st.session_state.enable_submit = not (st.session_state.clicked_i and st.session_state.clicked_o and st.session_state.clicked_t)
 # Submit and Reset buttons
 submit_col, stop_col, reset_col = st.columns(3)
-if submit_col.button("Submit", disabled=st.session_state.clicked_submit):
+if submit_col.button("Submit", disabled=st.session_state.enable_submit):
     if are_permutations(st.session_state.word):
+        st.session_state.clicked_submit = True
         st.session_state.stop_event.clear()
         st.success(f'Assembling the word: {st.session_state.word}!')
         timer_placeholder = st.empty()
@@ -267,8 +280,9 @@ if submit_col.button("Submit", disabled=st.session_state.clicked_submit):
     else:
         st.error("The robot can't assemble such a word.")
 
-reset_col.button("Reset", on_click=reset_all)
-stop_col.button("Stop", disabled=st.session_state.clicked_submit, on_click=stop_all)
+reset_col.button("Reset",  disabled=st.session_state.clicked_submit, on_click=reset_all)
+if stop_col.button("Stop", on_click=stop_all): 
+    is_Stopped = True
 
 # Optional: Give hint when nothing is submitted
 if not st.session_state.word:

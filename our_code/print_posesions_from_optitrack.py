@@ -52,14 +52,15 @@ def receive_new_frame(data_frame: DataFrame):
             
             if ms.id_num == 605:
                 # Handle the chaser's data
-                c_pos, c_rot, c_rad = chaser_data_handling.handle_frame(ms, "ctf_car")
+                c_pos, c_rot, c_rad = chaser_data_handling.handle_frame(ms)
                 # Append the current position of the car to car_positions
                 # car_positions.append((c_pos[0], c_pos[2]))
                 #print(f"Chaser rad: {c_rad}")
                 #print(f"Type of c_pos600: {type(c_pos)}")
             if ms.id_num == 606:
                 # Handle the target's data
-                t_pos, t_rot, t_rad = chaser_data_handling.handle_frame(ms, "ctf_cube")
+                t_pos, t_rot, t_rad = chaser_data_handling.handle_frame(ms)
+                
     #print(f"ctf_car:  c_pos: {str(c_pos):<25} c_rot: {str(c_rot):<25} c_rad: {str(c_rad):<10}")
     
     # time.sleep(1)  # Sleep for a short duration to avoid flooding the console with messages
@@ -157,7 +158,8 @@ try:
             # Continuously receive data frames
             streaming_client.update_sync()
             time.sleep(1)
-            print(f"ctf_cube: t_pos: {str(t_pos):<25} t_rot: {str(t_rot):<25} t_rad: {str(t_rad):<10}")
+            # print(f"ctf_cube: t_pos: {str(t_pos):<25} t_rot: {str(t_rot):<25} t_rad: {str(t_rad):<10}")
+            print(f"ctf_cube: t_pos: {str(c_pos):<25} t_rot: {str(c_rot):<25} t_rad: {str(c_rad):<10}")
 
 
         
