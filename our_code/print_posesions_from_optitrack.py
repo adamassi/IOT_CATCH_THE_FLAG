@@ -17,6 +17,10 @@ from conversion import normalize_angle
 
 c_pos, c_rot, c_rad = [0,0,0], 0, 0
 t_pos, t_rot, t_rad = [0,0,0], 0, 0
+car_pos, car_rot, car_rad = [0,0,0], 0, 0
+cube_1_pos, cube_1_rot, cube_1_rad = [0,0,0], 0, 0
+cube_2_pos, cube_2_rot, cube_2_rad = [0,0,0], 0, 0
+cube_3_pos, cube_3_rot, cube_3_rad = [0,0,0], 0, 0
 
 
 base_pos = [4.13, 0.09, 0.26]
@@ -41,26 +45,36 @@ def receive_new_desc(desc: DataDescriptions):
 
 
 def receive_new_frame(data_frame: DataFrame):
-
-    global c_pos, c_rot, c_rad
-    global t_pos, t_rot, t_rad
-    global car_positions  # Declare car_positions as global
+    global car_pos, car_rot, car_rad
+    global cube_1_pos, cube_1_rot, cube_1_rad
+    global cube_2_pos, cube_2_rot, cube_2_rad
+    global cube_3_pos, cube_3_rot, cube_3_rad
+    # global c_pos, c_rot, c_rad
+    # global t_pos, t_rot, t_rad
+    # global car_positions  # Declare car_positions as global
 
 
 
     for ms in data_frame.rigid_bodies:
-            
             if ms.id_num == 605:
-                # Handle the chaser's data
-                c_pos, c_rot, c_rad = chaser_data_handling.handle_frame(ms)
-                # Append the current position of the car to car_positions
-                # car_positions.append((c_pos[0], c_pos[2]))
-                #print(f"Chaser rad: {c_rad}")
-                #print(f"Type of c_pos600: {type(c_pos)}")
-            if ms.id_num == 606:
-                # Handle the target's data
-                t_pos, t_rot, t_rad = chaser_data_handling.handle_frame(ms)
-                
+                car_pos, car_rot, car_rad = chaser_data_handling.handle_frame(ms)
+            elif ms.id_num == 604:
+                cube_1_pos, cube_1_rot, cube_1_rad = chaser_data_handling.handle_frame(ms)
+            elif ms.id_num == 606:
+                cube_2_pos, cube_2_rot, cube_2_rad = chaser_data_handling.handle_frame(ms)
+            elif ms.id_num == 607:
+                cube_3_pos, cube_3_rot, cube_3_rad = chaser_data_handling.handle_frame(ms)
+            
+            # if ms.id_num == 605:
+            #     # Handle the chaser's data
+            #     c_pos, c_rot, c_rad = chaser_data_handling.handle_frame(ms)
+            #     # Append the current position of the car to car_positions
+            #     # car_positions.append((c_pos[0], c_pos[2]))
+            #     #print(f"Chaser rad: {c_rad}")
+            #     #print(f"Type of c_pos600: {type(c_pos)}")
+            # if ms.id_num == 606:
+            #     # Handle the target's data
+            #     t_pos, t_rot, t_rad = chaser_data_handling.handle_frame(ms)
     #print(f"ctf_car:  c_pos: {str(c_pos):<25} c_rot: {str(c_rot):<25} c_rad: {str(c_rad):<10}")
     
     # time.sleep(1)  # Sleep for a short duration to avoid flooding the console with messages
@@ -81,7 +95,7 @@ def receive_new_frame(data_frame: DataFrame):
 
 streaming_client = NatNetClient(
     server_ip_address="132.68.35.2",  # IP address of the OptiTrack server
-    local_ip_address=socket.gethostbyname(socket.gethostname()),  # Local IP address
+    local_ip_address="132.69.234.108",#socket.gethostbyname(socket.gethostname()),  # Local IP address
     
     use_multicast=False  # Use unicast instead of multicast for communication
 )
@@ -152,14 +166,17 @@ try:
         #streaming_client.run_async()
         time.sleep(1)  # Allow some time for the client to start and receive data
         print("Streaming started. Waiting for data...")
-        print("ctf_car: c_pos{c_pos}, c_rot: {c_rot}, c_rad: {c_rad}")
-        print("ctf_cube: t_pos{t_pos}, t_rot: {t_rot}, t_rad: {t_rad}")
+        # print("ctf_car: c_pos{c_pos}, c_rot: {c_rot}, c_rad: {c_rad}")
+        # print("ctf_cube: t_pos{t_pos}, t_rot: {t_rot}, t_rad: {t_rad}")
         while True:
             # Continuously receive data frames
             streaming_client.update_sync()
             time.sleep(1)
+            print(f"ctf_car: c_pos: {str(car_pos):<25} c_rot: {str(car_rot):<25} c_rad: {str(car_rad):<10}")
+            print(f"cube_1_pos: {str(cube_1_pos):<25} cube_1_rot: {str(cube_1_rot):<25} cube_1_rad: {str(cube_1_rad):<10}")
+            print(f"cube_2_pos: {str(cube_2_pos):<25} cube_2_rot: {str(cube_2_rot):<25} cube_2_rad: {str(cube_2_rad):<10}")
+            print(f"cube_3_pos: {str(cube_3_pos):<25} cube_3_rot: {str(cube_3_rot):<25} cube_3_rad: {str(cube_3_rad):<10}")
             # print(f"ctf_cube: t_pos: {str(t_pos):<25} t_rot: {str(t_rot):<25} t_rad: {str(t_rad):<10}")
-            print(f"ctf_cube: t_pos: {str(c_pos):<25} t_rot: {str(c_rot):<25} t_rad: {str(c_rad):<10}")
 
 
         
