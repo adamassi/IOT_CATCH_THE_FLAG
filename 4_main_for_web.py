@@ -257,6 +257,7 @@ def go_to_goal(goal_pos):
                 break
             if dist(c_pos[0], t_pos[0], c_pos[2], t_pos[2]) > 0.15:
                 print("NNNNNNNNNNNNNNED TO FIX")
+                send_servo_request(30)
                 return []
                 
     return plan  # Return the planned path for further use or analysis
