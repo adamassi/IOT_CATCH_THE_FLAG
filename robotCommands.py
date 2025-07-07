@@ -1,8 +1,20 @@
 import requests
 import time
+import socket
 #import math
 from PARAMETERS import ESPConfig
-
+ip_address = None
+try:
+    ip_address = socket.gethostbyname("esp32.local")
+    print(f"The IP address of esp32.local is {ip_address}\n\n")
+except socket.gaierror as e:
+    print(f"Dear friend !!\nDNS resolution failed:\nPlease check the following:\n"
+          f"1.The robot chaser is powered on. \n"
+          f"2.The router is working properly. \n"
+          f"3.The battery is full.  \n"
+          f"4.The wifi configuration."
+          f"\n\n\n{e}")
+    exit()
 # Replace with the actual IP address of your ESP device
 #ESP_IP = "http://192.168.0.101"  # This is typically the default for ESP AP mode
 
