@@ -85,7 +85,7 @@ def run_script(output_dict, word):
             output_dict["stderr"] = process.stderr
             output_dict["finished"] = True
             break
-        if not (process.poll() is None):
+        if (process.returncode is not None):
             print("Process finished")
             output_dict["returncode"] = process.returncode
             output_dict["stdout"] = process.stdout
@@ -133,6 +133,9 @@ def submit_button():
         timer_placeholder.write(f"Time elapsed: {elapsed:.1f} seconds")
         # Reload and display the image safely
         display_image(image_placeholder, "./map-RRTfor_web.png")
+        if output["stdout"] != "":
+            print(output["stdout"])
+            break
         time.sleep(0.1)  # Update every 0.3 seconds
     elapsed = time.time() - st.session_state.start_time
     timer_placeholder.write(f"Finished in {elapsed:.1f} seconds")
