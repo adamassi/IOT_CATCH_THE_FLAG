@@ -303,7 +303,7 @@ try:
             y = arr[i]  # Get the current target ID from the array
             out_limits(c_pos, t_pos)
             print("Current target ID:", y)
-            y=607
+            # y=607
             get_path_to_target()  # Get the path to the target position
             send_servo_request(80)
             plan = go_to_goal(bases[i])  # Move to the base position first
