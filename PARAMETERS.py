@@ -41,6 +41,7 @@ class RigidBodyIDs:
     CUBE_1 = 604
     CUBE_2 = 606
     CUBE_3 = 607
+    CUBES_IDS = [CUBE_1, CUBE_2, CUBE_3]
 
 class PlannerConfig:
     MAP_JSON_PATH = "our_code/path_algorithms/map1.json"
