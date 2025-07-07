@@ -2,25 +2,18 @@ import time
 import socket
 from natnet_client import DataDescriptions, DataFrame, NatNetClient
 import numpy as np
-import math
-from datetime import datetime
 import optitrack_data_handling
 #from helperFunc import dist, is_out_of_board 
 from helper_functions import dist, angle_between_points
-####import algorithms as al
-####import matplotlib.pyplot as plt
-####from commands import send_led_error_command
-
 from robotCommands import *
-# from stam import send_servo_request, send_go_request, send_stop_request, send_lift_request, send_right_request ,angle_between_points, send_steer_request,send_back_request
 
 from conversion import normalize_angle
-#from path_algorithms.RCSPlanner import RCSPlanner
+
 from path_algorithms.MapEnvironment import MapEnvironment
-#from path_algorithms.RRTPlanner import RRTPlanner
 from path_algorithms.RRTStarPlanner import RRTStarPlanner
-from shapely.geometry import Polygon  # Ensure this is imported
-from PARAMETERS import OptiTrackConfig
+# from shapely.geometry import Polygon  # Ensure this is imported
+from PARAMETERS import *
+from path_algorithms.create_obstacles import add_cube_obstacle  # Import the function to add cube obstacles
 
 
 c_pos, c_rot, c_rad = [0,0,0], 0, 0
@@ -151,29 +144,29 @@ def GoBack( ):
                 break
             
 
-    # time.sleep(1)
+   
 
 
 
-def add_cube_obstacle(env, cube_pos, size=0.2):
-    """
-    Adds a square obstacle representing a cube to the environment.
+# def add_cube_obstacle(env, cube_pos, size=0.2):
+#     """
+#     Adds a square obstacle representing a cube to the environment.
 
-    Args:
-        env (MapEnvironment): The planning environment object.
-        cube_pos (list): The [x, y, z] position of the cube (only x and z used).
-        size (float): The size of the cube (side length in meters).
-    """
-    cx, cz = cube_pos[0], cube_pos[2]
-    half = size / 2
-    obstacle = [
-        [cx - half, cz - half],
-        [cx + half, cz - half],
-        [cx + half, cz + half],
-        [cx - half, cz + half],
-        [cx - half, cz - half]
-    ]
-    env.obstacles.append(Polygon(obstacle))
+#     Args:
+#         env (MapEnvironment): The planning environment object.
+#         cube_pos (list): The [x, y, z] position of the cube (only x and z used).
+#         size (float): The size of the cube (side length in meters).
+#     """
+#     cx, cz = cube_pos[0], cube_pos[2]
+#     half = size / 2
+#     obstacle = [
+#         [cx - half, cz - half],
+#         [cx + half, cz - half],
+#         [cx + half, cz + half],
+#         [cx - half, cz + half],
+#         [cx - half, cz - half]
+#     ]
+#     env.obstacles.append(Polygon(obstacle))
 
 
 # Function get data where the  robot car and where the cube is and calculate the path to the cube

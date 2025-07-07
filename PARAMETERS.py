@@ -44,7 +44,7 @@ class RigidBodyIDs:
     CUBES_IDS = [CUBE_1, CUBE_2, CUBE_3]
 
 class PlannerConfig:
-    MAP_JSON_PATH = "our_code/path_algorithms/map1.json"
+    MAP_JSON_PATH = "path_algorithms/map1.json"
     GOAL_PROBABILITY = 0.40
     EXTENSION_MODE = 'E2'
     K_NEAREST = 10

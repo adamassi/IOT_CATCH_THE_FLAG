@@ -7,15 +7,13 @@ from datetime import datetime
 import chaser_data_handling
 from helperFunc import dist, is_out_of_board 
 import algorithms as al
-import matplotlib.pyplot as plt
+
 from commands import send_led_error_command
 
 from stam import *
 # from stam import send_servo_request, send_go_request, send_stop_request, send_lift_request, send_right_request ,angle_between_points, send_steer_request,send_back_request
 from conversion import normalize_angle
-from path_algorithms.RCSPlanner import RCSPlanner
 from path_algorithms.MapEnvironment import MapEnvironment
-from path_algorithms.RRTPlanner import RRTPlanner
 from path_algorithms.RRTStarPlanner import RRTStarPlanner
 from shapely.geometry import Polygon  # Ensure this is imported
 import sys
