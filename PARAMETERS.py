@@ -11,11 +11,30 @@ class ESPConfig:
     PICKUP_SERVO_ANGLE = 80
     
 class PositionConfig:
-    BASE_POS_1 = [3.9, 0.09, 0.28]
-    BASE_POS_2 = [3.9, 0.09, -0.09]
-    BASE_POS_3 = [4.13, 0.09, 0.26]
     POSITION_TOLERANCE = 0.15
     ANGLE_TOLERANCE = 0.07
+    BASE_POS_1 = [4.2, 0.14, -0.1] # x = 3.85 for the point before the base
+    BASE_POS_2 = [4.2, 0.14, 0.25]
+    BASE_POS_3 = [4.2, 0.14, 0.6]
+    BASES_POS = [BASE_POS_1, BASE_POS_2, BASE_POS_3]
+    BASES_BORDERS = {
+        'first': {
+            'start': [4.05, 0.14, -0.28],
+            'end': [4.33, 0.14, -0.28],
+        },
+        'second': {
+            'start': [4.05, 0.14, 0.07],
+            'end': [4.33, 0.14, 0.07],
+        },
+        'third': {
+            'start': [4.05, 0.14, 0.42],
+            'end': [4.33, 0.14, 0.42],
+        },
+        'fourth': {
+            'start': [4.05, 0.14, 0.75],
+            'end': [4.33, 0.14, 0.75],
+        },
+    }
 
 class RigidBodyIDs:
     CAR = 605
