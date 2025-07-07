@@ -4,7 +4,7 @@ from natnet_client import DataDescriptions, DataFrame, NatNetClient
 import numpy as np
 import optitrack_data_handling
 #from helperFunc import dist, is_out_of_board 
-from helper_functions import dist, angle_between_points
+from helper_functions import dist, angle_between_points ,out_limits
 from robotCommands import *
 from conversion import normalize_angle
 
@@ -283,6 +283,9 @@ try:
         streaming_client.update_sync()
         #streaming_client.run_async()
         time.sleep(1)  # Allow some time for the client to start and receive data
+        if out_limits(c_pos, t_pos):
+            print("The robot is out of the board limits. Please check the position.")
+            exit()
         print("Streaming started. Waiting for data...")
         plan = []
         # GoBack()

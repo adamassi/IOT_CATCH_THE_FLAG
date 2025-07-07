@@ -5,18 +5,36 @@ def angle_between_points(p1, p2):
     return math.atan2(p2[2] - p1[2], p2[0] - p1[0])
 
 
-limit_X = 4.45
-limit_Y = 2
+limit_X = 4.5
+limit_Y = 2.0
 
+def out_limits(car, target):
+    """
+    Check if the car is within the defined limits of the board.
 
+    Args:
+        car (list): The [x, y, z] position of the car.
+        target (list): The [x, y, z] position of the target.
+
+    Returns:
+        bool: True if both car and target are within limits, False otherwise.
+    """
+    return is_out_of_board(car[0], car[2]) or is_out_of_board(target[0], target[2])
+    
 #if True : The robot out of the borders of the board
 #if False : The robot in the borders of the board
 def is_out_of_board(cord_x, cord_y):
-    if limit_X < cord_x or limit_X < -cord_x:
-        return True
-    if limit_Y < cord_y or limit_Y < -cord_y:
-        return True
-    return False
+    """
+    Check if the robot is out of the board boundaries.
+
+    Args:
+        cord_x (float): x-coordinate of the robot.
+        cord_y (float): y-coordinate of the robot.
+
+    Returns:
+        bool: True if the robot is out of the board boundaries, False otherwise.
+    """
+    return abs(cord_x) > limit_X or abs(cord_y) > limit_Y
 
 
 def get_speed(steering_degree):
@@ -44,4 +62,3 @@ def dist(x1, x2, y1, y2):
         float: The Euclidean distance between the two points.
     """
     return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
-    
