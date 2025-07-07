@@ -6,7 +6,7 @@ from PIL import Image
 import os
 from stam import *
 
-def display_image(image_path, target_width=400):
+def display_image(image_placeholder, image_path, target_width=400):
     """Display an image with a specified target width."""
     if os.path.exists(image_path):
         try:
@@ -15,12 +15,12 @@ def display_image(image_path, target_width=400):
             width_percent = (target_width / float(image.width))
             target_height = int(float(image.height) * width_percent)
             resized_image = image.resize((target_width, target_height), Image.LANCZOS)
-            return resized_image
+            image_placeholder.image(resized_image, caption="Live Map Output")
         except Exception as e:
             pass
     return None
 
-
+event = threading.Event()
 # Initialize session state
 if "word" not in st.session_state:
     st.session_state.word = ""
@@ -30,20 +30,16 @@ if "clicked_o" not in st.session_state:
     st.session_state.clicked_o = False
 if "clicked_t" not in st.session_state:
     st.session_state.clicked_t = False
-# if "clicked_submit" not in st.session_state:
-#     st.session_state.clicked_submit = False
-# if "enable_submit" not in st.session_state:
-#     st.session_state.enable_submit = False
-# if "is_image" not in st.session_state:
-#     st.session_state.is_image = False
+if "clicked_submit" not in st.session_state:
+    st.session_state.clicked_submit = False
+if "enable_submit" not in st.session_state:
+    st.session_state.enable_submit = False
+if "start_time" not in st.session_state:
+    st.session_state.start_time = None
 # if "output_placeholder" not in st.session_state:
 #     st.session_state.output_placeholder = None
 # if "error_placeholder" not in st.session_state:
 #     st.session_state.error_placeholder = None
-if "stop_event" not in st.session_state:
-    st.session_state.stop_event = threading.Event()
-# if "process" not in st.session_state:
-#     st.session_state.process = None
 
 # Callback functions for each letter
 def click_i():
@@ -64,7 +60,8 @@ def reset_all():
     st.session_state.clicked_i = False
     st.session_state.clicked_o = False
     st.session_state.clicked_t = False
-    # st.session_state.clicked_submit = False
+    st.session_state.clicked_submit = False
+    st.session_state.enable_submit = False
 
 
 
@@ -78,56 +75,28 @@ def run_script(output_dict, word):
     # time.sleep(10)
     # process.terminate()  # Terminate the process after 10 seconds
     # send_stop_request()
-    while process.poll() is None:
-        if st.session_state.stop_event.is_set():
+    while True:
+        if event.is_set():
             process.terminate()
             send_stop_request()
+            print("Process terminated by event")
             output_dict["returncode"] = 0
             output_dict["stdout"] = process.stdout
             output_dict["stderr"] = process.stderr
             output_dict["finished"] = True
-            return
+            break
+        if not (process.poll() is None):
+            print("Process finished")
+            output_dict["returncode"] = process.returncode
+            output_dict["stdout"] = process.stdout
+            output_dict["stderr"] = process.stderr
+            output_dict["finished"] = True
+            break
         time.sleep(0.1)
-    output_dict["returncode"] = process.returncode
-    output_dict["stdout"] = process.stdout
-    output_dict["stderr"] = process.stderr
-    output_dict["finished"] = True
 
 # stop everything
 def stop_all():
-    st.session_state.stop_event.set()
-    return
-
-def submit_button():
-    st.success(f'Assembling the word: {st.session_state.word}!')
-
-    timer_placeholder = st.empty()
-    image_placeholder = st.empty()
-    st.session_state.is_image = True
-     # Dictionary to share output state
-    output = {"finished": False, "returncode": None, "stdout": "", "stderr": ""}
-
-    # Start algorithm in a thread
-    thread = threading.Thread(target=run_script, args=(output,st.session_state.word))
-    thread.start()
-
-    start_time = time.time()
-    # Keep updating timer and image
-    while not output["finished"]:
-        elapsed = time.time() - start_time
-        timer_placeholder.write(f"Time elapsed: {elapsed:.1f} seconds")
-        # Reload and display the image safely
-        display_image("./map-RRTfor_web.png")
-    time.sleep(0.3)  # Update every 0.3 seconds
-    elapsed = time.time() - start_time
-    timer_placeholder.write(f"Finished in {elapsed:.1f} seconds")
-
-    # Optionally show success/failure only
-    if output["returncode"] == 0:
-        st.success("Algorithm finished successfully!")
-    else:
-        st.error("There was an error running the algorithm.")
-
+    event.set()  # Set the event to signal the thread to stop
 
 
 st.write("Current assembled word:")
@@ -142,12 +111,51 @@ right.button("T", on_click=click_t, disabled=st.session_state.clicked_t, use_con
 st.session_state.enable_submit = not (st.session_state.clicked_i and st.session_state.clicked_o and st.session_state.clicked_t)
 # Submit and Reset buttons
 submit_col, stop_col, reset_col = st.columns(3)
-submit_col.button("Submit", on_click=submit_button)
+
+timer_placeholder = st.empty()
+image_placeholder = st.empty()
+
+def submit_button():
+    st.success(f'Assembling the word: {st.session_state.word}!')
+    st.session_state.clicked_submit = True
+    st.session_state.is_image = True
+     # Dictionary to share output state
+    output = {"finished": False, "returncode": None, "stdout": "", "stderr": ""}
+
+    # Start algorithm in a thread
+    thread = threading.Thread(target=run_script, args=(output,st.session_state.word))
+    thread.start()
+
+    st.session_state.start_time = time.time()
+    # Keep updating timer and image
+    while not output["finished"]:
+        elapsed = time.time() - st.session_state.start_time
+        timer_placeholder.write(f"Time elapsed: {elapsed:.1f} seconds")
+        # Reload and display the image safely
+        display_image(image_placeholder, "./map-RRTfor_web.png")
+        time.sleep(0.1)  # Update every 0.3 seconds
+    elapsed = time.time() - st.session_state.start_time
+    timer_placeholder.write(f"Finished in {elapsed:.1f} seconds")
+
+    # Optionally show success/failure only
+    if output["returncode"] == 0:
+        st.success("Algorithm finished successfully!")
+    else:
+        st.error("There was an error running the algorithm.")
+
+
+if submit_col.button("Submit", disabled=st.session_state.enable_submit, on_click=submit_button):
+    st.session_state.clicked_submit = True
     
 
-reset_col.button("Reset", on_click=reset_all)
-if stop_col.button("Stop", on_click=stop_all): 
-    is_Stopped = True
+reset_col.button("Reset", disabled=st.session_state.clicked_submit, on_click=reset_all)
+if stop_col.button("Stop", on_click=stop_all):
+    if not st.session_state.clicked_submit:
+        st.error("The algorithm is not running yet. Please submit your word first.")
+    else:
+        timer_placeholder = st.empty()
+        elapsed = time.time() - st.session_state.start_time
+        timer_placeholder.write(f"Finished in {elapsed:.1f} seconds")
 
 # Optional: Give hint when nothing is submitted
 if not st.session_state.word:
