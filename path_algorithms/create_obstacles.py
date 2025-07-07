@@ -28,6 +28,7 @@ def add_circle_obstacle(env, circle_pos, radius=0.09):
     obstacle_points = [(cx + radius * np.cos(theta), cz + radius * np.sin(theta)) for theta in np.linspace(0, 2 * np.pi, 100)]
     
     if not is_within_boundaries(env, obstacle_points):
+        print(f"Error: {e}")
         raise ValueError(f"Circle obstacle at position {circle_pos} with radius {radius}m is outside the map boundaries.")
     
     obstacle = Polygon(obstacle_points)

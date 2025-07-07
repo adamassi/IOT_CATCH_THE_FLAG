@@ -42,7 +42,9 @@ class MapEnvironment(object):
 
 
 
-        
+        # # test ithe valueError
+        # add_cube_obstacle(self, [-4.14, 0.14, 1.06])
+        # # check that the start location is within limits and collision free
         if not self.state_validity_checker(state=self.start):
             
             raise ValueError('Start state must be within the map limits');
@@ -62,7 +64,7 @@ class MapEnvironment(object):
         # iterate over all obstacles
         self.obstacles, self.obstacles_edges = [], []
         for obstacle in obstacles:
-            non_applicable_vertices = [x[0] < self.xlimit[0] or x[0] > self.xlimit[1] or x[1] < self.ylimit[0] or x[1] > self.ylimit[1] for x in obstacle]
+            non_applicable_vertices = [x[0] < self.xlimit[0] or x[0] > self.xlimit[1]+1 or x[1] < self.ylimit[0] or x[1] > self.ylimit[1] for x in obstacle]
             if any(non_applicable_vertices):
                 # Raise an error if any obstacle overlaps with the map boundaries, ensuring all obstacles are within valid limits.
                 # print(f'OOOOObstacle {obstacle} overlaps with the map boundaries: {self.xlimit}, {self.ylimit}')
