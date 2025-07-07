@@ -1,0 +1,1 @@
+raise ValueError('Json file does not exist!'); in MapEnviroment.py
