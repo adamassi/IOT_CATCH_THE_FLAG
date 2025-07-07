@@ -95,7 +95,7 @@ def receive_new_frame(data_frame: DataFrame):
 
 streaming_client = NatNetClient(
     server_ip_address="132.68.35.2",  # IP address of the OptiTrack server
-    local_ip_address="132.69.234.108",#socket.gethostbyname(socket.gethostname()),  # Local IP address
+    local_ip_address=socket.gethostbyname(socket.gethostname()),  # Local IP address
     
     use_multicast=False  # Use unicast instead of multicast for communication
 )
@@ -172,7 +172,8 @@ try:
             # Continuously receive data frames
             streaming_client.update_sync()
             time.sleep(1)
-            print(f"ctf_car: c_pos: {str(car_pos):<25} c_rot: {str(car_rot):<25} c_rad: {str(car_rad):<10}")
+            print("****************")
+            print(f"car_pos: {str(car_pos):<25} c_rot: {str(car_rot):<25} c_rad: {str(car_rad):<10}")
             print(f"cube_1_pos: {str(cube_1_pos):<25} cube_1_rot: {str(cube_1_rot):<25} cube_1_rad: {str(cube_1_rad):<10}")
             print(f"cube_2_pos: {str(cube_2_pos):<25} cube_2_rot: {str(cube_2_rot):<25} cube_2_rad: {str(cube_2_rad):<10}")
             print(f"cube_3_pos: {str(cube_3_pos):<25} cube_3_rot: {str(cube_3_rot):<25} cube_3_rad: {str(cube_3_rad):<10}")

@@ -118,7 +118,7 @@ def turnToTarget(is_cube = True, curr_t_pos = t_pos):
             if not turning_state == right:
                 turning_state = right
                 send_right_request(150)
-    time.sleep(1)######################################################??????????????????????????????????
+    # time.sleep(1)######################################################??????????????????????????????????
 
 def turnToTargetWhileMoving(is_cube = True, curr_t_pos = t_pos):
     left, right, stop = 1, 2, 3
@@ -163,7 +163,7 @@ def GoToTarget(is_cube = True, curr_t_pos = t_pos):
                 # turnToTarget(is_cube, curr_t_pos)###TODO:add a parameter to turnToTarget
                 # send_go_request()
 
-    time.sleep(1)
+    # time.sleep(1)
 
 
 
@@ -279,7 +279,7 @@ try:
 
         streaming_client.update_sync()
         #streaming_client.run_async()
-        time.sleep(1)  # Allow some time for the client to start and receive data
+        time.sleep(0.1)  # Allow some time for the client to start and receive data
         print("Streaming started. Waiting for data...")
         #GoToTarget(False, [0, 0, 0])
         turnToTarget()
@@ -291,7 +291,7 @@ try:
         send_beep_request(50)
         time.sleep(0.1)
         send_beep_request(50)
-        time.sleep(1)
+        # time.sleep(1)
         turnToTarget(False, base_pos)
         turnToTarget(False, base_pos)
         GoToTarget(False, base_pos)
