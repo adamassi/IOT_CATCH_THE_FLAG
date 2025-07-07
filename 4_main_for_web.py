@@ -23,6 +23,7 @@ arr=[]
 c_pos, c_rot, c_rad = [0,0,0], 0, 0
 t_pos1, t_rot1, t_rad1 = [0,0,0], 0, 0
 t_pos2, t_rot2, t_rad2 = [0,0,0], 0, 0
+t_pos3, t_rot3, t_rad3 = [0,0,0], 0, 0
 t_pos, t_rot, t_rad = [0,0,0], 0, 0
 base_pos = [3.9, 0.09, 0.28]
 base_pos2 = [3.9, 0.09, -0.09]  # Define a second base position for the second cube
