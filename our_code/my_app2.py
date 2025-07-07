@@ -40,8 +40,8 @@ if "clicked_t" not in st.session_state:
 #     st.session_state.output_placeholder = None
 # if "error_placeholder" not in st.session_state:
 #     st.session_state.error_placeholder = None
-# if "stop_event" not in st.session_state:
-#     st.session_state.stop_event = threading.Event()
+if "stop_event" not in st.session_state:
+    st.session_state.stop_event = threading.Event()
 # if "process" not in st.session_state:
 #     st.session_state.process = None
 
@@ -73,14 +73,29 @@ st.title('Simple Streamlit Example')
 
 
 def run_script(output_dict, word):
-    result = subprocess.run(["python", "./4_main_for_web.py", word], capture_output=True, text=True, timeout=40)
-    output_dict["returncode"] = result.returncode
-    output_dict["stdout"] = result.stdout
-    output_dict["stderr"] = result.stderr
+    # result = subprocess.run(["python", "./4_main_for_web.py", word], capture_output=True, text=True, timeout=40)
+    process = subprocess.Popen(["python", "./4_main_for_web.py", word], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    # time.sleep(10)
+    # process.terminate()  # Terminate the process after 10 seconds
+    # send_stop_request()
+    while process.poll() is None:
+        if st.session_state.stop_event.is_set():
+            process.terminate()
+            send_stop_request()
+            output_dict["returncode"] = 0
+            output_dict["stdout"] = process.stdout
+            output_dict["stderr"] = process.stderr
+            output_dict["finished"] = True
+            return
+        time.sleep(0.1)
+    output_dict["returncode"] = process.returncode
+    output_dict["stdout"] = process.stdout
+    output_dict["stderr"] = process.stderr
     output_dict["finished"] = True
 
 # stop everything
 def stop_all():
+    st.session_state.stop_event.set()
     return
 
 def submit_button():
