@@ -6,9 +6,9 @@ def angle_between_points(p1, p2):
 
 
 limit_X = 4.5
-limit_Y = 2.0
+limit_Y = 1.9
 
-def out_limits(car, target):
+def out_limits(car :float, target :float):
     """
     Check if the car is within the defined limits of the board.
 
@@ -19,11 +19,17 @@ def out_limits(car, target):
     Returns:
         bool: True if both car and target are within limits, False otherwise.
     """
-    return is_out_of_board(car[0], car[2]) or is_out_of_board(target[0], target[2])
+    if is_out_of_board(car[0], car[2]) or is_out_of_board(target[0], target[2]):
+        print("The robot is out of the board limits. Please check the position.")
+        exit()
+    
+
+
+    # return is_out_of_board(car[0], car[2]) or is_out_of_board(target[0], target[2])
     
 #if True : The robot out of the borders of the board
 #if False : The robot in the borders of the board
-def is_out_of_board(cord_x, cord_y):
+def is_out_of_board(cord_x :float, cord_y :float):
     """
     Check if the robot is out of the board boundaries.
 

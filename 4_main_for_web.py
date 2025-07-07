@@ -25,14 +25,14 @@ t_pos1, t_rot1, t_rad1 = [0,0,0], 0, 0
 t_pos2, t_rot2, t_rad2 = [0,0,0], 0, 0
 t_pos3, t_rot3, t_rad3 = [0,0,0], 0, 0
 t_pos, t_rot, t_rad = [0,0,0], 0, 0
-base_pos2 = [3.9, 0.09, 0.28]
-base_pos3 = [3.9, 0.09, -0.09]  # Define a second base position for the second cube
-base_pos1 = [3.9, 0.09, 0.67]  # Define a third base position for the third cube
-bases=[base_pos1, base_pos2,  base_pos3[2]]  # List of base positions for the cubes
+base_pos2 = [3.7, 0.09, 0.28]
+base_pos3 = [3.8, 0.09, -0.14]  # Define a second base position for the second cube
+base_pos1 = [3.8, 0.09, 0.67]  # Define a third base position for the third cube
+bases=[base_pos1, base_pos2,  base_pos3]  # List of base positions for the cubes
 y_base = [0.67, 0.28, -0.09]  # List of base positions for the cubes
 z = 1  # Initialize a global variable for iteration count
 w=1
-y=606
+y=604
 def extract_order(word):
     """
     Extracts the order of characters from the input word.
@@ -138,13 +138,13 @@ def turnToTarget(is_cube = True, curr_t_pos = t_pos):
     # time.sleep(1)
 
 def GoToTarget(is_cube = True, curr_t_pos = t_pos):
-    if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) >= 0.15:
+    if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) >= 0.16:
         send_go_request()
         while True:
             streaming_client.update_sync()
             if is_cube:
                 curr_t_pos = t_pos
-            if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) < 0.15:
+            if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) < 0.14:
                 send_stop_request()
                 break
             angle = angle_between_points(c_pos, curr_t_pos)
@@ -155,16 +155,19 @@ def GoToTarget(is_cube = True, curr_t_pos = t_pos):
                 send_go_request()
 
 def GoBack( ):
-    # TODO check the tut of the car or y
-    if c_pos[0] >= 3.9:
+    
+    if c_pos[0] >= 3.85:
         
         send_back_request()
+        send_start_beeping_request()
         while True:
-            send_beep_request(50)
+            
             streaming_client.update_sync()
-            if c_pos[0] < 3.9:
+            if c_pos[0] < 3.8:
                 send_stop_request()
                 break
+        send_stop_beeping_request()
+            
             
 
    
@@ -204,10 +207,11 @@ def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
     # Add dynamic obstacles (e.g., cubes detected in the environment)
     for cube_pos in cube_obstacles:
         if cube_pos != goal_pos:  # Skip if cube_pos matches goal_pos
-            print(f"Adding cube obstacle at position {cube_pos}.")
+            print(f"Adding cube obstacle NOT GOAL at position {cube_pos}.")
             add_cube_obstacle(planning_env, cube_pos)
 
     # Create an instance of the RCSPlanner with the planning environment
+    print("Creating RRT* planner...")
     planner = RRTStarPlanner(planning_env=planning_env, ext_mode='E2', goal_prob=0.40, k=10)
     print(f"Planning path from {planning_env.start} to {planning_env.goal}...")
     # Execute the planning algorithm to get the path
@@ -216,6 +220,7 @@ def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
     # for-web
     # planner.planning_env.visualize_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(), name='for_web')
     # Visualize the map with the computed plan and expanded nodes
+    print("Visualizing the map with the computed plan and expanded nodes...")
     planner.planning_env.visualize_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(), name='4main'+str(z))  # Convert z to string
     print('Successfully planned path')
     z += 1  # Increment the global variable z
@@ -239,11 +244,14 @@ def go_to_goal(goal_pos):
         plan = get_path_to_goal(c_pos, goal_pos,obsticles)
         finshed = True
         for i in range(len(plan) - 1):
+            print("1")
+            out_limits(c_pos, t_pos)
+            print("2")
             go_to_pos = [plan[i+1][0], 0, plan[i+1][1]]
             print("Current position:", go_to_pos)
             turnToTarget(False, go_to_pos)
             GoToTarget(False, go_to_pos)
-            if(dist(t_pos1[0], cur_t_pos1[0], t_pos1[2], cur_t_pos1[2]) > 0.1 and y!=604) or( dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1 and y!=606) or dist(t_pos3[0], cur_t_pos3[0], t_pos3[2], cur_t_pos3[2]) > 0.1:
+            if(dist(t_pos1[0], cur_t_pos1[0], t_pos1[2], cur_t_pos1[2]) > 0.1 and y!=604) or( dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1 and y!=606) or (dist(t_pos3[0], cur_t_pos3[0], t_pos3[2], cur_t_pos3[2]) and y!=607) > 0.1:
                 print("continue")
                 finshed = False
                 break
@@ -263,7 +271,7 @@ def get_path_to_target():
         plan = get_path_to_goal(c_pos, t_pos, [t_pos1,t_pos2,t_pos3])  # Pass t_pos1 as a dynamic obstacle
         finshed = True
         for i in range(len(plan) - 1):
-           
+            out_limits(c_pos, t_pos)
             go_to_pos = [plan[i+1][0], 0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
             print("Current position:", go_to_pos)
             # turnToTarget(False, go_to_pos)
@@ -283,15 +291,17 @@ try:
         streaming_client.update_sync()
         #streaming_client.run_async()
         time.sleep(1)  # Allow some time for the client to start and receive data
-        if out_limits(c_pos, t_pos):
-            print("The robot is out of the board limits. Please check the position.")
-            exit()
+
+        
         print("Streaming started. Waiting for data...")
         plan = []
+        # TODO
         # GoBack()
-        for i in range(1):
-            extract_order(word)
+        extract_order(word) 
+        print(arr)
+        for i in range(3):
             y = arr[i]  # Get the current target ID from the array
+            out_limits(c_pos, t_pos)
             print("Current target ID:", y)
             get_path_to_target()  # Get the path to the target position
             send_servo_request(80)

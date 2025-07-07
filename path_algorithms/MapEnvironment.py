@@ -25,8 +25,10 @@ class MapEnvironment(object):
             json_dict = json.load(f)
 
         # obtain boundary limits, start and inspection points
-        self.xlimit = [-4.0, json_dict['WIDTH']-1]
-        self.ylimit = [-2, json_dict['HEIGHT']]
+        # self.xlimit = [-4.0, json_dict['WIDTH']]
+        # self.ylimit = [-2.0, json_dict['HEIGHT']]
+        self.xlimit = [-4.0, 4.6]
+        self.ylimit = [-1.9, 1.9]
         # print(f'World limits: x={self.xlimit}, y={self.ylimit}')
         # print(f'Start point: {json_dict["START"]}, Goal point: {json_dict["GOAL"]}')
         self.start = np.array(json_dict['START'])
@@ -39,23 +41,26 @@ class MapEnvironment(object):
         add_rectangle_obstacle(self, [1.6, 0.24, 0.06], width=0.25, height=0.7)
         # adding pyramid obstacle
         add_rectangle_obstacle(self, [1.97, 0.12, 0.40], width=0.6, height=0.25)
+        add_rectangle_obstacle(self, [0.35, 0.1, -0.8], width=0.6, height=0.12)
 
 
 
         # # test ithe valueError
         # add_cube_obstacle(self, [-4.14, 0.14, 1.06])
         # # check that the start location is within limits and collision free
+        print("Validating start and goal states...")
         if not self.state_validity_checker(state=self.start):
             
             raise ValueError('Start state must be within the map limits');
 
         # check that the goal location is within limits and collision free
+        print("Validating goal state...")
         if not self.state_validity_checker(state=self.goal):
             raise ValueError('Goal state must be within the map limits');
 
         # if you want to - you can display starting map here
         #self.visualize_map()
-
+        print("Map environment initialized successfully.")
     def load_obstacles(self, obstacles):
         '''
         A function to load and verify scene obstacles.
@@ -216,7 +221,7 @@ class MapEnvironment(object):
         plt.figure(figsize=(6, 10))  # Adjusted to match your preferred dimensions
 
         # Draw background
-        back_img = np.zeros((self.ylimit[1] + 1, self.xlimit[1] + 1))
+        back_img = np.zeros((2, 5))
         plt.imshow(
             back_img.T,  # Transposed to reflect axis swap
             origin='lower',

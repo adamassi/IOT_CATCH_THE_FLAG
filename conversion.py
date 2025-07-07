@@ -53,5 +53,5 @@ def convert_yup_to_zup(location_yup, quaternion_yup):
 def only2(var):
     new_var = []
     for i in range(len(var)):  # Iterate through indices of var
-        new_var.append(round(var[i], 2))  # Format var[i] to two decimal places
+        new_var.append(round(var[i], 5))  # Format var[i] to two decimal places
     return new_var

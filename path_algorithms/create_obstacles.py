@@ -55,6 +55,7 @@ def add_cube_obstacle(env, cube_pos, size=0.23):
     ]
     
     if not is_within_boundaries(env, obstacle_points):
+        print(f"Error: Cube obstacle at position {cube_pos} with size {size}m is outside the map boundaries.")
         raise ValueError(f"Cube obstacle at position {cube_pos} with size {size}m is outside the map boundaries.")
     
     obstacle = Polygon(obstacle_points)
