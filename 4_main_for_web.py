@@ -15,7 +15,7 @@ from path_algorithms.MapEnvironment import MapEnvironment
 from path_algorithms.RRTStarPlanner import RRTStarPlanner
 import sys
 
-
+check_esp_http()
 # for web
 # word = sys.argv[1]
 word = "IOT"  # Example word to extract order from
