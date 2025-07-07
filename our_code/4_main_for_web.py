@@ -155,7 +155,7 @@ def GoToTarget(is_cube = True, curr_t_pos = t_pos):
                 turnToTarget(is_cube, curr_t_pos)
                 send_go_request()
 def GoBack( ):
-    
+    # TODO check the tut of the car or y
     if c_pos[0] >= 3.9:
         send_back_request()
         send_start_beeping_request()

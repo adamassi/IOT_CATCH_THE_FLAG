@@ -6,16 +6,20 @@ import optitrack_data_handling
 #from helperFunc import dist, is_out_of_board 
 from helper_functions import dist, angle_between_points
 from robotCommands import *
-
 from conversion import normalize_angle
 
-from path_algorithms.MapEnvironment import MapEnvironment
-from path_algorithms.RRTStarPlanner import RRTStarPlanner
 # from shapely.geometry import Polygon  # Ensure this is imported
 from PARAMETERS import *
 from path_algorithms.create_obstacles import add_cube_obstacle  # Import the function to add cube obstacles
+from path_algorithms.MapEnvironment import MapEnvironment
+from path_algorithms.RRTStarPlanner import RRTStarPlanner
+import sys
 
 
+# for web
+# word = sys.argv[1]
+word = "IOT"  # Example word to extract order from
+arr=[]
 c_pos, c_rot, c_rad = [0,0,0], 0, 0
 t_pos1, t_rot1, t_rad1 = [0,0,0], 0, 0
 t_pos2, t_rot2, t_rad2 = [0,0,0], 0, 0
@@ -25,6 +29,18 @@ base_pos2 = [3.9, 0.09, -0.09]  # Define a second base position for the second c
 z = 1  # Initialize a global variable for iteration count
 w=1
 y=606
+def extract_order(word):
+    """
+    Extracts the order of characters from the input word.
+    
+    """
+    for c in word:
+        if c=='I':
+            arr.append(604)
+        elif c=='O':
+            arr.append(606)
+        elif c=='T':
+            arr.append(607)
 
 
 def receive_new_desc(desc: DataDescriptions):
@@ -47,8 +63,9 @@ def receive_new_desc(desc: DataDescriptions):
 def receive_new_frame(data_frame: DataFrame):
     global c_pos, c_rot, c_rad
     global t_pos, t_rot, t_rad
-    global t_pos2, t_rot2, t_rad2  # Add variables for ctf_cube2
     global t_pos1, t_rot1, t_rad1  # Add variables for ctf_cube1
+    global t_pos2, t_rot2, t_rad2  # Add variables for ctf_cube2
+    global t_pos3, t_rot3, t_rad3
 
     for ms in data_frame.rigid_bodies:
         if ms.id_num == 605:
@@ -58,12 +75,14 @@ def receive_new_frame(data_frame: DataFrame):
             # Handle the target's data (ctf_cube)
             t_pos, t_rot, t_rad = optitrack_data_handling.handle_frame(ms)
         if ms.id_num == 604:
-            # Handle the second cube's data (ctf_cube2)
+            # Handle the first cube's data (ctf_cube2)
             t_pos1, t_rot1, t_rad1 = optitrack_data_handling.handle_frame(ms)
         if ms.id_num == 606:
             # Handle the second cube's data (ctf_cube2)
             t_pos2, t_rot2, t_rad2 = optitrack_data_handling.handle_frame(ms)
-        
+        if ms.id_num == 607:
+            # Handle the third cube's data (ctf_cube3)
+            t_pos3, t_rot3, t_rad3 = optitrack_data_handling.handle_frame(ms)   
     #print("received new frame")
 
 
@@ -132,7 +151,7 @@ def GoToTarget(is_cube = True, curr_t_pos = t_pos):
                 send_go_request()
 
 def GoBack( ):
-    
+    # TODO check the tut of the car or y
     if c_pos[0] >= 3.9:
         
         send_back_request()
@@ -147,7 +166,7 @@ def GoBack( ):
    
 
 
-
+# TODO CHECK IF I CAN TO DELETE THIS FUNCTION
 # def add_cube_obstacle(env, cube_pos, size=0.2):
 #     """
 #     Adds a square obstacle representing a cube to the environment.
@@ -168,7 +187,7 @@ def GoBack( ):
 #     ]
 #     env.obstacles.append(Polygon(obstacle))
 
-
+# TODO MOVE TO ANOTHER FILE 
 # Function get data where the  robot car and where the cube is and calculate the path to the cube
 def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
     global z  # Use the global variable z
@@ -196,18 +215,21 @@ def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
     z += 1  # Increment the global variable z
     return plan
 
-def go_to_goal(goal_pos,n_cube):
+def go_to_goal(goal_pos):
 
     finshed = False
     while not finshed:
         streaming_client.update_sync()
-        cur_t_pos = t_pos1
+        cur_t_pos1 = t_pos1
         cur_t_pos2 = t_pos2  # Use the current position of t_pos2
-        obsticles = [t_pos1, t_pos2] 
-        if n_cube == 1:
+        cur_t_pos3 = t_pos3  # Use the current position of t_pos3
+        obsticles = [t_pos1, t_pos2, t_pos3]  # List of dynamic obstacles (cubes)
+        if y == 606:
             obsticles.remove(t_pos2)
-        elif n_cube == 2:
+        elif y == 604:
             obsticles.remove(t_pos1) 
+        elif y == 607:
+            obsticles.remove(t_pos3)
         plan = get_path_to_goal(c_pos, goal_pos,obsticles)
         finshed = True
         for i in range(len(plan) - 1):
@@ -215,12 +237,11 @@ def go_to_goal(goal_pos,n_cube):
             print("Current position:", go_to_pos)
             turnToTarget(False, go_to_pos)
             GoToTarget(False, go_to_pos)
-            if(dist(t_pos1[0], cur_t_pos[0], t_pos1[2], cur_t_pos[2]) > 0.1 and y!=604) or( dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1 and y!=606):
+            if(dist(t_pos1[0], cur_t_pos1[0], t_pos1[2], cur_t_pos1[2]) > 0.1 and y!=604) or( dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1 and y!=606) or dist(t_pos3[0], cur_t_pos3[0], t_pos3[2], cur_t_pos3[2]) > 0.1:
                 print("continue")
                 finshed = False
                 break
     return plan  # Return the planned path for further use or analysis
-# Function to get the path to the target position, considering t_pos2 as a dynamic obstacle
 
 
 
@@ -231,8 +252,9 @@ def get_path_to_target():
     while not finshed:
         streaming_client.update_sync()
         cur_t_pos2 = t_pos2  # Use the current position of t_pos2
-        cur_t_pos = t_pos1  # Use the current position of t_pos
-        plan = get_path_to_goal(c_pos, t_pos, [t_pos1,t_pos2])  # Pass t_pos1 as a dynamic obstacle
+        cur_t_pos1 = t_pos1  # Use the current position of t_pos1
+        cur_t_pos3 = t_pos3  # Use the current position of t_pos3
+        plan = get_path_to_goal(c_pos, t_pos, [t_pos1,t_pos2,t_pos3])  # Pass t_pos1 as a dynamic obstacle
         finshed = True
         for i in range(len(plan) - 1):
            
@@ -241,13 +263,12 @@ def get_path_to_target():
             # turnToTarget(False, go_to_pos)
             turnToTarget(False, go_to_pos)
             GoToTarget(False, go_to_pos)
-            if dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1 or dist(t_pos1[0], cur_t_pos[0], t_pos1[2], cur_t_pos[2]) > 0.1:
+            if dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1 or dist(t_pos1[0], cur_t_pos1[0], t_pos1[2], cur_t_pos1[2]) > 0.1 or dist(t_pos3[0], cur_t_pos3[0], t_pos3[2], cur_t_pos3[2]) > 0.1:    
                 print("continue")
                 finshed = False
                 break
         print(f"{finshed}AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-          
-
+         
 try:
     send_servo_request(30)
     with streaming_client:
@@ -259,68 +280,22 @@ try:
         print("Streaming started. Waiting for data...")
         plan = []
         # GoBack()
-        y=604
-        # # plan=get_path_to_target(c_pos, t_pos2,[t_pos])  # Pass t_pos2 as a dynamic obstacle
-        get_path_to_target()  # Use a lambda to get the current position of t_pos
-        # go_to_goal(t_pos2)  # Move to the base position first
-        print("Chaser is facing the target.")
-    
-        send_servo_request(80)
-        plan=go_to_goal(base_pos,2)
-        # plan=get_path_to_target(c_pos, base_pos, [t_pos])  # Pass t_pos2 as a dynamic obstacle
-        # print("finished planening")
-        # for i in range(len(plan) - 1):
-        #     go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
-        #     print("Current position:", go_to_pos)
-        #     # turnToTarget(False, go_to_pos)
-        #     turnToTarget(False, go_to_pos)
-        #     GoToTarget(False, go_to_pos)
-        turnToTarget(False, [plan[-1][0]+0.3,0.09, 0.28])
-        GoToTarget(False, [plan[-1][0]+0.3,0.09, 0.28])  # Move slightly forward after reaching the target
-        send_servo_request(30)
-        GoBack()
-        y = 604  # Reset y to the ID of the second cube
-        get_path_to_target()  # Get the path to the target position again
-
-    #     # ##########################
-    #     #plan for the second cube
-    #     plan=get_path_to_target(c_pos, t_pos,[t_pos2])  # Pass t_pos2 as a dynamic obstacle
-
-    #     #iteration over the plan
-    #     for i in range(len(plan) - 1):
-    #         go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
-    #         print("Current position:", go_to_pos)
-    #         # turnToTarget(False, go_to_pos)
-    #         turnToTarget(False, go_to_pos)
-    #         GoToTarget(False, go_to_pos)
-    #     send_servo_request(60)
-    #     plan=get_path_to_target(c_pos, base_pos2, [t_pos2])  # Pass t_pos2 as a dynamic obstacle
-    #     print("finished planening")
-    #     for i in range(len(plan) - 1):
-    #         go_to_pos = [plan[i+1][0],0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
-    #         print("Current position:", go_to_pos)
-    #         # turnToTarget(False, go_to_pos)
-    #         turnToTarget(False, go_to_pos)
-    #         GoToTarget(False, go_to_pos)
-    #     turnToTarget(False, [go_to_pos[0]+0.3,0.09,- 0.09])
-    #     GoToTarget(False, [go_to_pos[0]+0.3,0.09, -0.09])  # Move slightly forward after reaching the target
-    #     send_servo_request(30)
-    #     GoBack()
-
+        for i in range(1):
+            extract_order(word)
+            y = arr[i]  # Get the current target ID from the array
+            print("Current target ID:", y)
+            get_path_to_target()  # Get the path to the target position
+            send_servo_request(80)
+            plan = go_to_goal(base_pos)  # Move to the base position first
+            turnToTarget(False, [plan[-1][0]+0.3,0.09, 0.28])
+            GoToTarget(False, [plan[-1][0]+0.3,0.09, 0.28])  # Move slightly forward after reaching the target
+            send_servo_request(30)
+            GoBack()
         
-    #     # turnToTarget(False, base_pos)
-    #     # turnToTarget(False, base_pos)
-    #     # GoToTarget(False, base_pos)
-    #     print("KNOW WE CAN GO TO THE TARGET POSITION")
-
         
     # send_servo_request(30)
     print("c_pos: ", c_pos, "c_rot: ", c_rot, "c_rad: ", c_rad)
     print("t_pos: ", t_pos, "t_rot: ", t_rot, "t_rad: ", t_rad)
-
-
-
-
 
 
 
