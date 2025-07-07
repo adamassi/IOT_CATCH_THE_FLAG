@@ -52,3 +52,10 @@ class PlannerConfig:
 class PlotConfig:
     X_LIM = (-1.9, 1.97)
     Y_LIM = (-3.33, 4.3)
+
+class PlaygroundConfig:
+    X_MAX = 3.35
+    X_MIN = -4.05
+    Y_MAX = 2.1
+    Y_MIN = -1.9
+    

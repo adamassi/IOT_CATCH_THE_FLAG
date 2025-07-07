@@ -144,8 +144,38 @@ def GoToTarget(cube_number=None, target_pos=None, is_cube=True):
 
 
 
+####################################
+########## Path planning ###########
+####################################
+# def plan_path(start_pos, goal_pos, cube_obstacles=[]):
+#     global z  # Use the global variable z
+#     json_file_path = "our_code/path_algorithms/map1.json"
+#     planning_env = MapEnvironment(json_file=json_file_path)
+#     # Initialize the map environment with the JSON file path
+#     planning_env.start = np.array([start_pos[0], start_pos[2]])  # Use x and y coordinates for the start position
+#     planning_env.goal = np.array([goal_pos[0], goal_pos[2]])  # Use x and y coordinates for the goal position
 
+#     # Add dynamic obstacles (e.g., cubes detected in the environment)
+#     for cube_pos in cube_obstacles:
+#         if cube_pos != goal_pos:  # Skip if cube_pos matches goal_pos
+#             print(f"Adding cube obstacle NOT GOAL at position {cube_pos}.")
+#             add_cube_obstacle(planning_env, cube_pos)
 
+#     # Create an instance of the RCSPlanner with the planning environment
+#     print("Creating RRT* planner...")
+#     planner = RRTStarPlanner(planning_env=planning_env, ext_mode='E2', goal_prob=0.40, k=10)
+#     print(f"Planning path from {planning_env.start} to {planning_env.goal}...")
+#     # Execute the planning algorithm to get the path
+#     plan = planner.plan()
+
+#     # for-web
+#     # planner.planning_env.visualize_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(), name='for_web')
+#     # Visualize the map with the computed plan and expanded nodes
+#     print("Visualizing the map with the computed plan and expanded nodes...")
+#     planner.planning_env.visualize_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(), name='4main'+str(z))  # Convert z to string
+#     print('Successfully planned path')
+#     z += 1  # Increment the global variable z
+#     return plan
 
 
 try:
