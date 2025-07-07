@@ -225,7 +225,7 @@ class MapEnvironment(object):
         plt.imshow(
             back_img.T,  # Transposed to reflect axis swap
             origin='lower',
-            extent=(self.ylimit[0], self.ylimit[1], self.xlimit[0], self.xlimit[1]),
+            extent=(-2, 2, -5, 5),
             zorder=0
         )
 
@@ -267,7 +267,7 @@ class MapEnvironment(object):
         plt.xlabel('Y Position →')
         plt.ylabel('X Position →')
         plt.xlim(-2, 2)
-        plt.ylim(-3.33, 4.5)
+        plt.ylim(-5, 5)
         #plt.gca().set_aspect('auto')
         plt.gca().set_aspect('equal', adjustable='box')
 
@@ -284,9 +284,9 @@ class MapEnvironment(object):
         '''
         # create figure and add background
         plt.figure()
-        back_img = np.zeros((self.ylimit[1]+1, self.xlimit[1]+1))
+        back_img = np.zeros((2, 5))
         plt.imshow(back_img, origin='lower', zorder=0,
-                   extent=(self.xlimit[0], self.xlimit[1], self.ylimit[0], self.ylimit[1]))
+                   extent=(-5, 5, -2, 2))
 
         return plt
 

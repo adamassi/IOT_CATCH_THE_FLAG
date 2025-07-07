@@ -25,10 +25,10 @@ t_pos1, t_rot1, t_rad1 = [0,0,0], 0, 0
 t_pos2, t_rot2, t_rad2 = [0,0,0], 0, 0
 t_pos3, t_rot3, t_rad3 = [0,0,0], 0, 0
 t_pos, t_rot, t_rad = [0,0,0], 0, 0
-base_pos2 = [3.7, 0.09, 0.28]
+base_pos2 = [3.8, 0.09, 0.28]
 base_pos3 = [3.8, 0.09, -0.14]  # Define a second base position for the second cube
 base_pos1 = [3.8, 0.09, 0.67]  # Define a third base position for the third cube
-bases=[base_pos1, base_pos2,  base_pos3]  # List of base positions for the cubes
+bases=[base_pos1, base_pos2,base_pos3]  # List of base positions for the cubes
 y_base = [0.67, 0.28, -0.09]  # List of base positions for the cubes
 z = 1  # Initialize a global variable for iteration count
 w=1
@@ -127,7 +127,7 @@ def turnToTarget(is_cube = True, curr_t_pos = t_pos):
         if abs(normalized_angle) < 0.07:
             send_stop_request()
             break
-        elif normalized_angle < 0:
+        elif normalized_angle < 0.0:
             if not turning_state == left:
                 turning_state = left
                 send_lift_request(60)
@@ -198,7 +198,7 @@ def GoBack( ):
 # Function get data where the  robot car and where the cube is and calculate the path to the cube
 def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
     global z  # Use the global variable z
-    json_file_path = "our_code/path_algorithms/map1.json"
+    json_file_path = "path_algorithms/map1.json"
     planning_env = MapEnvironment(json_file=json_file_path)
     # Initialize the map environment with the JSON file path
     planning_env.start = np.array([start_pos[0], start_pos[2]])  # Use x and y coordinates for the start position
@@ -255,7 +255,7 @@ def go_to_goal(goal_pos):
                 print("continue")
                 finshed = False
                 break
-            if dist(c_pos[0], t_pos[0], c_pos[2], t_pos[2]) > 0.15:
+            if dist(c_pos[0], t_pos[0], c_pos[2], t_pos[2]) > 0.2:
                 print("NNNNNNNNNNNNNNED TO FIX")
                 return []
                 
@@ -303,7 +303,7 @@ try:
         # GoBack()
         extract_order(word) 
         print(arr)
-        for i in range(1):
+        for i in range(3):
             y = arr[i]  # Get the current target ID from the array
             out_limits(c_pos, t_pos)
             print("Current target ID:", y)
@@ -312,7 +312,10 @@ try:
             while len(plan) == 0:
                 get_path_to_target()  # Get the path to the target position
                 send_servo_request(80)
-                plan = go_to_goal(bases[i])  # Move to the base position first
+                plan = go_to_goal(bases[i])  # Move to the base position firs
+                print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+                print("plan:", plan)
+            print("Plan:", plan)
             turnToTarget(False, [plan[-1][0]+0.3,0.09, y_base[i]])
             GoToTarget(False, [plan[-1][0]+0.3,0.09, y_base[i]])  # Move slightly forward after reaching the target
             send_servo_request(30)

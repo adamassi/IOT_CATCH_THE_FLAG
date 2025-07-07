@@ -17,7 +17,7 @@ def display_image(image_path, target_width=400):
             resized_image = image.resize((target_width, target_height), Image.LANCZOS)
             return resized_image
         except Exception as e:
-            st.error(f"Error loading image: {e}")
+            pass
     return None
 
 
@@ -73,7 +73,7 @@ st.title('Simple Streamlit Example')
 
 
 def run_script(output_dict, word):
-    result = subprocess.run(["python", "our_code/4_main_for_web.py", word], capture_output=True, text=True)
+    result = subprocess.run(["python", "./4_main_for_web.py", word], capture_output=True, text=True, timeout=40)
     output_dict["returncode"] = result.returncode
     output_dict["stdout"] = result.stdout
     output_dict["stderr"] = result.stderr
@@ -83,14 +83,12 @@ def run_script(output_dict, word):
 def stop_all():
     return
 
-def submit_botton():
+def submit_button():
     st.success(f'Assembling the word: {st.session_state.word}!')
 
     timer_placeholder = st.empty()
     image_placeholder = st.empty()
     st.session_state.is_image = True
-    st.session_state.output_placeholder = st.empty()
-    st.session_state.error_placeholder = st.empty()
      # Dictionary to share output state
     output = {"finished": False, "returncode": None, "stdout": "", "stderr": ""}
 
@@ -99,13 +97,12 @@ def submit_botton():
     thread.start()
 
     start_time = time.time()
-    target_width = 400
     # Keep updating timer and image
     while not output["finished"]:
         elapsed = time.time() - start_time
         timer_placeholder.write(f"Time elapsed: {elapsed:.1f} seconds")
         # Reload and display the image safely
-        display_image()
+        display_image("./map-RRTfor_web.png")
     time.sleep(0.3)  # Update every 0.3 seconds
     elapsed = time.time() - start_time
     timer_placeholder.write(f"Finished in {elapsed:.1f} seconds")
@@ -130,9 +127,10 @@ right.button("T", on_click=click_t, disabled=st.session_state.clicked_t, use_con
 st.session_state.enable_submit = not (st.session_state.clicked_i and st.session_state.clicked_o and st.session_state.clicked_t)
 # Submit and Reset buttons
 submit_col, stop_col, reset_col = st.columns(3)
-submit_col.button("Submit", disabled=st.session_state.enable_submit, on_click=submit_botton)
+submit_col.button("Submit", on_click=submit_button)
+    
 
-reset_col.button("Reset",  disabled=st.session_state.clicked_submit, on_click=reset_all)
+reset_col.button("Reset", on_click=reset_all)
 if stop_col.button("Stop", on_click=stop_all): 
     is_Stopped = True
 
