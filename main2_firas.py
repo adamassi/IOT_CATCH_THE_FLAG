@@ -7,13 +7,7 @@ from conversion import normalize_angle
 from PARAMETERS import PositionConfig, RigidBodyIDs, OptiTrackConfig
 
 
-"""
-This is most basic program, 
-it connects to the OptiTrack system, receives data about the car and cubes,
-and goes to one cube, and brings it to the base,
-no path planning is done here.
-The robot keeps following the cube even if it moves.
-"""
+
 
 
 class Cube:
