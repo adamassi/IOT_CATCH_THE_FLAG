@@ -4,7 +4,7 @@ from natnet_client import DataDescriptions, DataFrame, NatNetClient
 import numpy as np
 import optitrack_data_handling
 #from helperFunc import dist, is_out_of_board 
-from helper_functions import dist, angle_between_points
+from helper_functions import dist, angle_between_points ,out_limits
 from robotCommands import *
 from conversion import normalize_angle
 
@@ -25,8 +25,11 @@ t_pos1, t_rot1, t_rad1 = [0,0,0], 0, 0
 t_pos2, t_rot2, t_rad2 = [0,0,0], 0, 0
 t_pos3, t_rot3, t_rad3 = [0,0,0], 0, 0
 t_pos, t_rot, t_rad = [0,0,0], 0, 0
-base_pos = [3.9, 0.09, 0.28]
-base_pos2 = [3.9, 0.09, -0.09]  # Define a second base position for the second cube
+base_pos2 = [3.9, 0.09, 0.28]
+base_pos3 = [3.9, 0.09, -0.09]  # Define a second base position for the second cube
+base_pos1 = [3.9, 0.09, 0.67]  # Define a third base position for the third cube
+bases=[base_pos1, base_pos2,  base_pos3[2]]  # List of base positions for the cubes
+y_base = [0.67, 0.28, -0.09]  # List of base positions for the cubes
 z = 1  # Initialize a global variable for iteration count
 w=1
 y=606
@@ -210,8 +213,10 @@ def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
     # Execute the planning algorithm to get the path
     plan = planner.plan()
 
+    # for-web
+    # planner.planning_env.visualize_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(), name='for_web')
     # Visualize the map with the computed plan and expanded nodes
-    planner.planning_env.visualize_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(), name='for_web')  # Convert z to string
+    planner.planning_env.visualize_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(), name='4main'+str(z))  # Convert z to string
     print('Successfully planned path')
     z += 1  # Increment the global variable z
     return plan
@@ -278,6 +283,9 @@ try:
         streaming_client.update_sync()
         #streaming_client.run_async()
         time.sleep(1)  # Allow some time for the client to start and receive data
+        if out_limits(c_pos, t_pos):
+            print("The robot is out of the board limits. Please check the position.")
+            exit()
         print("Streaming started. Waiting for data...")
         plan = []
         # GoBack()
@@ -287,9 +295,9 @@ try:
             print("Current target ID:", y)
             get_path_to_target()  # Get the path to the target position
             send_servo_request(80)
-            plan = go_to_goal(base_pos)  # Move to the base position first
-            turnToTarget(False, [plan[-1][0]+0.3,0.09, 0.28])
-            GoToTarget(False, [plan[-1][0]+0.3,0.09, 0.28])  # Move slightly forward after reaching the target
+            plan = go_to_goal(bases[i])  # Move to the base position first
+            turnToTarget(False, [plan[-1][0]+0.3,0.09, y_base[i]])
+            GoToTarget(False, [plan[-1][0]+0.3,0.09, y_base[i]])  # Move slightly forward after reaching the target
             send_servo_request(30)
             GoBack()
         
