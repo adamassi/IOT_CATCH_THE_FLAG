@@ -225,7 +225,7 @@ def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
     print('Successfully planned path')
     z += 1  # Increment the global variable z
     return plan
-
+# use it to go to the base position
 def go_to_goal(goal_pos):
 
     finshed = False
@@ -255,6 +255,10 @@ def go_to_goal(goal_pos):
                 print("continue")
                 finshed = False
                 break
+            if dist(c_pos[0], t_pos[0], c_pos[2], t_pos[2]) > 0.15:
+                print("NNNNNNNNNNNNNNED TO FIX")
+                return []
+                
     return plan  # Return the planned path for further use or analysis
 
 
