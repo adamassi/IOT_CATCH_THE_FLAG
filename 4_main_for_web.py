@@ -251,7 +251,7 @@ def go_to_goal(goal_pos):
             print("Current position:", go_to_pos)
             turnToTarget(False, go_to_pos)
             GoToTarget(False, go_to_pos)
-            if(dist(t_pos1[0], cur_t_pos1[0], t_pos1[2], cur_t_pos1[2]) > 0.1 and y!=604) or( dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1 and y!=606) or (dist(t_pos3[0], cur_t_pos3[0], t_pos3[2], cur_t_pos3[2]) and y!=607) > 0.1:
+            if(dist(t_pos1[0], cur_t_pos1[0], t_pos1[2], cur_t_pos1[2]) > 0.1 and y!=604) or( dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1 and y!=606) or (dist(t_pos3[0], cur_t_pos3[0], t_pos3[2], cur_t_pos3[2])> 0.1 and y!=607) :
                 print("continue")
                 finshed = False
                 break
@@ -299,10 +299,11 @@ try:
         # GoBack()
         extract_order(word) 
         print(arr)
-        for i in range(3):
+        for i in range(1):
             y = arr[i]  # Get the current target ID from the array
             out_limits(c_pos, t_pos)
             print("Current target ID:", y)
+            y=607
             get_path_to_target()  # Get the path to the target position
             send_servo_request(80)
             plan = go_to_goal(bases[i])  # Move to the base position first
