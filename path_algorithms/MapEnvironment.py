@@ -42,9 +42,7 @@ class MapEnvironment(object):
 
 
 
-        # test ithe valueError
-        add_cube_obstacle(self, [-4.14, 0.14, 1.06])
-        # check that the start location is within limits and collision free
+        
         if not self.state_validity_checker(state=self.start):
             
             raise ValueError('Start state must be within the map limits');
