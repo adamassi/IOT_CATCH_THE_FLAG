@@ -298,7 +298,7 @@ try:
 
         
         print("Streaming started. Waiting for data...")
-        plan = []
+        
         # TODO
         # GoBack()
         extract_order(word) 
@@ -308,9 +308,11 @@ try:
             out_limits(c_pos, t_pos)
             print("Current target ID:", y)
             # y=607
-            get_path_to_target()  # Get the path to the target position
-            send_servo_request(80)
-            plan = go_to_goal(bases[i])  # Move to the base position first
+            plan = []
+            while plan == []:
+                get_path_to_target()  # Get the path to the target position
+                # send_servo_request(80)
+                plan = go_to_goal(bases[i])  # Move to the base position first
             turnToTarget(False, [plan[-1][0]+0.3,0.09, y_base[i]])
             GoToTarget(False, [plan[-1][0]+0.3,0.09, y_base[i]])  # Move slightly forward after reaching the target
             send_servo_request(30)
