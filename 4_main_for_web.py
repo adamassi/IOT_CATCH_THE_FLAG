@@ -266,6 +266,7 @@ def go_to_goal(goal_pos):
 def get_path_to_target():
     # plan = []
         # GoBack()
+    
     finshed = False
     while not finshed:
         streaming_client.update_sync()

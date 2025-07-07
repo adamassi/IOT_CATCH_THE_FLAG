@@ -62,6 +62,7 @@ class MapEnvironment(object):
         #self.visualize_map()
         print("Map environment initialized successfully.")
     def load_obstacles(self, obstacles):
+        # s
         '''
         A function to load and verify scene obstacles.
         @param obstacles A list of lists of obstacles points.
