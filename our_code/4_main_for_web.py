@@ -293,7 +293,7 @@ try:
             plan = []
             while  plan==[]:
                 get_path_to_target()  # Get the path to the target position
-                send_servo_request(80)
+                # send_servo_request(80)
                 plan = go_to_goal(base_pos)  # Move to the base position first
             turnToTarget(False, [plan[-1][0]+0.3,0.09, 0.28])
             GoToTarget(False, [plan[-1][0]+0.3,0.09, 0.28])  # Move slightly forward after reaching the target
