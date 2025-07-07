@@ -15,7 +15,7 @@ from path_algorithms.MapEnvironment import MapEnvironment
 from path_algorithms.RRTStarPlanner import RRTStarPlanner
 import sys
 
-check_esp_http()
+# check_esp_http()
 # for web
 # word = sys.argv[1]
 word = "OIT"  # Example word to extract order from
@@ -26,8 +26,8 @@ t_pos2, t_rot2, t_rad2 = [0,0,0], 0, 0
 t_pos3, t_rot3, t_rad3 = [0,0,0], 0, 0
 t_pos, t_rot, t_rad = [0,0,0], 0, 0
 base_pos2 = [3.7, 0.09, 0.28]
-base_pos3 = [3.8, 0.09, -0.14]  # Define a second base position for the second cube
-base_pos1 = [3.8, 0.09, 0.67]  # Define a third base position for the third cube
+base_pos3 = [3.7, 0.09, -0.25]  # Define a second base position for the second cube
+base_pos1 = [3.7, 0.09, 0.67]  # Define a third base position for the third cube
 bases=[base_pos1, base_pos2,  base_pos3]  # List of base positions for the cubes
 y_base = [0.67, 0.28, -0.09]  # List of base positions for the cubes
 z = 1  # Initialize a global variable for iteration count
@@ -302,18 +302,20 @@ try:
         #streaming_client.run_async()
         time.sleep(1)  # Allow some time for the client to start and receive data
 
-        
-        print("Streaming started. Waiting for data...")
+        sys.stdout.flush()  # Ensure that the output is flushed immediately
+        print("Streaming started. Waiting for data...", flush=True)
         
         # TODO
         # GoBack()
         extract_order(word) 
         print(arr)
+        sys.stdout.flush()  # Ensure that the output is flushed immediately
         for i in range(1):
             y = arr[i]  # Get the current target ID from the array
             out_limits(c_pos, t_pos)
             is_flipped([t_rot1, t_rot2, t_rot3])
             print("Current target ID:", y)
+            sys.stdout.flush()  # Ensure that the output is flushed immediately
             # y=607
             plan = []
             while len(plan) == 0:
@@ -321,8 +323,10 @@ try:
                 send_servo_request(80)
                 plan = go_to_goal(bases[i])  # Move to the base position first
             turnToTarget(False, [plan[-1][0]+0.3,0.09, y_base[i]])
+            sys.stdout.flush()  # Ensure that the output is flushed immediately
             GoToTarget(False, [plan[-1][0]+0.3,0.09, y_base[i]])  # Move slightly forward after reaching the target
             send_servo_request(30)
+            sys.stdout.flush()  # Ensure that the output is flushed immediately
             GoBack()
             # exit()
         
@@ -330,6 +334,7 @@ try:
     # send_servo_request(30)
     print("c_pos: ", c_pos, "c_rot: ", c_rot, "c_rad: ", c_rad)
     print("t_pos: ", t_pos, "t_rot: ", t_rot, "t_rad: ", t_rad)
+    sys.stdout.flush()  # Ensure that the output is flushed immediately
     # exit()
 
 
@@ -341,6 +346,6 @@ except ConnectionResetError as e:
 
 # Handle any other unexpected exceptions
 except Exception as e:
-    print(f"An unexpected error occurred: {e}")
+    print(f"An unexpected error occurred: {e}", file=sys.stderr)
     # Handle other exceptions, possibly with logging or retry logic here
 
