@@ -9,7 +9,7 @@ limit_X = 4.5
 limit_Y = 1.9
 def is_flipped(cube_ror=[[0, 0, 0]]):
     for i in range(len(cube_ror)):
-        if cube_ror[i][0] > 60.0 or cube_ror[i][1] > 60:
+        if abs(cube_ror[i][0]) > 60.0 or abs(cube_ror[i][1]) > 60:
             print("The robot is flipped. Please check the position.")
             exit()
 def out_limits(car :float, target :float):
