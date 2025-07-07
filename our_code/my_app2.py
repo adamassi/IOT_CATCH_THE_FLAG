@@ -5,6 +5,7 @@ import threading
 from PIL import Image
 import os
 from stam import *
+import select
 
 def display_image(image_placeholder, image_path, target_width=400):
     """Display an image with a specified target width."""
@@ -71,11 +72,14 @@ st.title('Simple Streamlit Example')
 
 def run_script(output_dict, word):
     # result = subprocess.run(["python", "./4_main_for_web.py", word], capture_output=True, text=True, timeout=40)
-    process = subprocess.Popen(["python", "./4_main_for_web.py", word], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    process = subprocess.Popen(["python", "./4_main_for_web.py", word], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=100)
     # time.sleep(10)
     # process.terminate()  # Terminate the process after 10 seconds
     # send_stop_request()
-    while True:
+    stdout_lines = []
+    stderr_lines = []
+
+    while process.poll() == None:
         if event.is_set():
             process.terminate()
             send_stop_request()
@@ -85,14 +89,74 @@ def run_script(output_dict, word):
             output_dict["stderr"] = process.stderr
             output_dict["finished"] = True
             break
-        if (process.returncode is not None):
-            print("Process finished")
-            output_dict["returncode"] = process.returncode
-            output_dict["stdout"] = process.stdout
-            output_dict["stderr"] = process.stderr
-            output_dict["finished"] = True
-            break
-        time.sleep(0.1)
+        stdout_lines += process.stdout.readlines()
+        stderr_lines += process.stderr.readlines()
+        
+    print("Process finished")
+
+    output_dict["returncode"] = process.returncode
+    output_dict["stdout"] = stdout_lines
+    output_dict["stderr"] = stderr_lines
+    output_dict["finished"] = True
+
+# def run_script(output_dict, word):
+#     process = subprocess.Popen(
+#         ["python", "./4_main_for_web.py", word],
+#         stdout=subprocess.PIPE,
+#         stderr=subprocess.PIPE,
+#         bufsize=1,  # Line-buffered
+#         text=True
+#     )
+
+    # stdout_lines = []
+    # stderr_lines = []
+
+#     # Use non-blocking reads via select (Unix only) or separate threads (cross-platform)
+#     try:
+#         while True:
+#             # Check for stop signal
+#             if event.is_set():
+#                 process.terminate()
+#                 send_stop_request()
+#                 output_dict["stdout"] = "\n".join(stdout_lines)
+#                 output_dict["stderr"] = "Process terminated by user."
+#                 output_dict["returncode"] = -1
+#                 output_dict["finished"] = True
+#                 return
+
+#             # Read output if available
+#             reads = [process.stdout.fileno(), process.stderr.fileno()]
+#             readable, _, _ = select.select(reads, [], [], 0.1)
+
+#             for fd in readable:
+#                 if fd == process.stdout.fileno():
+#                     line = process.stdout.readline()
+#                     if line:
+#                         stdout_lines.append(line)
+#                 elif fd == process.stderr.fileno():
+#                     line = process.stderr.readline()
+#                     if line:
+#                         stderr_lines.append(line)
+
+#             # Check if process is done
+#             if process.poll() is not None:
+#                 break
+
+#         # Drain remaining lines after process ends
+        # stdout_lines += process.stdout.readlines()
+        # stderr_lines += process.stderr.readlines()
+#     except Exception as e:
+#         output_dict["stdout"] = "\n".join(stdout_lines)
+#         output_dict["stderr"] = f"Exception: {str(e)}"
+#         output_dict["returncode"] = -2
+#         output_dict["finished"] = True
+#         return
+
+#     output_dict["stdout"] = "".join(stdout_lines)
+#     output_dict["stderr"] = "".join(stderr_lines)
+#     output_dict["returncode"] = process.returncode
+#     output_dict["finished"] = True
+    
 
 # stop everything
 def stop_all():
@@ -115,6 +179,7 @@ submit_col, stop_col, reset_col = st.columns(3)
 
 timer_placeholder = st.empty()
 image_placeholder = st.empty()
+output_log = st.empty()
 
 def submit_button():
     st.success(f'Assembling the word: {st.session_state.word}!')
@@ -133,16 +198,15 @@ def submit_button():
         timer_placeholder.write(f"Time elapsed: {elapsed:.1f} seconds")
         # Reload and display the image safely
         display_image(image_placeholder, "./map-RRTfor_web.png")
-        if output["stdout"] != "":
-            print(output["stdout"])
-            break
         time.sleep(0.1)  # Update every 0.3 seconds
     elapsed = time.time() - st.session_state.start_time
     timer_placeholder.write(f"Finished in {elapsed:.1f} seconds")
+    # print("Output:", output["stdout"])
 
     # Optionally show success/failure only
     if output["returncode"] == 0:
         st.success("Algorithm finished successfully!")
+        print("Algorithm finished successfully!")
     else:
         st.error("There was an error running the algorithm.")
 

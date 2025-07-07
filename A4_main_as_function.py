@@ -15,7 +15,7 @@ from path_algorithms.MapEnvironment import MapEnvironment
 from path_algorithms.RRTStarPlanner import RRTStarPlanner
 import sys
 
-check_esp_http()
+
 # for web
 # word = sys.argv[1]
 word = "OIT"  # Example word to extract order from
@@ -292,55 +292,55 @@ def get_path_to_target():
                 finshed = False
                 break
         print(f"{finshed}AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-         
-try:
-    send_servo_request(30)
-    with streaming_client:
-        streaming_client.request_modeldef()
+def run_all_code():
+    try:
+        send_servo_request(30)
+        with streaming_client:
+            streaming_client.request_modeldef()
 
-        streaming_client.update_sync()
-        #streaming_client.run_async()
-        time.sleep(1)  # Allow some time for the client to start and receive data
+            streaming_client.update_sync()
+            #streaming_client.run_async()
+            time.sleep(1)  # Allow some time for the client to start and receive data
 
-        
-        print("Streaming started. Waiting for data...")
-        
-        # TODO
-        # GoBack()
-        extract_order(word) 
-        print(arr)
-        for i in range(1):
-            y = arr[i]  # Get the current target ID from the array
-            out_limits(c_pos, t_pos)
-            is_flipped([t_rot1, t_rot2, t_rot3])
-            print("Current target ID:", y)
-            # y=607
-            plan = []
-            while len(plan) == 0:
-                get_path_to_target()  # Get the path to the target position
-                send_servo_request(80)
-                plan = go_to_goal(bases[i])  # Move to the base position first
-            turnToTarget(False, [plan[-1][0]+0.3,0.09, y_base[i]])
-            GoToTarget(False, [plan[-1][0]+0.3,0.09, y_base[i]])  # Move slightly forward after reaching the target
-            send_servo_request(30)
-            GoBack()
-            # exit()
-        
-        
-    # send_servo_request(30)
-    print("c_pos: ", c_pos, "c_rot: ", c_rot, "c_rad: ", c_rad)
-    print("t_pos: ", t_pos, "t_rot: ", t_rot, "t_rad: ", t_rad)
-    # exit()
+            
+            print("Streaming started. Waiting for data...")
+            
+            # TODO
+            # GoBack()
+            extract_order(word) 
+            print(arr)
+            for i in range(1):
+                y = arr[i]  # Get the current target ID from the array
+                out_limits(c_pos, t_pos)
+                is_flipped([t_rot1, t_rot2, t_rot3])
+                print("Current target ID:", y)
+                # y=607
+                plan = []
+                while len(plan) == 0:
+                    get_path_to_target()  # Get the path to the target position
+                    send_servo_request(80)
+                    plan = go_to_goal(bases[i])  # Move to the base position first
+                turnToTarget(False, [plan[-1][0]+0.3,0.09, y_base[i]])
+                GoToTarget(False, [plan[-1][0]+0.3,0.09, y_base[i]])  # Move slightly forward after reaching the target
+                send_servo_request(30)
+                GoBack()
+                exit()
+            
+            
+        # send_servo_request(30)
+        print("c_pos: ", c_pos, "c_rot: ", c_rot, "c_rad: ", c_rad)
+        print("t_pos: ", t_pos, "t_rot: ", t_rot, "t_rad: ", t_rad)
+       
 
+    # Handle connection-related errors specifically
+    except ConnectionResetError as e:
+        print(f"Dear friend !!\nOptitrack connection failed:\nPlease check if the Optitrack system is on and streaming.\n\n\n{e}")
 
-# Handle connection-related errors specifically
-except ConnectionResetError as e:
-    print(f"Dear friend !!\nOptitrack connection failed:\nPlease check if the Optitrack system is on and streaming.\n\n\n{e}")
+        exit()  # Exit the program
 
-    exit()  # Exit the program
+    # Handle any other unexpected exceptions
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        # Handle other exceptions, possibly with logging or retry logic here
 
-# Handle any other unexpected exceptions
-except Exception as e:
-    print(f"An unexpected error occurred: {e}")
-    # Handle other exceptions, possibly with logging or retry logic here
-
+# run_all_code()
