@@ -101,6 +101,7 @@ def stop_all():
 
 st.write("Current assembled word:")
 st.info(f'{st.session_state.word}')
+output = {"finished": False, "returncode": None, "stdout": "", "stderr": ""}
 
 # Buttons to assemble the word
 left, middle, right = st.columns(3)
@@ -120,7 +121,6 @@ def submit_button():
     st.session_state.clicked_submit = True
     st.session_state.is_image = True
      # Dictionary to share output state
-    output = {"finished": False, "returncode": None, "stdout": "", "stderr": ""}
 
     # Start algorithm in a thread
     thread = threading.Thread(target=run_script, args=(output,st.session_state.word))
