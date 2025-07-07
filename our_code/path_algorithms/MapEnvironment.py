@@ -83,7 +83,7 @@ class MapEnvironment(object):
             json_dict = json.load(f)
 
         # obtain boundary limits, start and inspection points
-        self.xlimit = [-4.0, json_dict['WIDTH']-1]
+        self.xlimit = [-4.0, json_dict['WIDTH']]
         self.ylimit = [-2, json_dict['HEIGHT']]
         # print(f'World limits: x={self.xlimit}, y={self.ylimit}')
         # print(f'Start point: {json_dict["START"]}, Goal point: {json_dict["GOAL"]}')
@@ -98,6 +98,7 @@ class MapEnvironment(object):
         # adding pyramid obstacle
         add_rectangle_obstacle(self, [1.97, 0.12, 0.40], width=0.6, height=0.25)
         add_circle_obstacle(self, [2.87, 0.14, -0.9])
+        add_cube_obstacle(self, [4.2, 0.14, 0.25], size=0.23)
 
 
 

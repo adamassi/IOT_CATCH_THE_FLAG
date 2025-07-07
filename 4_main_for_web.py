@@ -4,7 +4,7 @@ from natnet_client import DataDescriptions, DataFrame, NatNetClient
 import numpy as np
 import optitrack_data_handling
 #from helperFunc import dist, is_out_of_board 
-from helper_functions import dist, angle_between_points ,out_limits
+from helper_functions import dist, angle_between_points ,out_limits, is_flipped
 from robotCommands import *
 from conversion import normalize_angle
 
@@ -138,9 +138,11 @@ def turnToTarget(is_cube = True, curr_t_pos = t_pos):
     # time.sleep(1)
 
 def GoToTarget(is_cube = True, curr_t_pos = t_pos):
+    
     if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) >= 0.16:
         send_go_request()
         while True:
+            # is_flipped([t_pos1, t_pos2, t_pos3])
             streaming_client.update_sync()
             if is_cube:
                 curr_t_pos = t_pos
@@ -244,8 +246,9 @@ def go_to_goal(goal_pos):
         plan = get_path_to_goal(c_pos, goal_pos,obsticles)
         finshed = True
         for i in range(len(plan) - 1):
-            print("1")
-            out_limits(c_pos, t_pos)
+            # print("1")
+            is_flipped([t_pos1, t_pos2, t_pos3])
+            # out_limits(c_pos, t_pos)
             print("2")
             go_to_pos = [plan[i+1][0], 0, plan[i+1][1]]
             print("Current position:", go_to_pos)
@@ -277,6 +280,7 @@ def get_path_to_target():
         plan = get_path_to_goal(c_pos, t_pos, [t_pos1,t_pos2,t_pos3])  # Pass t_pos1 as a dynamic obstacle
         finshed = True
         for i in range(len(plan) - 1):
+            is_flipped([t_pos1,t_pos2,t_pos3])
             out_limits(c_pos, t_pos)
             go_to_pos = [plan[i+1][0], 0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
             print("Current position:", go_to_pos)
@@ -308,6 +312,7 @@ try:
         for i in range(1):
             y = arr[i]  # Get the current target ID from the array
             out_limits(c_pos, t_pos)
+            is_flipped([t_pos1, t_pos2, t_pos3])
             print("Current target ID:", y)
             # y=607
             plan = []
