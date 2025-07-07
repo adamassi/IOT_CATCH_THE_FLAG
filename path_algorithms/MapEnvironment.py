@@ -25,7 +25,7 @@ class MapEnvironment(object):
             json_dict = json.load(f)
 
         # obtain boundary limits, start and inspection points
-        self.xlimit = [-4.0, json_dict['WIDTH']]
+        self.xlimit = [-4.0, json_dict['WIDTH']-1]
         self.ylimit = [-2, json_dict['HEIGHT']]
         # print(f'World limits: x={self.xlimit}, y={self.ylimit}')
         # print(f'Start point: {json_dict["START"]}, Goal point: {json_dict["GOAL"]}')
