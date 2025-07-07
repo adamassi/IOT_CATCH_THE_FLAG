@@ -247,7 +247,7 @@ def go_to_goal(goal_pos):
         finshed = True
         for i in range(len(plan) - 1):
             # print("1")
-            is_flipped([t_pos1, t_pos2, t_pos3])
+            is_flipped([t_rot1, t_rot2, t_rot3])
             # out_limits(c_pos, t_pos)
             print("2")
             go_to_pos = [plan[i+1][0], 0, plan[i+1][1]]
@@ -280,7 +280,7 @@ def get_path_to_target():
         plan = get_path_to_goal(c_pos, t_pos, [t_pos1,t_pos2,t_pos3])  # Pass t_pos1 as a dynamic obstacle
         finshed = True
         for i in range(len(plan) - 1):
-            is_flipped([t_pos1,t_pos2,t_pos3])
+            is_flipped([t_rot1, t_rot2, t_rot3])
             out_limits(c_pos, t_pos)
             go_to_pos = [plan[i+1][0], 0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
             print("Current position:", go_to_pos)
@@ -312,7 +312,7 @@ try:
         for i in range(1):
             y = arr[i]  # Get the current target ID from the array
             out_limits(c_pos, t_pos)
-            is_flipped([t_pos1, t_pos2, t_pos3])
+            is_flipped([t_rot1, t_rot2, t_rot3])
             print("Current target ID:", y)
             # y=607
             plan = []
