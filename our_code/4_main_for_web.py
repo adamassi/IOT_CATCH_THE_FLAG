@@ -284,15 +284,17 @@ try:
         #streaming_client.run_async()
         time.sleep(1)  # Allow some time for the client to start and receive data
         print("Streaming started. Waiting for data...")
-        plan = []
+        
         # GoBack()
         for i in range(1):
             extract_order(word)
             y = arr[i]  # Get the current target ID from the array
             print("Current target ID:", y)
-            get_path_to_target()  # Get the path to the target position
-            send_servo_request(80)
-            plan = go_to_goal(base_pos)  # Move to the base position first
+            plan = []
+            while  plan==[]:
+                get_path_to_target()  # Get the path to the target position
+                # send_servo_request(80)
+                plan = go_to_goal(base_pos)  # Move to the base position first
             turnToTarget(False, [plan[-1][0]+0.3,0.09, 0.28])
             GoToTarget(False, [plan[-1][0]+0.3,0.09, 0.28])  # Move slightly forward after reaching the target
             send_servo_request(30)

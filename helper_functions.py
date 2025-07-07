@@ -7,7 +7,11 @@ def angle_between_points(p1, p2):
 
 limit_X = 4.5
 limit_Y = 1.9
-
+def is_flipped(cube_ror=[[0, 0, 0]]):
+    for i in range(len(cube_ror)):
+        if abs(cube_ror[i][0]) > 60.0 or abs(cube_ror[i][1]) > 60:
+            print("The robot is flipped. Please check the position.")
+            raise ValueError("The robot is flipped. Please check the position.")
 def out_limits(car :float, target :float):
     """
     Check if the car is within the defined limits of the board.

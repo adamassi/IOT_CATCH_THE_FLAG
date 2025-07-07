@@ -4,7 +4,7 @@ from natnet_client import DataDescriptions, DataFrame, NatNetClient
 import numpy as np
 import optitrack_data_handling
 #from helperFunc import dist, is_out_of_board 
-from helper_functions import dist, angle_between_points ,out_limits, is_flipped
+from helper_functions import dist, angle_between_points ,out_limits
 from robotCommands import *
 from conversion import normalize_angle
 
@@ -15,20 +15,20 @@ from path_algorithms.MapEnvironment import MapEnvironment
 from path_algorithms.RRTStarPlanner import RRTStarPlanner
 import sys
 
-check_esp_http()
+
 # for web
 # word = sys.argv[1]
-word = "OIT"  # Example word to extract order from
+word = "IOT"  # Example word to extract order from
 arr=[]
 c_pos, c_rot, c_rad = [0,0,0], 0, 0
 t_pos1, t_rot1, t_rad1 = [0,0,0], 0, 0
 t_pos2, t_rot2, t_rad2 = [0,0,0], 0, 0
 t_pos3, t_rot3, t_rad3 = [0,0,0], 0, 0
 t_pos, t_rot, t_rad = [0,0,0], 0, 0
-base_pos2 = [3.7, 0.09, 0.28]
+base_pos2 = [3.8, 0.09, 0.28]
 base_pos3 = [3.8, 0.09, -0.14]  # Define a second base position for the second cube
 base_pos1 = [3.8, 0.09, 0.67]  # Define a third base position for the third cube
-bases=[base_pos1, base_pos2,  base_pos3]  # List of base positions for the cubes
+bases=[base_pos1, base_pos2,base_pos3]  # List of base positions for the cubes
 y_base = [0.67, 0.28, -0.09]  # List of base positions for the cubes
 z = 1  # Initialize a global variable for iteration count
 w=1
@@ -127,7 +127,7 @@ def turnToTarget(is_cube = True, curr_t_pos = t_pos):
         if abs(normalized_angle) < 0.07:
             send_stop_request()
             break
-        elif normalized_angle < 0:
+        elif normalized_angle < 0.0:
             if not turning_state == left:
                 turning_state = left
                 send_lift_request(60)
@@ -138,11 +138,9 @@ def turnToTarget(is_cube = True, curr_t_pos = t_pos):
     # time.sleep(1)
 
 def GoToTarget(is_cube = True, curr_t_pos = t_pos):
-    
     if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) >= 0.16:
         send_go_request()
         while True:
-            # is_flipped([t_pos1, t_pos2, t_pos3])
             streaming_client.update_sync()
             if is_cube:
                 curr_t_pos = t_pos
@@ -200,7 +198,7 @@ def GoBack( ):
 # Function get data where the  robot car and where the cube is and calculate the path to the cube
 def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
     global z  # Use the global variable z
-    json_file_path = "our_code/path_algorithms/map1.json"
+    json_file_path = "path_algorithms/map1.json"
     planning_env = MapEnvironment(json_file=json_file_path)
     # Initialize the map environment with the JSON file path
     planning_env.start = np.array([start_pos[0], start_pos[2]])  # Use x and y coordinates for the start position
@@ -246,9 +244,8 @@ def go_to_goal(goal_pos):
         plan = get_path_to_goal(c_pos, goal_pos,obsticles)
         finshed = True
         for i in range(len(plan) - 1):
-            # print("1")
-            is_flipped([t_rot1, t_rot2, t_rot3])
-            # out_limits(c_pos, t_pos)
+            print("1")
+            out_limits(c_pos, t_pos)
             print("2")
             go_to_pos = [plan[i+1][0], 0, plan[i+1][1]]
             print("Current position:", go_to_pos)
@@ -258,9 +255,8 @@ def go_to_goal(goal_pos):
                 print("continue")
                 finshed = False
                 break
-            if dist(c_pos[0], t_pos[0], c_pos[2], t_pos[2]) > 0.15:
+            if dist(c_pos[0], t_pos[0], c_pos[2], t_pos[2]) > 0.2:
                 print("NNNNNNNNNNNNNNED TO FIX")
-                send_servo_request(30)
                 return []
                 
     return plan  # Return the planned path for further use or analysis
@@ -270,7 +266,6 @@ def go_to_goal(goal_pos):
 def get_path_to_target():
     # plan = []
         # GoBack()
-    
     finshed = False
     while not finshed:
         streaming_client.update_sync()
@@ -280,7 +275,6 @@ def get_path_to_target():
         plan = get_path_to_goal(c_pos, t_pos, [t_pos1,t_pos2,t_pos3])  # Pass t_pos1 as a dynamic obstacle
         finshed = True
         for i in range(len(plan) - 1):
-            is_flipped([t_rot1, t_rot2, t_rot3])
             out_limits(c_pos, t_pos)
             go_to_pos = [plan[i+1][0], 0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
             print("Current position:", go_to_pos)
@@ -309,28 +303,30 @@ try:
         # GoBack()
         extract_order(word) 
         print(arr)
-        for i in range(1):
+        for i in range(3):
             y = arr[i]  # Get the current target ID from the array
             out_limits(c_pos, t_pos)
-            is_flipped([t_rot1, t_rot2, t_rot3])
             print("Current target ID:", y)
             # y=607
             plan = []
             while len(plan) == 0:
                 get_path_to_target()  # Get the path to the target position
                 send_servo_request(80)
-                plan = go_to_goal(bases[i])  # Move to the base position first
+                plan = go_to_goal(bases[i])  # Move to the base position firs
+                print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+                print("plan:", plan)
+            print("Plan:", plan)
             turnToTarget(False, [plan[-1][0]+0.3,0.09, y_base[i]])
             GoToTarget(False, [plan[-1][0]+0.3,0.09, y_base[i]])  # Move slightly forward after reaching the target
             send_servo_request(30)
             GoBack()
-            # exit()
         
         
     # send_servo_request(30)
     print("c_pos: ", c_pos, "c_rot: ", c_rot, "c_rad: ", c_rad)
     print("t_pos: ", t_pos, "t_rot: ", t_rot, "t_rad: ", t_rad)
-    # exit()
+
+
 
 
 # Handle connection-related errors specifically

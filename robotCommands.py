@@ -1,7 +1,24 @@
 import requests
 import time
+import socket
 #import math
 from PARAMETERS import ESPConfig
+import requests
+
+
+
+
+def check_esp_http(ip=ESPConfig.ESP_IP):
+    try:
+        response = requests.get(f"http://{ip}", timeout=2)
+        if response.status_code == 200:
+            print("ESP is online and responding.")
+            return True
+        else:
+            raise ConnectionError(f"ESP responded with status code {response.status_code}")
+    except requests.exceptions.RequestException as e:
+        raise ConnectionError(f"Failed to connect to ESP at {ip}: {e}")
+
 
 # Replace with the actual IP address of your ESP device
 #ESP_IP = "http://192.168.0.101"  # This is typically the default for ESP AP mode

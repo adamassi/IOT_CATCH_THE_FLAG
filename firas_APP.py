@@ -4,8 +4,8 @@ import time
 import threading
 from PIL import Image
 import os
-from stam import *
-
+from robotCommands import *
+from A4_main_as_function import run_all_code
 
 # Initialize session state
 if "word" not in st.session_state:
@@ -68,6 +68,9 @@ def run_script(output_dict, word):
     output_dict["stdout"] = result.stdout
     output_dict["stderr"] = result.stderr
     output_dict["finished"] = True
+def run_script_as_function(output_dict, word):
+    run_all_code()
+    output_dict["finished"] = True
 
 # stop everything
 def stop_all():
@@ -87,7 +90,7 @@ def submit_botton():
         output = {"finished": False, "returncode": None, "stdout": "", "stderr": ""}
 
         # Start algorithm in a thread
-        thread = threading.Thread(target=run_script, args=(output,st.session_state.word))
+        thread = threading.Thread(target=run_script_as_function, args=(output,st.session_state.word))
         thread.start()
 
         start_time = time.time()
