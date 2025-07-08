@@ -38,10 +38,6 @@ if "enable_submit" not in st.session_state:
     st.session_state.enable_submit = False
 if "start_time" not in st.session_state:
     st.session_state.start_time = None
-# if "output_placeholder" not in st.session_state:
-#     st.session_state.output_placeholder = None
-# if "error_placeholder" not in st.session_state:
-#     st.session_state.error_placeholder = None
 
 # Callback functions for each letter
 def click_i():
@@ -71,43 +67,18 @@ def reset_all():
 
 
 # Title
-st.title('Simple Streamlit Example')
-
-# def run_script(output_dict, word):
-#     # result = subprocess.run(["python", "./4_main_for_web.py", word], capture_output=True, text=True, timeout=40)
-#     process = subprocess.Popen(["python", "./4_main_for_web.py", word], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1)
-#     # time.sleep(10)
-#     # process.terminate()  # Terminate the process after 10 seconds
-#     # send_stop_request()
-#     stdout_lines = []
-#     stderr_lines = []
-
-#     while process.poll() == None:
-#         if event.is_set():
-#             process.kill()
-#             send_stop_request()
-#             print("Process terminated by event")
-#             output_dict["returncode"] = 0
-#             output_dict["stdout"] = process.stdout
-#             output_dict["stderr"] = process.stderr
-#             output_dict["finished"] = True
-#             break
-#         stdout_lines += process.stdout.readlines()
-#         stderr_lines += process.stderr.readlines()
-#         output_dict["stdout"] = stdout_lines
-        
-        
-#     print("Process finished")
-
-#     output_dict["returncode"] = process.returncode
-#     output_dict["stdout"] = stdout_lines
-#     output_dict["stderr"] = stderr_lines
-#     output_dict["finished"] = True
-#     print("Output:")
-#     # for line in output_dict["stdout"]:
-#     #     print(line)
-#     # print("Error:", output_dict["stderr"])
-#     # print("Return code:", output_dict["returncode"])
+st.title('Capture The Flag - IOT Edition')
+st.write("Current assembled word:")
+st.info(f'{st.session_state.word}')
+st.write("Currently Avaliable Cubes:")
+# Buttons to assemble the word
+left, middle, right = st.columns(3)
+# Submit and Reset buttons
+submit_col, stop_col, reset_col = st.columns(3)
+timer_placeholder = st.empty()
+image_placeholder = st.empty()
+output_log = st.empty()
+final_output = st.empty()
 
 def enqueue_output(pipe, q):
     for line in iter(pipe.readline, ''):
@@ -188,23 +159,13 @@ def stop_all():
     event.set()  # Set the event to signal the thread to stop
 
 
-st.write("Current assembled word:")
-st.info(f'{st.session_state.word}')
 output = {"finished": False, "returncode": None, "stdout": [], "stderr": []}
 
-# Buttons to assemble the word
-left, middle, right = st.columns(3)
 left.button("I", on_click=click_i, disabled=st.session_state.clicked_i, use_container_width=True)
 middle.button("O", on_click=click_o, disabled=st.session_state.clicked_o, use_container_width=True)
 right.button("T", on_click=click_t, disabled=st.session_state.clicked_t, use_container_width=True)
 
 st.session_state.enable_submit = not (st.session_state.clicked_i and st.session_state.clicked_o and st.session_state.clicked_t)
-# Submit and Reset buttons
-submit_col, stop_col, reset_col = st.columns(3)
-
-timer_placeholder = st.empty()
-image_placeholder = st.empty()
-output_log = st.empty()
 
 def submit_button():
     st.success(f'Assembling the word: {st.session_state.word}!')
@@ -241,7 +202,8 @@ def submit_button():
         st.success(f"Algorithm finished successfully! Finished in {elapsed:.1f} seconds!")
         image_placeholder2 = st.empty()
         display_image(image_placeholder2, "./map-RRTfor_web.png")
-        st.code("Output:\n" + live_output, height=200)
+        final_output = st.empty()
+        final_output.code("Output:\n" + live_output, height=200)
         print(f"Algorithm finished successfully! Finished in {elapsed:.1f} seconds!")
     else:
         st.error("There was an error running the algorithm.")

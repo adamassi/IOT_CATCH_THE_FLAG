@@ -18,7 +18,7 @@ import sys
 # check_esp_http()
 # for web
 # word = sys.argv[1]
-word = "OIT"  # Example word to extract order from
+word = "IOT"  # Example word to extract order from
 arr=[]
 c_pos, c_rot, c_rad = [0,0,0], 0, 0
 t_pos1, t_rot1, t_rad1 = [0,0,0], 0, 0
@@ -26,7 +26,7 @@ t_pos2, t_rot2, t_rad2 = [0,0,0], 0, 0
 t_pos3, t_rot3, t_rad3 = [0,0,0], 0, 0
 t_pos, t_rot, t_rad = [0,0,0], 0, 0
 base_pos2 = [3.7, 0.09, 0.28]
-base_pos3 = [3.7, 0.09, -0.25]  # Define a second base position for the second cube
+base_pos3 = [3.7, 0.09, -0.35]  # Define a second base position for the second cube
 base_pos1 = [3.7, 0.09, 0.67]  # Define a third base position for the third cube
 bases=[base_pos1, base_pos2,  base_pos3]  # List of base positions for the cubes
 y_base = [0.67, 0.28, -0.09]  # List of base positions for the cubes
@@ -39,12 +39,12 @@ def extract_order(word):
     
     """
     for c in word:
-        if c=='I':
-            arr.append(604)
+        if c=='T':
+            arr.append(607)
         elif c=='O':
             arr.append(606)
-        elif c=='T':
-            arr.append(607)
+        elif c=='I':
+            arr.append(604)
 
 
 def receive_new_desc(desc: DataDescriptions):
@@ -159,9 +159,9 @@ def GoToTarget(is_cube = True, curr_t_pos = t_pos):
 def GoBack( ):
     
     if c_pos[0] >= 3.85:
-        
-        send_back_request()
         send_start_beeping_request()
+        send_back_request()
+        
         while True:
             
             streaming_client.update_sync()
@@ -200,7 +200,7 @@ def GoBack( ):
 # Function get data where the  robot car and where the cube is and calculate the path to the cube
 def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
     global z  # Use the global variable z
-    json_file_path = "our_code/path_algorithms/map1.json"
+    json_file_path = "path_algorithms/map1.json"
     planning_env = MapEnvironment(json_file=json_file_path)
     # Initialize the map environment with the JSON file path
     planning_env.start = np.array([start_pos[0], start_pos[2]])  # Use x and y coordinates for the start position
@@ -310,7 +310,7 @@ try:
         extract_order(word) 
         print(arr)
         sys.stdout.flush()  # Ensure that the output is flushed immediately
-        for i in range(1):
+        for i in range(3):
             y = arr[i]  # Get the current target ID from the array
             out_limits(c_pos, t_pos)
             is_flipped([t_rot1, t_rot2, t_rot3])
