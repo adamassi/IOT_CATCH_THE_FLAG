@@ -18,7 +18,7 @@ import sys
 # check_esp_http()
 # for web
 # word = sys.argv[1]
-word = "IOT"  # Example word to extract order from
+word = "OIT"  # Example word to extract order from
 arr=[]
 c_pos, c_rot, c_rad = [0,0,0], 0, 0
 t_pos1, t_rot1, t_rad1 = [0,0,0], 0, 0
@@ -28,8 +28,8 @@ t_pos, t_rot, t_rad = [0,0,0], 0, 0
 base_pos2 = [3.7, 0.09, 0.28]
 base_pos3 = [3.7, 0.09, -0.35]  # Define a second base position for the second cube
 base_pos1 = [3.7, 0.09, 0.67]  # Define a third base position for the third cube
-bases=[base_pos1, base_pos2,  base_pos3]  # List of base positions for the cubes
-y_base = [0.67, 0.28, -0.09]  # List of base positions for the cubes
+bases=[base_pos3, base_pos2,  base_pos1]  # List of base positions for the cubes
+y_base = [-0.09, 0.28, 0.67]  # List of base positions for the cubes
 z = 1  # Initialize a global variable for iteration count
 w=1
 y=604
