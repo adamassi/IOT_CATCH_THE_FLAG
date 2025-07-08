@@ -18,7 +18,7 @@ class MapEnvironment(object):
 
         # check if json file exists and load
         json_path = os.path.join(os.getcwd(), json_file)
-        print(f'Loading map from {json_path}...')
+        # print(f'Loading map from {json_path}...')
         if not os.path.isfile(json_path):
             raise ValueError('Json file does not exist!');
         with open(json_path) as f:
