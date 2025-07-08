@@ -25,13 +25,12 @@ t_pos1, t_rot1, t_rad1 = [0,0,0], 0, 0
 t_pos2, t_rot2, t_rad2 = [0,0,0], 0, 0
 t_pos3, t_rot3, t_rad3 = [0,0,0], 0, 0
 t_pos, t_rot, t_rad = [0,0,0], 0, 0
-base_pos2 = [3.7, 0.09, 0.28]
-base_pos3 = [3.7, 0.09, -0.35]  # Define a second base position for the second cube
 base_pos1 = [3.7, 0.09, 0.67]  # Define a third base position for the third cube
+base_pos2 = [3.7, 0.09, 0.28]
+base_pos3 = [3.7, 0.09, -0.25]  # Define a second base position for the second cube
 bases=[base_pos3, base_pos2,  base_pos1]  # List of base positions for the cubes
-y_base = [-0.09, 0.28, 0.67]  # List of base positions for the cubes
-z = 1  # Initialize a global variable for iteration count
-w=1
+y_base = [-0.25, 0.28, 0.67]  # List of base positions for the cubes
+#z = 1  # Initiali#ze a global variable for iteration count
 y=604
 def extract_order(word):
     """
@@ -182,8 +181,8 @@ def GoBack( ):
 
 #     Args:
 #         env (MapEnvironment): The planning environment object.
-#         cube_pos (list): The [x, y, z] position of the cube (only x and z used).
-#         size (float): The size of the cube (side length in meters).
+#         cube_pos (list): The [x, y, z] position of the cube (only x and #z used).
+#         size (float): The si#ze of the cube (side length in meters).
 #     """
 #     cx, cz = cube_pos[0], cube_pos[2]
 #     half = size / 2
@@ -199,10 +198,10 @@ def GoBack( ):
 # TODO MOVE TO ANOTHER FILE 
 # Function get data where the  robot car and where the cube is and calculate the path to the cube
 def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
-    global z  # Use the global variable z
+    # global #z  # Use the global variable #z
     json_file_path = "path_algorithms/map1.json"
     planning_env = MapEnvironment(json_file=json_file_path)
-    # Initialize the map environment with the JSON file path
+    # Initiali#ze the map environment with the JSON file path
     planning_env.start = np.array([start_pos[0], start_pos[2]])  # Use x and y coordinates for the start position
     planning_env.goal = np.array([goal_pos[0], goal_pos[2]])  # Use x and y coordinates for the goal position
 
@@ -220,12 +219,12 @@ def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
     plan = planner.plan()
 
     # for-web
-    planner.planning_env.visualize_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(), name='for_web')
-    # Visualize the map with the computed plan and expanded nodes
-    print("Visualizing the map with the computed plan and expanded nodes...")
-    # planner.planning_env.visualize_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(), name='4main'+str(z))  # Convert z to string
+    planner.planning_env.visuali#ze_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(), name='for_web')
+    # Visuali#ze the map with the computed plan and expanded nodes
+    print("Visuali#zing the map with the computed plan and expanded nodes...")
+    # planner.planning_env.visuali#ze_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(), name='4main'+str(#z))  # Convert #z to string
     # print('Successfully planned path')
-    z += 1  # Increment the global variable z
+    #z += 1  # Increment the global variable #z
     return plan
 # use it to go to the base position
 def go_to_goal(goal_pos):
@@ -322,9 +321,9 @@ try:
                 get_path_to_target()  # Get the path to the target position
                 send_servo_request(80)
                 plan = go_to_goal(bases[i])  # Move to the base position first
-            turnToTarget(False, [plan[-1][0]+0.3,0.09, y_base[i]])
+            turnToTarget(False, [plan[-1][0]+0.4,0.09, y_base[i]])
             sys.stdout.flush()  # Ensure that the output is flushed immediately
-            GoToTarget(False, [plan[-1][0]+0.3,0.09, y_base[i]])  # Move slightly forward after reaching the target
+            GoToTarget(False, [plan[-1][0]+0.4,0.09, y_base[i]])  # Move slightly forward after reaching the target
             send_servo_request(30)
             sys.stdout.flush()  # Ensure that the output is flushed immediately
             GoBack()
@@ -332,8 +331,8 @@ try:
         
         
     # send_servo_request(30)
-    print("c_pos: ", c_pos, "c_rot: ", c_rot, "c_rad: ", c_rad)
-    print("t_pos: ", t_pos, "t_rot: ", t_rot, "t_rad: ", t_rad)
+    # print("c_pos: ", c_pos, "c_rot: ", c_rot, "c_rad: ", c_rad)
+    # print("t_pos: ", t_pos, "t_rot: ", t_rot, "t_rad: ", t_rad)
     sys.stdout.flush()  # Ensure that the output is flushed immediately
     # exit()
 

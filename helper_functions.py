@@ -72,3 +72,22 @@ def dist(x1, x2, y1, y2):
         float: The Euclidean distance between the two points.
     """
     return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+
+def correct_slot(cube,pos):
+    "first slot [[3.9, -0.05], [3.9, 0.00], [4.5, 0.00], [4.5, -0.40], [3.9, -0.40], [3.9, -0.45], [4.4, -0.45], [4.5, -0.45], [4.5, -0.40], [4.4, -0.40], [4.4, -0.05]]"
+    "2:[[3.9,0.4],[3.9,0.45],[4.5,0.45] ,[4.5,0.05],[3.9,0.05],[3.9,0.0],[4.4,0.0],[4.5, 0.0], [4.5, 0.05], [4.4, 0.05],[4.4,0.4]],"
+    if pos[0]> 3.9:
+        print("The target is in the correct slot")
+        if cube==0:
+            print(pos)
+            if (pos[2]< -0.40 and pos[2]> -0.05):
+                return True
+        elif cube==1:
+            if (pos[2]< 0.40 and pos[2]> 0.05):
+                return True
+        elif cube==2:
+            if (pos[2]> 0.45 and pos[2]< 0.8):
+                return True
+    
+    return False
+
