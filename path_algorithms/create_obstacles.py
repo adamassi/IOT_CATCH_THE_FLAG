@@ -33,7 +33,7 @@ def add_circle_obstacle(env, circle_pos, radius=0.09):
     
     obstacle = Polygon(obstacle_points)
     env.obstacles.append(obstacle)
-    print(f"Added circle obstacle at position {circle_pos} with radius {radius}m.")
+    # print(f"Added circle obstacle at position {circle_pos} with radius {radius}m.")
 
 def add_cube_obstacle(env, cube_pos, size=0.23):
     """
@@ -60,7 +60,7 @@ def add_cube_obstacle(env, cube_pos, size=0.23):
     
     obstacle = Polygon(obstacle_points)
     env.obstacles.append(obstacle)
-    print(f"Added cube obstacle at position {cube_pos} with size {size}m.")
+    # print(f"Added cube obstacle at position {cube_pos} with size {size}m.")
 
 def add_rectangle_obstacle(env, center_pos, width=0.25, height=0.7):
     """
@@ -87,7 +87,7 @@ def add_rectangle_obstacle(env, center_pos, width=0.25, height=0.7):
     
     obstacle = Polygon(obstacle_points)
     env.obstacles.append(obstacle)
-    print(f"Added rectangle obstacle at position {center_pos} with width {width}m and height {height}m.")
+    # print(f"Added rectangle obstacle at position {center_pos} with width {width}m and height {height}m.")
 
 
 

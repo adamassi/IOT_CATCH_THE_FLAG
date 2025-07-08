@@ -4,7 +4,8 @@ from natnet_client import DataDescriptions, DataFrame, NatNetClient
 import numpy as np
 import optitrack_data_handling
 #from helperFunc import dist, is_out_of_board 
-from helper_functions import dist, angle_between_points ,out_limits, is_flipped
+# from helper_functions import dist, angle_between_points ,out_limits, is_flipped
+from helper_functions import *
 from robotCommands import *
 from conversion import normalize_angle
 
@@ -17,8 +18,8 @@ import sys
 
 # check_esp_http()
 # for web
-# word = sys.argv[1]
-word = "OIT"  # Example word to extract order from
+word = sys.argv[1]
+# word = "OIT"  # Example word to extract order from
 arr=[]
 c_pos, c_rot, c_rad = [0,0,0], 0, 0
 t_pos1, t_rot1, t_rad1 = [0,0,0], 0, 0
@@ -27,9 +28,9 @@ t_pos3, t_rot3, t_rad3 = [0,0,0], 0, 0
 t_pos, t_rot, t_rad = [0,0,0], 0, 0
 base_pos1 = [3.7, 0.09, 0.67]  # Define a third base position for the third cube
 base_pos2 = [3.7, 0.09, 0.28]
-base_pos3 = [3.7, 0.09, -0.25]  # Define a second base position for the second cube
+base_pos3 = [3.7, 0.09, -0.15]  # Define a second base position for the second cube
 bases=[base_pos3, base_pos2,  base_pos1]  # List of base positions for the cubes
-y_base = [-0.25, 0.28, 0.67]  # List of base positions for the cubes
+y_base = [-0.15, 0.28, 0.67]  # List of base positions for the cubes
 #z = 1  # Initiali#ze a global variable for iteration count
 y=604
 def extract_order(word):
@@ -208,7 +209,7 @@ def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
     # Add dynamic obstacles (e.g., cubes detected in the environment)
     for cube_pos in cube_obstacles:
         if cube_pos != goal_pos:  # Skip if cube_pos matches goal_pos
-            print(f"Adding cube obstacle NOT GOAL at position {cube_pos}.")
+            # print(f"Adding cube obstacle NOT GOAL at position {cube_pos}.")
             add_cube_obstacle(planning_env, cube_pos)
 
     # Create an instance of the RCSPlanner with the planning environment
@@ -219,10 +220,10 @@ def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
     plan = planner.plan()
 
     # for-web
-    planner.planning_env.visuali#ze_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(), name='for_web')
+    planner.planning_env.visualize_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(), name='for_web')
     # Visuali#ze the map with the computed plan and expanded nodes
-    print("Visuali#zing the map with the computed plan and expanded nodes...")
-    # planner.planning_env.visuali#ze_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(), name='4main'+str(#z))  # Convert #z to string
+    print("Visualizing the map with the computed plan and expanded nodes...")
+    # planner.planning_env.visualize_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(), name='4main'+str(#z))  # Convert #z to string
     # print('Successfully planned path')
     #z += 1  # Increment the global variable #z
     return plan
@@ -293,6 +294,9 @@ def get_path_to_target():
         # print(f"{finshed}AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
          
 try:
+    extract_order(word) 
+    print(arr)
+    y = arr[0]  # Get the first target ID from the array
     send_servo_request(30)
     with streaming_client:
         streaming_client.request_modeldef()
@@ -304,29 +308,27 @@ try:
         sys.stdout.flush()  # Ensure that the output is flushed immediately
         print("Streaming started. Waiting for data...", flush=True)
         
-        # TODO
-        # GoBack()
-        extract_order(word) 
-        print(arr)
+    
         sys.stdout.flush()  # Ensure that the output is flushed immediately
         for i in range(3):
             y = arr[i]  # Get the current target ID from the array
             out_limits(c_pos, t_pos)
             is_flipped([t_rot1, t_rot2, t_rot3])
-            print("Current target ID:", y)
-            sys.stdout.flush()  # Ensure that the output is flushed immediately
-            # y=607
-            plan = []
-            while len(plan) == 0:
-                get_path_to_target()  # Get the path to the target position
-                send_servo_request(80)
-                plan = go_to_goal(bases[i])  # Move to the base position first
-            turnToTarget(False, [plan[-1][0]+0.4,0.09, y_base[i]])
-            sys.stdout.flush()  # Ensure that the output is flushed immediately
-            GoToTarget(False, [plan[-1][0]+0.4,0.09, y_base[i]])  # Move slightly forward after reaching the target
-            send_servo_request(30)
-            sys.stdout.flush()  # Ensure that the output is flushed immediately
-            GoBack()
+            # print("Current target ID:", y)
+            if not correct_slot(i,t_pos):
+                sys.stdout.flush()  # Ensure that the output is flushed immediately
+                # y=607
+                plan = []
+                while len(plan) == 0:
+                    get_path_to_target()  # Get the path to the target position
+                    send_servo_request(80)
+                    plan = go_to_goal(bases[i])  # Move to the base position first
+                turnToTarget(False, [plan[-1][0]+0.4,0.09, y_base[i]])
+                sys.stdout.flush()  # Ensure that the output is flushed immediately
+                GoToTarget(False, [plan[-1][0]+0.4,0.09, y_base[i]])  # Move slightly forward after reaching the target
+                send_servo_request(30)
+                sys.stdout.flush()  # Ensure that the output is flushed immediately
+                GoBack()
             # exit()
         
         

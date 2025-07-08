@@ -54,15 +54,12 @@ def click_t():
 
 # Reset everything
 def reset_all():
-    if not st.session_state.clicked_submit:
-        st.session_state.word = ""
-        st.session_state.clicked_i = False
-        st.session_state.clicked_o = False
-        st.session_state.clicked_t = False
-        st.session_state.clicked_submit = False
-        st.session_state.enable_submit = False
-    else:
-        print("You cannot reset while the algorithm is running. Please stop it first.")
+    st.session_state.word = ""
+    st.session_state.clicked_i = False
+    st.session_state.clicked_o = False
+    st.session_state.clicked_t = False
+    st.session_state.clicked_submit = False
+    st.session_state.enable_submit = False
 
 
 
@@ -157,6 +154,7 @@ def run_script(output_dict, word):
 # stop everything
 def stop_all():
     event.set()  # Set the event to signal the thread to stop
+    st.session_state.clicked_submit = False
 
 
 output = {"finished": False, "returncode": None, "stdout": [], "stderr": []}
@@ -198,6 +196,7 @@ def submit_button():
     output_log.text("Output:\n" + live_output) 
     # Optionally show success/failure only
     if output["stderr"] == []:
+        st.session_state.clicked_submit = False
         elapsed = time.time() - st.session_state.start_time
         st.success(f"Algorithm finished successfully! Finished in {elapsed:.1f} seconds!")
         image_placeholder2 = st.empty()
@@ -205,9 +204,12 @@ def submit_button():
         final_output = st.empty()
         final_output.code("Output:\n" + live_output, height=200)
         print(f"Algorithm finished successfully! Finished in {elapsed:.1f} seconds!")
+        
     else:
+        st.session_state.clicked_submit = False
         st.error("There was an error running the algorithm.")
         st.error(f"{output['stderr'][0]}")
+    st.session_state.clicked_submit = False
 
 
 if submit_col.button("Submit", disabled=st.session_state.enable_submit, on_click=submit_button):
@@ -218,7 +220,7 @@ if submit_col.button("Submit", disabled=st.session_state.enable_submit, on_click
 reset_col.button("Reset", on_click=reset_all)
 
 if stop_col.button("Stop", on_click=stop_all):
-    if not st.session_state.clicked_submit:
+    if st.session_state.clicked_submit:
         st.error("The algorithm is not running yet. Please submit your word first.")
     else:
         timer_placeholder = st.empty()

@@ -37,8 +37,8 @@ class MapEnvironment(object):
         # add circle obstacles in the map in  [2.71, 1.06]
         add_circle_obstacle(self, [2.71, 0.14, 1.06])
         # add_cube_obstacle(self, [2.71, 0.14, 1.06])
-
         add_rectangle_obstacle(self, [1.6, 0.24, 0.06], width=0.25, height=0.7)
+        # add_circle_obstacle(self, 2.86, 0.13, -0.91)
         # adding pyramid obstacle
         add_rectangle_obstacle(self, [1.97, 0.12, 0.40], width=0.6, height=0.25)
         add_rectangle_obstacle(self, [0.35, 0.1, -0.8], width=0.6, height=0.12)

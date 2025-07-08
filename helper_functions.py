@@ -79,11 +79,14 @@ def correct_slot(cube,pos):
     if pos[0]> 3.9:
         print("The target is in the correct slot")
         if cube==0:
-            print(pos)
-            if (pos[2]< -0.40 and pos[2]> -0.05):
+            # print(pos)
+            if (pos[2]> -0.40 and pos[2]< -0.05):
+                # print("AAAAAAAAAAAAAAAAAAAAAAAAAA")
                 return True
         elif cube==1:
-            if (pos[2]< 0.40 and pos[2]> 0.05):
+            # print(pos)
+            # print("AAAAAAAAAAAAAAAAAAA")
+            if (pos[2]< 0.40 and pos[2]> 0.0):
                 return True
         elif cube==2:
             if (pos[2]> 0.45 and pos[2]< 0.8):

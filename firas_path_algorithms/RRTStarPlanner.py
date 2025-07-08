@@ -136,7 +136,7 @@ class RRTStarPlanner(object):
         # Print total path cost and time
         total_time = time.time() - start_time
         total_cost = self.compute_cost(plan)
-        print('Total cost of path: {:.3f}'.format(total_cost))
+        # print('Total cost of path: {:.3f}'.format(total_cost))
         print('Total time: {:.3f} seconds'.format(total_time))
         #  itorite over the plan and print each step
         for i, step in enumerate(plan):

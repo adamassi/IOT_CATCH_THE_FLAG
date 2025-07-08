@@ -290,6 +290,9 @@ def get_path_to_target():
         # print(f"{finshed}AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
          
 try:
+    extract_order(word) 
+    print(arr)
+    y= arr[0]  # Get the first target ID from the array
     send_servo_request(30)
     with streaming_client:
         streaming_client.request_modeldef()
@@ -303,17 +306,22 @@ try:
         
         # TODO
         # GoBack()
-        extract_order(word) 
-        print(arr)
+       
         #sys.stdout.flush()  # Ensure that the output is flushed immediately
         for i in range(3):
             print(i)
             y = arr[i]  # Get the current target ID from the array
+            
+            # while for 1 sec
+            # start_time = time.time()
+            # while time.time() - start_time >= 1.0:
+            #     continue
             out_limits(c_pos, t_pos)
             is_flipped([t_rot1, t_rot2, t_rot3])
-            print("Current target ID:", y)
+            # print("Current target ID:", y)
             #sys.stdout.flush()  # Ensure that the output is flushed immediately
             # y=607
+            # print(f"cccccccccccccheck correct slot {t_pos}")
             if not correct_slot(i,t_pos):
                 # TODO PRINT
                 plan = []
