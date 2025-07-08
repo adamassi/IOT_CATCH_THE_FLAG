@@ -224,7 +224,7 @@ def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
     # Visualize the map with the computed plan and expanded nodes
     print("Visualizing the map with the computed plan and expanded nodes...")
     # planner.planning_env.visualize_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(), name='4main'+str(z))  # Convert z to string
-    print('Successfully planned path')
+    # print('Successfully planned path')
     z += 1  # Increment the global variable z
     return plan
 # use it to go to the base position
@@ -249,17 +249,17 @@ def go_to_goal(goal_pos):
             # print("1")
             is_flipped([t_rot1, t_rot2, t_rot3])
             # out_limits(c_pos, t_pos)
-            print("2")
+            # print("2")
             go_to_pos = [plan[i+1][0], 0, plan[i+1][1]]
-            print("Current position:", go_to_pos)
+            # print("Current position:", go_to_pos)
             turnToTarget(False, go_to_pos)
             GoToTarget(False, go_to_pos)
             if(dist(t_pos1[0], cur_t_pos1[0], t_pos1[2], cur_t_pos1[2]) > 0.1 and y!=604) or( dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1 and y!=606) or (dist(t_pos3[0], cur_t_pos3[0], t_pos3[2], cur_t_pos3[2])> 0.1 and y!=607) :
-                print("continue")
+                # print("continue")
                 finshed = False
                 break
             if dist(c_pos[0], t_pos[0], c_pos[2], t_pos[2]) > 0.15:
-                print("NNNNNNNNNNNNNNED TO FIX")
+                # print("NNNNNNNNNNNNNNED TO FIX")
                 send_servo_request(30)
                 return []
                 
@@ -283,7 +283,7 @@ def get_path_to_target():
             is_flipped([t_rot1, t_rot2, t_rot3])
             out_limits(c_pos, t_pos)
             go_to_pos = [plan[i+1][0], 0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
-            print("Current position:", go_to_pos)
+            # print("Current position:", go_to_pos)
             # turnToTarget(False, go_to_pos)
             turnToTarget(False, go_to_pos)
             GoToTarget(False, go_to_pos)
@@ -291,7 +291,7 @@ def get_path_to_target():
                 print("continue")
                 finshed = False
                 break
-        print(f"{finshed}AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+        # print(f"{finshed}AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
          
 try:
     send_servo_request(30)
