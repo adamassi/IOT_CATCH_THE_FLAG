@@ -1,6 +1,6 @@
 import time
 import socket
-from natnet_client import DataDescriptions, DataFrame, NatNetClient
+from natnet import DataDescriptions, DataFrame, NatNetClient
 import numpy as np
 import optitrack_data_handling
 #from helperFunc import dist, is_out_of_board 
@@ -258,7 +258,6 @@ def go_to_goal(goal_pos):
                 finshed = False
                 break
             if dist(c_pos[0], t_pos[0], c_pos[2], t_pos[2]) > 0.15:
-                # print("NNNNNNNNNNNNNNED TO FIX")
                 send_servo_request(30)
                 return []
                 
@@ -287,7 +286,6 @@ def get_path_to_target():
                 print("continue")
                 finshed = False
                 break
-        # print(f"{finshed}AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
          
 try:
     extract_order(word) 

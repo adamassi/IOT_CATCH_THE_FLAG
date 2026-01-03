@@ -3,8 +3,6 @@ import requests
 import socket
 #import math
 from PARAMETERS import ESPConfig
-import requests
-
 
 
 
