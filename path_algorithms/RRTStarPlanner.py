@@ -17,7 +17,8 @@ class RRTStarPlanner(object):
 
         # Set step size for extensions based on the environment size
         if planning_env.ylimit[1] < 100:
-            self.step_size = 0.2  # Small step size for small environments
+            self.step_size = 0.2  # Small step size for small environments(this what we use in the lab)
+            
         else:
             self.step_size = 10
 

@@ -137,21 +137,44 @@ def turnToTarget(is_cube = True, curr_t_pos = t_pos):
     # time.sleep(1)
 
 def GoToTarget(is_cube = True, curr_t_pos = t_pos):
-    
+    """Drive the chaser toward a target position until close.
+
+    Args:
+        is_cube (bool): If True, use the tracked global `t_pos` as the
+            current target; otherwise use the provided `curr_t_pos`.
+        curr_t_pos (list): [x, y, z] fallback target position when
+            `is_cube` is False.
+
+    Behavior:
+        - If the distance to the target is >= 0.16 m, start moving forward.
+        - Continuously update streaming data and check distance.
+        - If within 0.14 m, stop and return.
+        - If heading error is large (> 0.5 rad), call `turnToTarget`
+          to re-orient before continuing forward.
+    """
+
+    # Only start driving if we're not already close to the target
     if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) >= 0.16:
         send_go_request()
         while True:
-            # is_flipped([t_pos1, t_pos2, t_pos3])
+            # Keep optitrack data fresh
             streaming_client.update_sync()
+
+            # If tracking a cube, always use the live global `t_pos`
             if is_cube:
                 curr_t_pos = t_pos
+
+            # If we got close enough, stop and exit
             if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) < 0.14:
-                send_stop_request()
+                send_stop_request() #the problem if we remove this line is harder to catch the target 
+                #1/3/2026
                 break
+
+            # Compute heading error and optionally re-orient
             angle = angle_between_points(c_pos, curr_t_pos)
             normalized_angle = normalize_angle(angle - c_rad)
             if abs(normalized_angle) > 0.5:
-                #send_stop_request()
+                # Large heading error: turn toward the target, then resume
                 turnToTarget(is_cube, curr_t_pos)
                 send_go_request()
 
