@@ -46,6 +46,7 @@ def send_back_request():
         # print("BACK request sent. Response:", response.text)
     except Exception as e:
         print("Error sending BACK request:", e)
+# left with i we use 
 def send_lift_request(speed=45):
     try:
         response = requests.get(f"{ESPConfig.ESP_IP}/left?value="+str(speed))

@@ -7,7 +7,7 @@
 Servo myServo;
 
 
-
+// WiFi credentials  router name and password
 const char *ssid = "IOT_project";     //remember to change
 const char *password = "Arduino123";  //remember to change
 
@@ -30,7 +30,8 @@ int pwm_power_value = 45;
 int servoAngle = 10;
 
 const int frequency = 500;
-
+// l1() l4 responsible go backward
+// l2 (right) and l3(left) responsible go forward 
 const int pwm_channel1 = 5;
 const int pwm_channel2 = 2;
 const int pwm_channel3 = 3;
@@ -352,6 +353,19 @@ void setup() {
   });
 
   server.on("/right", HTTP_GET, [](AsyncWebServerRequest *request) {
+    //slider_value = "150";
+    int speed = pwm_power_value;
+    if (request->hasParam(input_parameter)) {
+      speed = request->getParam(input_parameter)->value().toInt();
+    }
+    ledcWrite(pwm_channel1, speed);
+    ledcWrite(pwm_channel2, 0);
+    ledcWrite(pwm_channel3, speed);
+    ledcWrite(pwm_channel4, 0);
+
+    request->send(200, "text/plain", "turn right");
+  });
+  server.on("/right_moving", HTTP_GET, [](AsyncWebServerRequest *request) {
     //slider_value = "150";
     int speed = pwm_power_value;
     if (request->hasParam(input_parameter)) {
