@@ -124,7 +124,7 @@ def turnToTarget(is_cube = True, curr_t_pos = t_pos):
         angle = angle_between_points(curr_c_pos, curr_t_pos)
         normalized_angle = normalize_angle(angle - curr_c_rad)
         if abs(normalized_angle) < 0.07:
-            send_stop_request()
+            # send_stop_request()
             break
         elif normalized_angle < 0:
             if not turning_state == left:
