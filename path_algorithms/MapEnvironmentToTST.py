@@ -111,22 +111,18 @@ class MapEnvironment(object):
                 return False
 
         return True
-    #     "OBSTACLES": [[[3.9,0.4],[3.9,0.45],[4.5,0.45] ,[4.5,0.05],[3.9,0.05],[3.9,0.0],[4.4,0.0],[4.5, 0.0], [4.5, 0.05], [4.4, 0.05],[4.4,0.4]],
-    # [[3.9, 0.8], [3.9, 0.85], [4.5, 0.85], [4.5, 0.45], [3.9, 0.45], [3.9, 0.4], [4.4, 0.4], [4.4, 0.8]],
-    # [[3.9, -0.05], [3.9, 0.00], [4.5, 0.00], [4.5, -0.40], [3.9, -0.40], [3.9, -0.45], [4.4, -0.45], [4.5, -0.45], [4.5, -0.40], [4.4, -0.40], [4.4, -0.05]]
-
-# ],
     def is_visible(self, point1, point2):
         """
         Check if two points have line-of-sight visibility.
         """
 
-        line = LineString([point1, point2])
-        # obstacles: withe out firt one
-        for i, polygon in enumerate(self.obstacles):
-            if (line.crosses(polygon) or line.within(polygon)):
+        edge = LineString([point1, point2])
+        # enlarged = [obstacle.buffer(0) for obstacle in self.obstacles]
+        # Check for intersection with any obstacle
+        # WITHE OUT THE FIRST OSTACLE
+        for obstacle in self.obstacles:
+            if edge.intersects(obstacle):
                 return False
-
         return True
 
     def edge_validity_checker(self, state1, state2):
@@ -195,33 +191,30 @@ class MapEnvironment(object):
 
         # Include start and goal points
         additional_points = [start, goal]
-
+        obstacles_vertices = [tuple(coord) for obstacle in self.obstacles[1:] for coord in obstacle.buffer(0.1).exterior.coords[:-1]]
         # Collect all nodes (start, goal, and obstacle vertices)
-        nodes = additional_points + [
-            tuple(coord)
-            for polygon in self.obstacles
-            for coord in polygon.exterior.coords[:-1]
-        ]
+        inflation = 0.1
+
+        nodes = additional_points + obstacles_vertices
 
         # Initialize the graph
         graph = {node: [] for node in nodes}
 
         # Check all pairs of nodes for valid edges
         for i, node1 in enumerate(nodes):
-            
-                for node2 in nodes[i + 1:]:
-                    if node1 != node2 and self.is_visible(
-                        np.array(node1),
-                        np.array(node2)
-                    ):
-                        # Compute the distance between nodes
-                        distance = np.linalg.norm(
-                            np.array(node1) - np.array(node2)
-                        )
+            for node2 in nodes[i + 1:]:
+                if node1 != node2 and self.is_visible(
+                    np.array(node1),
+                    np.array(node2)
+                ):
+                    # Compute the distance between nodes
+                    distance = np.linalg.norm(
+                        np.array(node1) - np.array(node2)
+                    )
 
-                        # Add the edge to the graph
-                        graph[node1].append((node2, distance))
-                        graph[node2].append((node1, distance))
+                    # Add the edge to the graph
+                    graph[node1].append((node2, distance))
+                    graph[node2].append((node1, distance))
 
         return graph
 
@@ -321,7 +314,7 @@ class MapEnvironment(object):
         # Plot visibility graph if given
         for node, edges in visibility_graph.items():
             for neighbor, _ in edges:
-                plt.plot([node[1], neighbor[1]], [node[0], neighbor[0]], color='white', linewidth=0.5, alpha=0.2)
+                plt.plot([node[0], neighbor[0]], [node[1], neighbor[1]], color='orange', linewidth=0.3, alpha=0.2)
         # Plot start and goal
         for state, color in [(self.start, 'r'), (self.goal, 'g')]:
             cx, cy = state[1], state[0]

@@ -7,6 +7,7 @@ import time
 class RRTStarPlanner(object):
     def __init__(self, planning_env, ext_mode, goal_prob, k):
         # Initialize the planning environment and the RRT* tree
+        # planning_env: is MapEnvironment
         self.planning_env = planning_env
         self.tree = RRTTree(self.planning_env)
 
