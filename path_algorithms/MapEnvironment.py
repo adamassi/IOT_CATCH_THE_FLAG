@@ -111,9 +111,9 @@ class MapEnvironment(object):
                 return False
 
         return True
-    #     "OBSTACLES": [[[3.9,0.4],[3.9,0.45],[4.5,0.45] ,[4.5,0.05],[3.9,0.05],[3.9,0.0],[4.4,0.0],[4.5, 0.0], [4.5, 0.05], [4.4, 0.05],[4.4,0.4]],
-    # [[3.9, 0.8], [3.9, 0.85], [4.5, 0.85], [4.5, 0.45], [3.9, 0.45], [3.9, 0.4], [4.4, 0.4], [4.4, 0.8]],
-    # [[3.9, -0.05], [3.9, 0.00], [4.5, 0.00], [4.5, -0.40], [3.9, -0.40], [3.9, -0.45], [4.4, -0.45], [4.5, -0.45], [4.5, -0.40], [4.4, -0.40], [4.4, -0.05]]
+#         "OBSTACLES": [[[3.9,0.4],[3.9,0.45],[4.5,0.45] ,[4.5,0.05],[3.9,0.05],[3.9,0.0],[4.4,0.0],[4.5, 0.0], [4.5, 0.05], [4.4, 0.05],[4.4,0.4]],
+#     [[3.9, 0.8], [3.9, 0.85], [4.5, 0.85], [4.5, 0.45], [3.9, 0.45], [3.9, 0.4], [4.4, 0.4], [4.4, 0.8]],
+#     [[3.9, -0.05], [3.9, 0.00], [4.5, 0.00], [4.5, -0.40], [3.9, -0.40], [3.9, -0.45], [4.4, -0.45], [4.5, -0.45], [4.5, -0.40], [4.4, -0.40], [4.4, -0.05]]
 
 # ],
     def is_visible(self, point1, point2):
@@ -199,7 +199,7 @@ class MapEnvironment(object):
         # Collect all nodes (start, goal, and obstacle vertices)
         nodes = additional_points + [
             tuple(coord)
-            for polygon in self.obstacles
+            for polygon in self.obstacles[3:]  # Skip the first three obstacles if they are not relevant for visibility graph
             for coord in polygon.exterior.coords[:-1]
         ]
 
