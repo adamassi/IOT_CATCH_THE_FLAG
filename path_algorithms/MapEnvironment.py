@@ -42,6 +42,7 @@ class MapEnvironment(object):
         # adding pyramid obstacle
         add_rectangle_obstacle(self, [1.97, 0.12, 0.40], width=0.6, height=0.25)
         add_rectangle_obstacle(self, [0.35, 0.1, -0.8], width=0.6, height=0.12)
+        add_walls(self)
 
 
 

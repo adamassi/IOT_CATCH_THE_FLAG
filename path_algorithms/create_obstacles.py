@@ -1,4 +1,4 @@
-from shapely.geometry import Polygon  # For creating geometric shapes
+from shapely.geometry import Polygon,Point  # For creating geometric shapes
 import numpy as np  # For mathematical operations like cosine and sine
 
 def is_within_boundaries(env, points):
@@ -88,7 +88,29 @@ def add_rectangle_obstacle(env, center_pos, width=0.25, height=0.7):
     obstacle = Polygon(obstacle_points)
     env.obstacles.append(obstacle)
     # print(f"Added rectangle obstacle at position {center_pos} with width {width}m and height {height}m.")
-
+def add_walls(env):
+    """
+    Adds walls around the boundaries of the map to prevent the robot from going out of bounds.
+    """
+    wall_length = 8  # Thickness of the walls in meters
+    x_min, x_max = env.xlimit
+    y_min, y_max = env.ylimit
+    #left wall
+    add_rectangle_obstacle(env, [0,0,-1.89], width=wall_length, height=0.01)  # Left wall
+    #right wall
+    add_rectangle_obstacle(env, [0,0,1.89], width=wall_length, height=0.01)  # Right wall
+    # env.obstacles.append(Polygon([(1,-1.9)]))
+    
+    # # Define wall positions (centered on the boundary)
+    # walls = [
+    #     [x_min - wall_thickness / 2, 0, (z_min + z_max) / 2],  # Left wall
+    #     [x_max + wall_thickness / 2, 0, (z_min + z_max) / 2],  # Right wall
+    #     [(x_min + x_max) / 2, 0, z_min - wall_thickness / 2],  # Bottom wall
+    #     [(x_min + x_max) / 2, 0, z_max + wall_thickness / 2]   # Top wall
+    # ]
+    
+    # for wall_pos in walls:
+    #     add_rectangle_obstacle(env, wall_pos, width=wall_thickness, height=(z_max - z_min + wall_thickness))
 
 
 
