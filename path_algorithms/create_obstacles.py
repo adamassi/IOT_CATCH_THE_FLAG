@@ -93,24 +93,10 @@ def add_walls(env):
     Adds walls around the boundaries of the map to prevent the robot from going out of bounds.
     """
     wall_length = 8  # Thickness of the walls in meters
-    x_min, x_max = env.xlimit
-    y_min, y_max = env.ylimit
+    
     #left wall
     add_rectangle_obstacle(env, [0,0,-1.89], width=wall_length, height=0.01)  # Left wall
     #right wall
     add_rectangle_obstacle(env, [0,0,1.89], width=wall_length, height=0.01)  # Right wall
-    # env.obstacles.append(Polygon([(1,-1.9)]))
     
-    # # Define wall positions (centered on the boundary)
-    # walls = [
-    #     [x_min - wall_thickness / 2, 0, (z_min + z_max) / 2],  # Left wall
-    #     [x_max + wall_thickness / 2, 0, (z_min + z_max) / 2],  # Right wall
-    #     [(x_min + x_max) / 2, 0, z_min - wall_thickness / 2],  # Bottom wall
-    #     [(x_min + x_max) / 2, 0, z_max + wall_thickness / 2]   # Top wall
-    # ]
-    
-    # for wall_pos in walls:
-    #     add_rectangle_obstacle(env, wall_pos, width=wall_thickness, height=(z_max - z_min + wall_thickness))
-
-
 
