@@ -6,7 +6,7 @@ class OptiTrackConfig:
     
 
 class ESPConfig:
-    ESP_IP = "http://192.168.0.103"
+    ESP_IP = "http://192.168.0.105"
     OPEN_SERVO_ANGLE = 30
     PICKUP_SERVO_ANGLE = 80
     
