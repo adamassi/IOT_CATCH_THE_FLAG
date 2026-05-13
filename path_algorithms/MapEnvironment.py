@@ -42,6 +42,7 @@ class MapEnvironment(object):
         # adding pyramid obstacle
         add_rectangle_obstacle(self, [1.97, 0.12, 0.40], width=0.6, height=0.25)
         add_rectangle_obstacle(self, [0.35, 0.1, -0.8], width=0.6, height=0.12)
+        add_walls(self)
 
 
 
@@ -111,6 +112,23 @@ class MapEnvironment(object):
                 return False
 
         return True
+#         "OBSTACLES": [[[3.9,0.4],[3.9,0.45],[4.5,0.45] ,[4.5,0.05],[3.9,0.05],[3.9,0.0],[4.4,0.0],[4.5, 0.0], [4.5, 0.05], [4.4, 0.05],[4.4,0.4]],
+#     [[3.9, 0.8], [3.9, 0.85], [4.5, 0.85], [4.5, 0.45], [3.9, 0.45], [3.9, 0.4], [4.4, 0.4], [4.4, 0.8]],
+#     [[3.9, -0.05], [3.9, 0.00], [4.5, 0.00], [4.5, -0.40], [3.9, -0.40], [3.9, -0.45], [4.4, -0.45], [4.5, -0.45], [4.5, -0.40], [4.4, -0.40], [4.4, -0.05]]
+
+# ],
+    def is_visible(self, point1, point2):
+        """
+        Check if two points have line-of-sight visibility.
+        """
+
+        line = LineString([point1, point2])
+        # obstacles: withe out firt one
+        for i, polygon in enumerate(self.obstacles):
+            if (line.crosses(polygon) or line.within(polygon)):
+                return False
+
+        return True
 
     def edge_validity_checker(self, state1, state2):
         '''
@@ -167,6 +185,49 @@ class MapEnvironment(object):
 
         pass
 
+    def generate_visibility_graph(self):
+        """
+        Generate a visibility graph for the environment.
+        Nodes include the start, goal, and vertices of obstacles.
+        Edges are valid connections between nodes that do not intersect obstacles.
+        """
+        start = tuple(self.start)
+        goal = tuple(self.goal)
+
+        # Include start and goal points
+        additional_points = [start, goal]
+
+        # Collect all nodes (start, goal, and obstacle vertices)
+        nodes = additional_points + [
+            tuple(coord)
+            for polygon in self.obstacles[3:]  # Skip the first three obstacles if they are not relevant for visibility graph
+            for coord in polygon.exterior.coords[:-1]
+        ]
+
+        # Initialize the graph
+        graph = {node: [] for node in nodes}
+
+        # Check all pairs of nodes for valid edges
+        for i, node1 in enumerate(nodes):
+            
+                for node2 in nodes[i + 1:]:
+                    if node1 != node2 and self.is_visible(
+                        np.array(node1),
+                        np.array(node2)
+                    ):
+                        # Compute the distance between nodes
+                        distance = np.linalg.norm(
+                            np.array(node1) - np.array(node2)
+                        )
+
+                        # Add the edge to the graph
+                        graph[node1].append((node2, distance))
+                        graph[node2].append((node1, distance))
+
+        return graph
+
+
+
     # ------------------------#
     # Visualization Functions
     # ------------------------#
@@ -210,8 +271,9 @@ class MapEnvironment(object):
     #         plt.savefig('map-RRT'+name+'.png')
 
     #     return plt
+
 # firas 
-    def visualize_map(self, show_map=False, plan=None, tree_edges=None, expanded_nodes=None, name=""):
+    def visualize_map(self, show_map=False, plan=None, tree_edges=None, expanded_nodes=None,visibility_graph=None, name=""):
         """
         Visualize the map with current state of robot and obstacles in the map (X is vertical, Y is horizontal).
         @param show_map If to show the map or save it.
@@ -257,7 +319,10 @@ class MapEnvironment(object):
                 cx, cy = node[1], node[0]
                 point_circ = plt.Circle((cx, cy), radius=0.1, color='lightgrey', zorder=10)
                 plt.gca().add_patch(point_circ)
-
+        # Plot visibility graph if given
+        for node, edges in visibility_graph.items():
+            for neighbor, _ in edges:
+                plt.plot([node[1], neighbor[1]], [node[0], neighbor[0]], color='white', linewidth=0.5, alpha=0.2)
         # Plot start and goal
         for state, color in [(self.start, 'r'), (self.goal, 'g')]:
             cx, cy = state[1], state[0]
