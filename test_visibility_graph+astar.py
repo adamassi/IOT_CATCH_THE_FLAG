@@ -15,6 +15,7 @@ def main():
         show_map=True,
         visibility_graph=visibility_graph
     )
+    
 
 
 if __name__ == "__main__":
