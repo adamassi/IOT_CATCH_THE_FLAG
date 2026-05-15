@@ -232,47 +232,6 @@ class MapEnvironment(object):
     # Visualization Functions
     # ------------------------#
 
-    # def visualize_map(self, show_map=False, plan=None, tree_edges=None, expanded_nodes=None,name=""):
-    #     '''
-    #     Visualize map with current state of robot and obstacles in the map.
-    #     @param show_map If to show the map or save it.
-    #     @param plan A given plan to draw for the robot.
-    #     @param tree_edges A set of tree edges to draw.
-    #     @param expanded_nodes A set of expanded nodes to draw.
-    #     '''
-    #     # create empty background
-    #     plt = self.create_map_visualization()
-
-    #     # add obstacles
-    #     plt = self.visualize_obstacles(plt=plt)
-
-    #     # add plan if given
-    #     if plan is not None:
-    #         plt = self.visualize_plan(plt=plt, plan=plan, color='navy')
-
-    #     # add tree edges if given
-    #     if tree_edges is not None:
-    #         plt = self.visualize_tree_edges(plt=plt, tree_edges=tree_edges, color='lightgrey')
-
-    #     # add expanded nodes if given
-    #     if expanded_nodes is not None:
-    #         plt = self.visualize_expanded_nodes(plt=plt, expanded_nodes=expanded_nodes, color='lightgrey')
-
-    #     # add start
-    #     plt = self.visualize_point_location(plt=plt, state=self.start, color='r')
-
-    #     # add goal or inspection points
-    #     plt = self.visualize_point_location(plt=plt, state=self.goal, color='g')
-
-    #     # show map
-    #     if show_map:
-    #         plt.show()
-    #     else:
-    #         plt.savefig('map-RRT'+name+'.png')
-
-    #     return plt
-
-# firas 
     def visualize_map(self, show_map=False, plan=None, tree_edges=None, expanded_nodes=None,visibility_graph=None, name=""):
         """
         Visualize the map with current state of robot and obstacles in the map (X is vertical, Y is horizontal).
@@ -341,7 +300,7 @@ class MapEnvironment(object):
         if show_map:
             plt.show()
         else:
-            plt.savefig(f'map-RRT{name}.png')
+            plt.savefig(f'pics/map-RRT{name}.png')
 
         return plt
 
