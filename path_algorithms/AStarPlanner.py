@@ -3,10 +3,10 @@ import heapq
 import numpy as np
 
 class AStarPlanner:
-    def __init__(self, start, goal, graph):
-        self.start = tuple(start)
-        self.goal = tuple(goal)
-        self.graph = graph
+    def __init__(self, env):
+        self.start = tuple(env.start)
+        self.goal = tuple(env.goal)
+        self.graph = env.generate_visibility_graph()
 
     def plan_path(self):
         # Implement A* path planning algorithm
