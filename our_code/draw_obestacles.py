@@ -1,6 +1,6 @@
 import time
 import socket
-from natnet_client import DataDescriptions, DataFrame, NatNetClient
+from natnet import DataDescriptions, DataFrame, NatNetClient
 import numpy as np
 import math
 from datetime import datetime
