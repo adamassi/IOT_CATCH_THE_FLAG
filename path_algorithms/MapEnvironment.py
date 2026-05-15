@@ -320,9 +320,10 @@ class MapEnvironment(object):
                 point_circ = plt.Circle((cx, cy), radius=0.1, color='lightgrey', zorder=10)
                 plt.gca().add_patch(point_circ)
         # Plot visibility graph if given
-        for node, edges in visibility_graph.items():
-            for neighbor, _ in edges:
-                plt.plot([node[1], neighbor[1]], [node[0], neighbor[0]], color='white', linewidth=0.5, alpha=0.2)
+        if visibility_graph is not None:
+            for node, edges in visibility_graph.items():
+                for neighbor, _ in edges:
+                    plt.plot([node[1], neighbor[1]], [node[0], neighbor[0]], color='white', linewidth=0.5, alpha=0.2)
         # Plot start and goal
         for state, color in [(self.start, 'r'), (self.goal, 'g')]:
             cx, cy = state[1], state[0]
