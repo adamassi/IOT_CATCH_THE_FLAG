@@ -11,6 +11,7 @@ from shapely.geometry import Point, LineString, Polygon
 from path_algorithms.create_obstacles import *
 # 2.71, 0.14, 1.06
 # add circle obstacles function
+obstacle_margin = 0.12  # Margin to ensure the robot does not collide with obstacles
 
 class MapEnvironment(object):
     
@@ -184,6 +185,8 @@ class MapEnvironment(object):
         '''
 
         pass
+    
+    
 
     def generate_visibility_graph(self):
         """
@@ -196,11 +199,17 @@ class MapEnvironment(object):
 
         # Include start and goal points
         additional_points = [start, goal]
+        inflated_obstacles = [polygon.buffer(obstacle_margin) for polygon in self.obstacles[3:]]
 
         # Collect all nodes (start, goal, and obstacle vertices)
+        # nodes = additional_points + [
+        #     tuple(coord)
+        #     for polygon in self.obstacles[3:]  # Skip the first three obstacles if they are not relevant for visibility graph
+        #     for coord in polygon.exterior.coords[:-1]
+        # ]
         nodes = additional_points + [
             tuple(coord)
-            for polygon in self.obstacles[3:]  # Skip the first three obstacles if they are not relevant for visibility graph
+            for polygon in inflated_obstacles
             for coord in polygon.exterior.coords[:-1]
         ]
 
@@ -225,6 +234,18 @@ class MapEnvironment(object):
                         graph[node2].append((node1, distance))
 
         return graph
+    
+    # def generate_graph(self, filtered_obstacles, start, goal):
+    #     polygons = load_obstacle_map(filtered_obstacles)
+
+    #     # Make obstacles bigger BEFORE building the visibility graph, so both
+    #     # graph nodes and line-of-sight checks use the safer inflated obstacles.
+    #     enlarged_polygons = self.enlarge_obstacles(polygons, obstacle_clearance)
+
+    #     additional_points = [start, goal]
+    #     visibility_graph = self.generate_visibility_graph(enlarged_polygons, additional_points)
+    #     return enlarged_polygons, visibility_graph
+
 
 
 
