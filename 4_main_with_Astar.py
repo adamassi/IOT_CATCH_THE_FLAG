@@ -246,7 +246,7 @@ def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
 
     
     print("Visualizing the map with the computed plan and expanded nodes...")
-    planner.planning_env.visualize_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(), name='4main'+str(y))  # Convert z to string
+    # planner.planning_env.visualize_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(), name='4main'+str(y))  # Convert z to string
     # print('Successfully planned path')
     z += 1  # Increment the global variable z
     return plan

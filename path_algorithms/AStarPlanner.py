@@ -7,6 +7,7 @@ class AStarPlanner:
         self.start = tuple(env.start)
         self.goal = tuple(env.goal)
         self.graph = env.generate_visibility_graph()
+        self.planning_env = env
 
     def plan_path(self):
         # Implement A* path planning algorithm
@@ -41,3 +42,8 @@ class AStarPlanner:
                         heapq.heappush(open_set, (f_score[neighbor], neighbor))
 
         return None
+    def plan(self):
+        plan = self.plan_path()
+        if plan is not None:
+            self.planning_env.visualize_plan(plan=plan, visibility_graph=self.graph, name='AStarPlan')
+        return plan
