@@ -62,6 +62,7 @@ class MapEnvironment(object):
         # if you want to - you can display starting map here
         #self.visualize_map()
         print("Map environment initialized successfully.")
+
     def load_obstacles(self, obstacles):
         # s
         '''
