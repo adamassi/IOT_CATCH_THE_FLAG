@@ -18,8 +18,8 @@ import sys
 
 # check_esp_http()
 # for web
-word = sys.argv[1]
-# word = "OIT"  # Example word to extract order from
+#word = sys.argv[1]
+word = "OIT"  # Example word to extract order from
 arr=[]
 c_pos, c_rot, c_rad = [0,0,0], 0, 0
 t_pos1, t_rot1, t_rad1 = [0,0,0], 0, 0

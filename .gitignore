@@ -65,3 +65,6 @@ htmlcov/
 .DS_Store
 Thumbs.db
 our_code/__pycache__/
+
+# pics
+*.png
