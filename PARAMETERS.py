@@ -17,6 +17,11 @@ class PositionConfig:
     BASE_POS_2 = [4.2, 0.14, 0.25]
     BASE_POS_3 = [4.2, 0.14, 0.6]
     BASES_POS = [BASE_POS_1, BASE_POS_2, BASE_POS_3]
+# below are the base positions for the cubes, which are different from the target positions (BASES_POS) where the cubes should be placed. The base positions are where the cubes start before being moved to their target positions.
+    base_pos1 = [3.7, 0.09, 0.67]  # Define a third base position for the third cube
+    base_pos2 = [3.7, 0.09, 0.28]
+    base_pos3 = [3.7, 0.09, -0.15]  # Define a second base position for the second cube
+    bases = [base_pos3, base_pos2, base_pos1]  # List of base positions
     BASES_BORDERS = {
         'first': {
             'start': [4.05, 0.14, -0.28],
