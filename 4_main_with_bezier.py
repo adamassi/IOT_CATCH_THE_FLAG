@@ -4,21 +4,17 @@ from natnet import DataDescriptions, DataFrame, NatNetClient
 import numpy as np
 import optitrack_data_handling
 #from helperFunc import dist, is_out_of_board 
-from helper_functions import dist, angle_between_points ,out_limits, is_flipped
+# from helper_functions import dist, angle_between_points ,out_limits, is_flipped
 from robotCommands import *
 from conversion import normalize_angle
-
+from helper_functions import *
 # from shapely.geometry import Polygon  # Ensure this is imported
 from PARAMETERS import *
 from path_algorithms.create_obstacles import add_cube_obstacle  # Import the function to add cube obstacles
 from path_algorithms.MapEnvironment import MapEnvironment
 from path_algorithms.RRTStarPlanner import RRTStarPlanner
-from path_algorithms.bezier_path import safe_bezier_smooth_path
-# import #sys
+from path_algorithms.AStarPlanner import AStarPlanner
 
-# check_esp_http()
-# for web
-# word = #sys.argv[1]
 word = "OIT"  # Example word to extract order from
 arr=[]
 c_pos, c_rot, c_rad = [0,0,0], 0, 0
@@ -27,10 +23,10 @@ t_pos2, t_rot2, t_rad2 = [0,0,0], 0, 0
 t_pos3, t_rot3, t_rad3 = [0,0,0], 0, 0
 t_pos, t_rot, t_rad = [0,0,0], 0, 0
 base_pos2 = [3.7, 0.09, 0.28]
-base_pos3 = [3.7, 0.09, -0.25]  # Define a second base position for the second cube
+base_pos3 = [3.7, 0.09, -0.15]  # Define a second base position for the second cube
 base_pos1 = [3.7, 0.09, 0.67]  # Define a third base position for the third cube
 bases=[base_pos3, base_pos2,  base_pos1]  # List of base positions for the cubes
-y_base = [-0.25, 0.28, 0.67]  # List of base positions for the cubes
+y_base = [-0.15, 0.28, 0.67]  # List of base positions for the cubes
 z = 1  # Initialize a global variable for iteration count
 y=604
 def extract_order(word):
@@ -45,6 +41,56 @@ def extract_order(word):
             arr.append(606)
         elif c=='I':
             arr.append(604)
+def bezier_smooth_plan(plan, samples_per_segment=25, tension=0.25):
+    """
+    Smooth a polyline plan using cubic Bézier segments.
+
+    plan: numpy array with shape (N, 2)
+    returns: numpy array with many sampled points along the smooth curve
+    """
+    plan = np.asarray(plan, dtype=float)
+
+    if plan is None or len(plan) < 2:
+        return plan
+
+    if len(plan) == 2:
+        return plan
+
+    smooth_points = []
+
+    for i in range(len(plan) - 1):
+        p0 = plan[i]
+        p3 = plan[i + 1]
+
+        # Tangent at p0
+        if i == 0:
+            tangent0 = plan[i + 1] - plan[i]
+        else:
+            tangent0 = plan[i + 1] - plan[i - 1]
+
+        # Tangent at p3
+        if i == len(plan) - 2:
+            tangent1 = plan[i + 1] - plan[i]
+        else:
+            tangent1 = plan[i + 2] - plan[i]
+
+        p1 = p0 + tension * tangent0
+        p2 = p3 - tension * tangent1
+
+        # Avoid duplicating the joint point except on the final segment
+        t_values = np.linspace(0, 1, samples_per_segment, endpoint=(i == len(plan) - 2))
+
+        for t in t_values:
+            point = (
+                (1 - t) ** 3 * p0
+                + 3 * (1 - t) ** 2 * t * p1
+                + 3 * (1 - t) * t ** 2 * p2
+                + t ** 3 * p3
+            )
+            smooth_points.append(point)
+
+    return np.array(smooth_points)
+
 
 
 def receive_new_desc(desc: DataDescriptions):
@@ -72,19 +118,19 @@ def receive_new_frame(data_frame: DataFrame):
     global t_pos3, t_rot3, t_rad3
 
     for ms in data_frame.rigid_bodies:
-        if ms.id_num == 605:
+        if ms.id_num == RigidBodyIDs.CAR:
             # Handle the chaser's data
             c_pos, c_rot, c_rad = optitrack_data_handling.handle_frame(ms)
         if ms.id_num == y:
             # Handle the target's data (ctf_cube)
             t_pos, t_rot, t_rad = optitrack_data_handling.handle_frame(ms)
-        if ms.id_num == 604:
-            # Handle the first cube's data (ctf_cube2)
+        if ms.id_num == RigidBodyIDs.CUBE_1:
+            # Handle the first cube's data (ctf_cube1)``
             t_pos1, t_rot1, t_rad1 = optitrack_data_handling.handle_frame(ms)
-        if ms.id_num == 606:
+        if ms.id_num == RigidBodyIDs.CUBE_2:
             # Handle the second cube's data (ctf_cube2)
             t_pos2, t_rot2, t_rad2 = optitrack_data_handling.handle_frame(ms)
-        if ms.id_num == 607:
+        if ms.id_num == RigidBodyIDs.CUBE_3:
             # Handle the third cube's data (ctf_cube3)
             t_pos3, t_rot3, t_rad3 = optitrack_data_handling.handle_frame(ms)   
     #print("received new frame")
@@ -138,21 +184,44 @@ def turnToTarget(is_cube = True, curr_t_pos = t_pos):
     # time.sleep(1)
 
 def GoToTarget(is_cube = True, curr_t_pos = t_pos):
-    
+    """Drive the chaser toward a target position until close.
+
+    Args:
+        is_cube (bool): If True, use the tracked global `t_pos` as the
+            current target; otherwise use the provided `curr_t_pos`.
+        curr_t_pos (list): [x, y, z] fallback target position when
+            `is_cube` is False.
+
+    Behavior:
+        - If the distance to the target is >= 0.16 m, start moving forward.
+        - Continuously update streaming data and check distance.
+        - If within 0.14 m, stop and return.
+        - If heading error is large (> 0.5 rad), call `turnToTarget`
+          to re-orient before continuing forward.
+    """
+
+    # Only start driving if we're not already close to the target
     if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) >= 0.16:
         send_go_request()
         while True:
-            # is_flipped([t_pos1, t_pos2, t_pos3])
+            # Keep optitrack data fresh
             streaming_client.update_sync()
+
+            # If tracking a cube, always use the live global `t_pos`
             if is_cube:
                 curr_t_pos = t_pos
+
+            # If we got close enough, stop and exit
             if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) < 0.14:
-                send_stop_request()
+                send_stop_request() #the problem if we remove this line is harder to catch the target 
+                #1/3/2026
                 break
+
+            # Compute heading error and optionally re-orient
             angle = angle_between_points(c_pos, curr_t_pos)
             normalized_angle = normalize_angle(angle - c_rad)
             if abs(normalized_angle) > 0.5:
-                #send_stop_request()
+                # Large heading error: turn toward the target, then resume
                 turnToTarget(is_cube, curr_t_pos)
                 send_go_request()
 
@@ -175,6 +244,9 @@ def GoBack( ):
    
 
 
+
+
+# TODO MOVE TO ANOTHER FILE 
 # Function get data where the  robot car and where the cube is and calculate the path to the cube
 def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
     global z  # Use the global variable z
@@ -192,29 +264,23 @@ def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
 
     # Create an instance of the RCSPlanner with the planning environment
     print("Creating RRT* planner...")
-    planner = RRTStarPlanner(planning_env=planning_env, ext_mode='E2', goal_prob=0.40, k=10)
+    # planner = RRTStarPlanner(planning_env=planning_env, ext_mode='E2', goal_prob=0.40, k=10)
+
+    planner = AStarPlanner(planning_env=planning_env) 
     print(f"Planning path from {planning_env.start} to {planning_env.goal}...")
-    # Execute the planning algorithm to get the raw waypoint path
-    raw_plan = planner.plan()
-
-    # Smooth the RRT* polyline with Bézier curves.
-    # The smoother validates the curve with the same collision checkers;
-    # if the curve is unsafe, it automatically returns raw_plan.
-    plan = safe_bezier_smooth_path(
-        raw_plan,
-        planning_env,
-        samples_per_corner=8,
-        corner_cut=0.35,
+    # Execute the planning algorithm to get the path
+    plan = planner.plan()
+    smooth_plan = bezier_smooth_plan(
+        plan,
+        samples_per_segment=30,
+        tension=0.20
     )
-
-    # for-web
-    # planner.planning_env.visualize_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(), name='for_web')
-    # Visualize the map with the computed plan and expanded nodes
+    
     print("Visualizing the map with the computed plan and expanded nodes...")
-    planner.planning_env.visualize_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(), name='4mainbezire'+str(y))  # Convert z to string
+    # planner.planning_env.visualize_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(), name='4main'+str(y))  # Convert z to string
     # print('Successfully planned path')
     z += 1  # Increment the global variable z
-    return plan
+    return smooth_plan
 # use it to go to the base position
 def go_to_goal(goal_pos):
 
@@ -236,8 +302,7 @@ def go_to_goal(goal_pos):
         for i in range(len(plan) - 1):
             
             is_flipped([t_rot1, t_rot2, t_rot3])
-            # out_limits(c_pos, t_pos)
-            # print("2")
+           
             go_to_pos = [plan[i+1][0], 0, plan[i+1][1]]
             # print("Current position:", go_to_pos)
             turnToTarget(False, go_to_pos)
@@ -247,7 +312,6 @@ def go_to_goal(goal_pos):
                 finshed = False
                 break
             if dist(c_pos[0], t_pos[0], c_pos[2], t_pos[2]) > 0.15:
-                # print("NNNNNNNNNNNNNNED TO FIX")
                 send_servo_request(30)
                 return []
                 
@@ -276,9 +340,11 @@ def get_path_to_target():
                 print("continue")
                 finshed = False
                 break
-        # print(f"{finshed}AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
          
 try:
+    extract_order(word) 
+    print(arr)
+    y= arr[0]  # Get the first target ID from the array
     send_servo_request(30)
     with streaming_client:
         streaming_client.request_modeldef()
@@ -292,36 +358,31 @@ try:
         
         # TODO
         # GoBack()
-        extract_order(word) 
-        print(arr)
+       
         #sys.stdout.flush()  # Ensure that the output is flushed immediately
         for i in range(3):
+            print(i)
             y = arr[i]  # Get the current target ID from the array
+            
+            
             out_limits(c_pos, t_pos)
             is_flipped([t_rot1, t_rot2, t_rot3])
-            print("Current target ID:", y)
-            #sys.stdout.flush()  # Ensure that the output is flushed immediately
-            # y=607
-            plan = []
-            while len(plan) == 0:
-                get_path_to_target()  # Get the path to the target position
-                send_servo_request(80)
-                plan = go_to_goal(bases[i])  # Move to the base position first
-            turnToTarget(False, [plan[-1][0]+0.4,0.09, y_base[i]])
-            #sys.stdout.flush()  # Ensure that the output is flushed immediately
-            GoToTarget(False, [plan[-1][0]+0.4,0.09, y_base[i]])  # Move slightly forward after reaching the target
-            send_servo_request(30)
-            #sys.stdout.flush()  # Ensure that the output is flushed immediately
-            GoBack()
-            # exit()
+            if not correct_slot(i,t_pos):
+                plan = []
+                while len(plan) == 0:
+                    get_path_to_target()  # Get the path to the target position
+                    send_servo_request(80) # close the servo
+                    plan = go_to_goal(bases[i])  # Move to the base position first
+                turnToTarget(False, [plan[-1][0]+0.4,0.09, y_base[i]])
+                #sys.stdout.flush()  # Ensure that the output is flushed immediately
+                GoToTarget(False, [plan[-1][0]+0.4,0.09, y_base[i]])  # Move slightly forward after reaching the target
+                send_servo_request(30)
+                #sys.stdout.flush()  # Ensure that the output is flushed immediately
+                GoBack()
+            
         
         
-    # send_servo_request(30)
-    # print("c_pos: ", c_pos, "c_rot: ", c_rot, "c_rad: ", c_rad)
-    # print("t_pos: ", t_pos, "t_rot: ", t_rot, "t_rad: ", t_rad)
-    #sys.stdout.flush()  # Ensure that the output is flushed immediately
-    # exit()
-
+   
 
 # Handle connection-related errors specifically
 except ConnectionResetError as e:
