@@ -199,19 +199,19 @@ class MapEnvironment(object):
 
         # Include start and goal points
         additional_points = [start, goal]
-        inflated_obstacles = [polygon.buffer(obstacle_margin) for polygon in self.obstacles[3:]]
+        # inflated_obstacles = [polygon.buffer(obstacle_margin) for polygon in self.obstacles[3:]]
 
         # Collect all nodes (start, goal, and obstacle vertices)
-        # nodes = additional_points + [
-        #     tuple(coord)
-        #     for polygon in self.obstacles[3:]  # Skip the first three obstacles if they are not relevant for visibility graph
-        #     for coord in polygon.exterior.coords[:-1]
-        # ]
         nodes = additional_points + [
             tuple(coord)
-            for polygon in inflated_obstacles
+            for polygon in self.obstacles[3:]  # Skip the first three obstacles if they are not relevant for visibility graph
             for coord in polygon.exterior.coords[:-1]
         ]
+        # nodes = additional_points + [
+        #     tuple(coord)
+        #     for polygon in inflated_obstacles
+        #     for coord in polygon.exterior.coords[:-1]
+        # ]
 
         # Initialize the graph
         graph = {node: [] for node in nodes}
