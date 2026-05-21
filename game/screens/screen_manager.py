@@ -1,10 +1,11 @@
 # screens/screen_manager.py
 from __future__ import annotations
 from typing import Callable, Dict
-
-from screens.base import Screen
 from screens.menu import MenuScreen
 from screens.game import GameScreen
+from screens.configure import ConfigureScreen
+from screens.layout_config import LayoutConfigScreen
+from screens.robot_config import RobotConfigScreen
 
 
 class ScreenManager:
@@ -13,15 +14,18 @@ class ScreenManager:
     Keeps app.py clean and makes adding screens easy.
     """
 
-    def __init__(self, quit_game: Callable[[], None], fonts: dict):
+    def __init__(self, quit_game, fonts):
         self._quit_game = quit_game
         self._fonts = fonts
-        self._screens: Dict[str, Screen] = {}
-        self._current_name: str | None = None
-
+        self._screens : Dict[str, Screen] = {}
+        self._current_name = None
+        
         # Register screens here (or expose register() if you prefer)
-        self._screens["menu"] = MenuScreen(self, quit_game=self._quit_game, fonts=self._fonts)
-        self._screens["game"] = GameScreen(self, fonts=self._fonts)
+        self._screens["menu"] = MenuScreen(self, quit_game, fonts)
+        self._screens["game"] = GameScreen(self, fonts)
+        self._screens["configure"] = ConfigureScreen(self, fonts)
+        self._screens["layout_config"] = LayoutConfigScreen(self, fonts)
+        self._screens["robot_config"] = RobotConfigScreen(self, fonts)
 
         self.go_to("menu")
 
