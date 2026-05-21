@@ -1,25 +1,7 @@
 import requests
-# import time
 import socket
-#import math
 from PARAMETERS import ESPConfig
 
-
-
-# def check_esp_http(ip=ESPConfig.ESP_IP):
-#     try:
-#         response = requests.get(f"http://{ip}", timeout=2)
-#         if response.status_code == 200:
-#             print("ESP is online and responding.")
-#             return True
-#         else:
-#             raise ConnectionError(f"ESP responded with status code {response.status_code}")
-#     except requests.exceptions.RequestException as e:
-#         raise ConnectionError(f"Failed to connect to ESP at {ip}: {e}")
-
-
-# Replace with the actual IP address of your ESP device
-#ESP_IP = "http://192.168.0.101"  # This is typically the default for ESP AP mode
 
 def send_servo_request(angle=10):
     try:
@@ -91,47 +73,3 @@ def send_stop_beeping_request():
         print("Error sending STOP BEEPING request:", e)
 
 
-
-# def angle_between_points(p1, p2):
-    
-#     return math.atan2(p2[2] - p1[2], p2[0] - p1[0])
-    
-
-# send_beep_request(50)
-# time.sleep(0.1)  # Wait for the beep to finish
-# send_beep_request(50)
-# time.sleep(0.1)  # Wait for the beep to finish
-# send_beep_request(500)
-
-# Example usage
-# send_go_request()
-# send_left_request
-# time.sleep(100)  # optionally wait before stopping
-# send_stop_request()
-
-# send_right_request(70)
-# time.sleep(3)
-# send_right_request(250)
-# send_steer(250, 250)
-# print("Steering command sent. left: 250, right: 250")
-# time.sleep(3)
-# send_steer(250, 100)
-# print("Steering command sent. left: 250, right: 100")
-
-# #send steer commands, try speeds from 0 to 250 with steps of 10
-# for i in range(0, 250, 10):
-#     send_steer(250, i)
-#     time.sleep(0.1)  # small delay to observe the change in steering
-#     print(f"Steering command sent. left: 250, right: {i}")
-# # send steer commands, try speeds from 0 to 250 with steps of 1
-# for i in range(0, 250, 10):
-#     send_steer(i, 250)
-#     time.sleep(0.1)  # small delay to observe the change in steering
-#     print(f"Steering command sent. left: {i}, right: 250")
-
-# send_stop_request()
-
-# send_start_beeping_request(300, 300)
-# time.sleep(5)  # Beep for 5 seconds
-# send_stop_beeping_request()
-# send_steer_request(left=20   0, right = 250)

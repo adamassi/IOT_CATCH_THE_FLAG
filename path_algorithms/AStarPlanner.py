@@ -45,5 +45,5 @@ class AStarPlanner:
     def plan(self):
         plan = self.plan_path()
         if plan is not None:
-            self.planning_env.visualize_plan(plan=plan, visibility_graph=self.graph, name='AStarPlan')
+            self.planning_env.visualize_map(plan=plan, visibility_graph=self.graph, name='AStarPlan')
         return plan

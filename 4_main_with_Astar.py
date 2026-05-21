@@ -216,7 +216,7 @@ def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
     print("Creating RRT* planner...")
     # planner = RRTStarPlanner(planning_env=planning_env, ext_mode='E2', goal_prob=0.40, k=10)
 
-    planner = AStarPlanner(planning_env=planning_env) 
+    planner = AStarPlanner(planning_env) 
     print(f"Planning path from {planning_env.start} to {planning_env.goal}...")
     # Execute the planning algorithm to get the path
     plan = planner.plan()
