@@ -50,6 +50,11 @@ class RigidBodyIDs:
 
 class PlannerConfig:
     MAP_JSON_PATH = "path_algorithms/map1.json"
+    # Choose path planning algorithm:
+    # Options: "RRT_STAR", "ASTAR" default is RRT_STAR
+    ALGORITHM = "RRT_STAR"
+
+    # RRT* parameters
     GOAL_PROBABILITY = 0.40
     EXTENSION_MODE = 'E2'
     K_NEAREST = 10
