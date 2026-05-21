@@ -75,7 +75,7 @@ def main():
     startTime = time.time()
     visibility_graph = env.generate_visibility_graph()
 
-    aStar = AStarPlanner(env.start, env.goal, visibility_graph)
+    aStar = AStarPlanner(env)
     plan = aStar.plan_path()
 
     print(f"Planning time: {time.time() - startTime:.4f} seconds")
@@ -90,7 +90,12 @@ def main():
         print("Bézier path is valid.")
     else:
         print("Warning: Bézier path collides with an obstacle. Use the original A* plan or lower the tension.")
+     
 
+
+    print(plan)
+    print("Smoothed plan:")
+    print(smooth_plan)
     # Important: show_map=False first, so we can draw the Bézier curve before plt.show()
     env.visualize_map(
         plan=plan,

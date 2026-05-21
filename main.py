@@ -10,10 +10,8 @@ from conversion import normalize_angle
 from helper_functions import *
 # from shapely.geometry import Polygon  # Ensure this is imported
 from PARAMETERS import *
-from path_algorithms.create_obstacles import add_cube_obstacle  # Import the function to add cube obstacles
-from path_algorithms.MapEnvironment import MapEnvironment
-from path_algorithms.RRTStarPlanner import RRTStarPlanner
-from path_algorithms.AStarPlanner import AStarPlanner
+from path_algorithms.planner import *
+
 
 word = "OIT"  # Example word to extract order from
 arr=[]
@@ -22,10 +20,6 @@ t_pos1, t_rot1, t_rad1 = [0,0,0], 0, 0
 t_pos2, t_rot2, t_rad2 = [0,0,0], 0, 0
 t_pos3, t_rot3, t_rad3 = [0,0,0], 0, 0
 t_pos, t_rot, t_rad = [0,0,0], 0, 0
-base_pos2 = [3.7, 0.09, 0.28]
-base_pos3 = [3.7, 0.09, -0.15]  # Define a second base position for the second cube
-base_pos1 = [3.7, 0.09, 0.67]  # Define a third base position for the third cube
-bases=[base_pos3, base_pos2,  base_pos1]  # List of base positions for the cubes
 y_base = [-0.15, 0.28, 0.67]  # List of base positions for the cubes
 z = 1  # Initialize a global variable for iteration count
 y=604
@@ -216,7 +210,7 @@ def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
     print("Creating RRT* planner...")
     # planner = RRTStarPlanner(planning_env=planning_env, ext_mode='E2', goal_prob=0.40, k=10)
 
-    planner = AStarPlanner(planning_env) 
+    planner = AStarPlanner(planning_env=planning_env) 
     print(f"Planning path from {planning_env.start} to {planning_env.goal}...")
     # Execute the planning algorithm to get the path
     plan = planner.plan()
@@ -318,7 +312,7 @@ try:
                 while len(plan) == 0:
                     get_path_to_target()  # Get the path to the target position
                     send_servo_request(80) # close the servo
-                    plan = go_to_goal(bases[i])  # Move to the base position first
+                    plan = go_to_goal(PositionConfig.bases[i])  # Move to the base position first
                 turnToTarget(False, [plan[-1][0]+0.4,0.09, y_base[i]])
                 #sys.stdout.flush()  # Ensure that the output is flushed immediately
                 GoToTarget(False, [plan[-1][0]+0.4,0.09, y_base[i]])  # Move slightly forward after reaching the target
