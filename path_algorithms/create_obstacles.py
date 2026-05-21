@@ -1,5 +1,9 @@
+import json
+import os
+
 from shapely.geometry import Polygon  # For creating geometric shapes
 import numpy as np  # For mathematical operations like cosine and sine
+from path_algorithms.map_json_utils import write_cubes_json, append_obstacle_to_json
 
 def is_within_boundaries(env, points):
     """
@@ -14,6 +18,14 @@ def is_within_boundaries(env, points):
         if x < env.xlimit[0] or x > env.xlimit[1] or z < env.ylimit[0] or z > env.ylimit[1]:
             return False
     return True
+
+def clear_dynamic_cubes():
+    """
+    Clears the dynamic cubes file, preparing for a new batch of cubes.
+    Call this before starting to add a new set of dynamic obstacles.
+    """
+    cubes_path = os.path.join(os.getcwd(), "path_algorithms/cubes.json")
+    write_cubes_json(cubes_path, [])
 
 def add_circle_obstacle(env, circle_pos, radius=0.09):
     """
@@ -60,6 +72,10 @@ def add_cube_obstacle(env, cube_pos, size=0.23):
     
     obstacle = Polygon(obstacle_points)
     env.obstacles.append(obstacle)
+
+    # Append cube to cubes.json
+    cubes_path = os.path.join(os.getcwd(), "path_algorithms/cubes.json")
+    append_obstacle_to_json(cubes_path, 'CUBES', obstacle_points)
     # print(f"Added cube obstacle at position {cube_pos} with size {size}m.")
 
 def add_rectangle_obstacle(env, center_pos, width=0.25, height=0.7):
@@ -87,7 +103,9 @@ def add_rectangle_obstacle(env, center_pos, width=0.25, height=0.7):
     
     obstacle = Polygon(obstacle_points)
     env.obstacles.append(obstacle)
-    # print(f"Added rectangle obstacle at position {center_pos} with width {width}m and height {height}m.")
+    print("********************************************************************************************")
+    print(f"Added rectangle obstacle at position {center_pos} with width {width}m and height {height}m.")
+    print("********************************************************************************************")
 
 
 

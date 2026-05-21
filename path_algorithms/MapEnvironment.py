@@ -8,7 +8,8 @@ from matplotlib import patches as pat
 from matplotlib import collections as coll
 from numpy.core.fromnumeric import size
 from shapely.geometry import Point, LineString, Polygon
-from path_algorithms.create_obstacles import *
+from path_algorithms.map_json_utils import write_map_json_compact
+# from path_algorithms.create_obstacles import *
 # 2.71, 0.14, 1.06
 # add circle obstacles function
 obstacle_margin = 0.12  # Margin to ensure the robot does not collide with obstacles
@@ -34,15 +35,19 @@ class MapEnvironment(object):
         # print(f'Start point: {json_dict["START"]}, Goal point: {json_dict["GOAL"]}')
         self.start = np.array(json_dict['START'])
         self.goal = np.array(json_dict['GOAL'])
-        self.load_obstacles(obstacles=json_dict['OBSTACLES'])
-        # add circle obstacles in the map in  [2.71, 1.06]
-        add_circle_obstacle(self, [2.71, 0.14, 1.06])
-        # add_cube_obstacle(self, [2.71, 0.14, 1.06])
-        add_rectangle_obstacle(self, [1.6, 0.24, 0.06], width=0.25, height=0.7)
-        # add_circle_obstacle(self, 2.86, 0.13, -0.91)
-        # adding pyramid obstacle
-        add_rectangle_obstacle(self, [1.97, 0.12, 0.40], width=0.6, height=0.25)
-        add_rectangle_obstacle(self, [0.35, 0.1, -0.8], width=0.6, height=0.12)
+        # Combine GOALS and OBSTACLES for loading
+        all_obstacles = json_dict.get('GOALS', []) + json_dict.get('OBSTACLES', [])
+        self.load_obstacles(obstacles=all_obstacles)
+        self.print_rectangle_obstacles(obstacles_coords=self.obstacles)
+        self.remove_obstacle_by_id(0)
+        # # add circle obstacles in the map in  [2.71, 1.06]
+        # add_circle_obstacle(self, [2.71, 0.14, 1.06])
+        # # add_cube_obstacle(self, [2.71, 0.14, 1.06])
+        # add_rectangle_obstacle(self, [1.6, 0.24, 0.06], width=0.25, height=0.7)
+        # # add_circle_obstacle(self, 2.86, 0.13, -0.91)
+        # # adding pyramid obstacle
+        # add_rectangle_obstacle(self, [1.97, 0.12, 0.40], width=0.6, height=0.25)
+        # add_rectangle_obstacle(self, [0.35, 0.1, -0.8], width=0.6, height=0.12)
         # add_walls(self)
 
 
@@ -68,22 +73,111 @@ class MapEnvironment(object):
         # s
         '''
         A function to load and verify scene obstacles.
-        @param obstacles A list of lists of obstacles points.
+        @param obstacles A list of obstacle dicts with id and coordinates.
         '''
         # iterate over all obstacles
         self.obstacles, self.obstacles_edges = [], []
         for obstacle in obstacles:
-            non_applicable_vertices = [x[0] < self.xlimit[0] or x[0] > self.xlimit[1]+1 or x[1] < self.ylimit[0] or x[1] > self.ylimit[1] for x in obstacle]
+            # Extract coordinates from dict format (all obstacles now have id and coordinates)
+            coords = obstacle['coordinates']
+            
+            non_applicable_vertices = [x[0] < self.xlimit[0] or x[0] > self.xlimit[1]+1 or x[1] < self.ylimit[0] or x[1] > self.ylimit[1] for x in coords]
             if any(non_applicable_vertices):
                 # Raise an error if any obstacle overlaps with the map boundaries, ensuring all obstacles are within valid limits.
-                # print(f'OOOOObstacle {obstacle} overlaps with the map boundaries: {self.xlimit}, {self.ylimit}')
+                # print(f'OOOOObstacle {coords} overlaps with the map boundaries: {self.xlimit}, {self.ylimit}')
                 raise ValueError('An obstacle coincides with the maps boundaries!');
             
             # make sure that the obstacle is a closed form
-            if obstacle[0] != obstacle[-1]:
-                obstacle.append(obstacle[0])
-                self.obstacles_edges.append([LineString([Point(x[0],x[1]),Point(y[0],y[1])]) for (x,y) in zip(obstacle[:-1], obstacle[1:])])
-            self.obstacles.append(Polygon(obstacle))
+            if coords[0] != coords[-1]:
+                coords.append(coords[0])
+                self.obstacles_edges.append([LineString([Point(x[0],x[1]),Point(y[0],y[1])]) for (x,y) in zip(coords[:-1], coords[1:])])
+            self.obstacles.append(Polygon(coords))
+
+    def print_rectangle_obstacles(self, obstacles_coords):
+        '''
+        Convert and print rectangle obstacles from self.obstacles (Shapely Polygon objects) back to the original format.
+        Format: "rectangle obstacle at position [x, y, z] with width Wm and height Hm."
+        
+        @param obstacles_coords A list of Shapely Polygon objects from self.obstacles
+        '''
+        print("\n=== Rectangle Obstacles ===")
+        for idx, obstacle in enumerate(obstacles_coords):
+            # Extract coordinates from Shapely Polygon
+            coords = list(obstacle.exterior.coords[:-1])  # Remove the closing point
+            
+            # Check if it's a simple rectangle (4 unique corners)
+            if len(coords) == 4:
+                xs = [c[0] for c in coords]
+                zs = [c[1] for c in coords]
+                
+                min_x, max_x = min(xs), max(xs)
+                min_z, max_z = min(zs), max(zs)
+                
+                center_x = (min_x + max_x) / 2
+                center_z = (min_z + max_z) / 2
+                width = max_x - min_x
+                height = max_z - min_z
+                
+                print(f"Obstacle {idx}: rectangle obstacle at position [{center_x:.2f}, 0.14, {center_z:.2f}] with width {width:.2f}m and height {height:.2f}m.")
+
+
+    def remove_obstacle_by_id(self, obstacle_id, json_file="path_algorithms/map1.json"):
+        '''
+        Remove an obstacle from the OBSTACLES section and move it to HISTORY.
+        Only non-negative IDs (obstacles) can be removed. GOALS cannot be removed.
+        @param obstacle_id The ID of the obstacle to remove (must be non-negative)
+        @param json_file The path to the JSON file
+        '''
+        # Only allow removal of non-negative IDs (OBSTACLES)
+        if obstacle_id < 0:
+            print(f"Error: Cannot remove obstacle with ID {obstacle_id}. Only non-negative IDs (OBSTACLES) can be removed. GOALS are protected.")
+            return False
+        
+        json_path = os.path.join(os.getcwd(), json_file)
+        
+        try:
+            with open(json_path) as f:
+                json_dict = json.load(f)
+            
+            # Find and remove the obstacle from OBSTACLES
+            original_count = len(json_dict.get('OBSTACLES', []))
+            obstacle_to_remove = None
+            
+            for obs in json_dict.get('OBSTACLES', []):
+                if obs.get('id') == obstacle_id:
+                    obstacle_to_remove = obs
+                    break
+            
+            if obstacle_to_remove is None:
+                print(f"Obstacle with ID {obstacle_id} not found in OBSTACLES section")
+                return False
+            
+            # Remove from OBSTACLES
+            json_dict['OBSTACLES'] = [
+                obs for obs in json_dict['OBSTACLES']
+                if obs.get('id') != obstacle_id
+            ]
+            
+            # Add to HISTORY with timestamp
+            if 'HISTORY' not in json_dict:
+                json_dict['HISTORY'] = []
+            
+            removed_entry = {
+                "id": obstacle_to_remove['id'],
+                "coordinates": obstacle_to_remove['coordinates'],
+                "removed_at": datetime.now().isoformat()
+            }
+            json_dict['HISTORY'].append(removed_entry)
+            
+            # Write back to file while keeping coordinate arrays compact
+            write_map_json_compact(json_path, json_dict)
+            
+            print(f"Obstacle with ID {obstacle_id} successfully removed and added to HISTORY")
+            return True
+        
+        except Exception as e:
+            print(f"Error removing obstacle: {e}")
+            return False
 
     def compute_distance(self, start_state, end_state):
         '''
