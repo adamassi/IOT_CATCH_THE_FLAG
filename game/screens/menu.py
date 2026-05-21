@@ -36,7 +36,7 @@ class MenuScreen(Screen):
                 config.BTN,
                 config.BTN_HOVER,
                 config.WHITE,
-                on_click=None,  # does nothing for now
+                on_click=lambda: self.manager.go_to("configure"),  # does nothing for now
             ),
             Button(
                 "Exit",
