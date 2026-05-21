@@ -5,11 +5,11 @@ from path_algorithms.AStarPlanner import AStarPlanner
 from PARAMETERS import *
 import numpy as np  # Import numpy for array operations
 
-
+json_file_path = PlannerConfig.MAP_JSON_PATH  # Get the JSON file path from the configuration
+planning_env = MapEnvironment(json_file=json_file_path)
 # Function get data where the  robot car and where the cube is and calculate the path to the cube
 def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
-    json_file_path = PlannerConfig.MAP_JSON_PATH  # Get the JSON file path from the configuration
-    planning_env = MapEnvironment(json_file=json_file_path)
+    
     # Initialize the map environment with the JSON file path
     planning_env.start = np.array([start_pos[0], start_pos[2]])  # Use x and y coordinates for the start position
     planning_env.goal = np.array([goal_pos[0], goal_pos[2]])  # Use x and y coordinates for the goal position

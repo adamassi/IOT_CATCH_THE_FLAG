@@ -291,7 +291,6 @@ def get_path_to_target():
                 print("continue")
                 finshed = False
                 break
-        # print(f"{finshed}AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
          
 try:
     extract_order(word) 
