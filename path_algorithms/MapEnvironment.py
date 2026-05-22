@@ -221,7 +221,7 @@ class MapEnvironment(object):
         line = LineString([point1, point2])
         # obstacles: withe out firt one
         for i, polygon in enumerate(self.obstacles):
-            if (line.crosses(polygon) or line.within(polygon)):
+            if (line.crosses(polygon) or line.within(polygon)) or line.intersects(polygon):
                 return False
 
         return True
