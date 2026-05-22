@@ -2,7 +2,12 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <ESP32Servo.h>
+#include <Adafruit_neoPixel.h>
 
+#define LED_PIN 35
+#define NUM_LEDS 1
+
+Adafruit_NeoPixel pixels(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
 
 Servo myServo;
 
@@ -39,6 +44,8 @@ const int pwm_channel4 = 4;
 // const int servo_channel = 1;
 const int resolution = 8;
 
+
+  
 const char *input_parameter = "value";
 
 AsyncWebServer server(80);
@@ -249,6 +256,10 @@ void setup() {
   digitalWrite(ENA_pin, HIGH);
 
 
+  // Initialize the NeoPixel
+  pixels.begin();
+  pixels.clear();
+  pixels.show();
 
   // ledcSetup(servo_channel, frequency, resolution);
   // ledcAttachPin(servoPin, servo_channel);
@@ -492,6 +503,11 @@ void setup() {
 
 
   server.begin();
+}
+// Add the setLED function here
+void setLED(int r, int g, int b) {
+  pixels.setPixelColor(0, pixels.Color(r, g, b));  // Set the color of the first LED
+  pixels.show();  // Update the LED to display the new color
 }
 
 void loop() {
