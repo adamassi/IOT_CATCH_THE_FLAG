@@ -189,11 +189,11 @@ def go_to_goal(goal_pos):
         cur_t_pos2 = t_pos2  # Use the current position of t_pos2
         cur_t_pos3 = t_pos3  # Use the current position of t_pos3
         obsticles = [t_pos1, t_pos2, t_pos3]  # List of dynamic obstacles (cubes)
-        if y == 606:
+        if current_target_id == 606:
             obsticles.remove(t_pos2)
-        elif y == 604:
+        elif current_target_id == 604:
             obsticles.remove(t_pos1) 
-        elif y == 607:
+        elif current_target_id == 607:
             obsticles.remove(t_pos3)
         plan = get_path_to_goal(c_pos, goal_pos,obsticles)
         finshed = True

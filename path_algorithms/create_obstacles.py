@@ -93,6 +93,7 @@ def remove_cube_obstacle(env, number_of_cubes_to_remove):
         else:
             # print("No more obstacles to remove.")
             break
+        
 def add_rectangle_obstacle(env, center_pos, width=0.25, height=0.7):
     """
     Adds a rectangular obstacle to the environment.
