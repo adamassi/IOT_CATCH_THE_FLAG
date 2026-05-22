@@ -77,7 +77,22 @@ def add_cube_obstacle(env, cube_pos, size=0.23):
     cubes_path = os.path.join(os.getcwd(), "path_algorithms/cubes.json")
     append_obstacle_to_json(cubes_path, 'CUBES', obstacle_points)
     # print(f"Added cube obstacle at position {cube_pos} with size {size}m.")
+def remove_cube_obstacle(env, number_of_cubes_to_remove):
+    """
+    Removes the most recently added cube obstacles from the environment.
 
+    Args:
+        env (MapEnvironment): The planning environment object.
+        number_of_cubes_to_remove (int): The number of cube obstacles to remove.
+    """
+    # Remove the last 'number_of_cubes_to_remove' obstacles from the environment
+    for _ in range(number_of_cubes_to_remove):
+        if env.obstacles:
+            removed_obstacle = env.obstacles.pop()
+            # print(f"Removed cube obstacle: {removed_obstacle}")
+        else:
+            # print("No more obstacles to remove.")
+            break
 def add_rectangle_obstacle(env, center_pos, width=0.25, height=0.7):
     """
     Adds a rectangular obstacle to the environment.

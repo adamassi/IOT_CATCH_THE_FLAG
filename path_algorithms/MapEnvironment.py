@@ -39,7 +39,7 @@ class MapEnvironment(object):
         all_obstacles = json_dict.get('GOALS', []) + json_dict.get('OBSTACLES', [])
         self.load_obstacles(obstacles=all_obstacles)
         self.print_rectangle_obstacles(obstacles_coords=self.obstacles)
-        self.remove_obstacle_by_id(0)
+        #Sself.remove_obstacle_by_id(0)
         # # add circle obstacles in the map in  [2.71, 1.06]
         # add_circle_obstacle(self, [2.71, 0.14, 1.06])
         # # add_cube_obstacle(self, [2.71, 0.14, 1.06])
@@ -416,7 +416,7 @@ class MapEnvironment(object):
         if show_map:
             plt.show()
         else:
-            plt.savefig(f'pics/map-RRT{name}.png')
+            plt.savefig(f'pics/map-{name}.png')
 
         return plt
 

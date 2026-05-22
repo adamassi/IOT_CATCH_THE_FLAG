@@ -1,4 +1,4 @@
-from path_algorithms.create_obstacles import add_cube_obstacle  # Import the function to add cube obstacles
+from path_algorithms.create_obstacles import add_cube_obstacle, remove_cube_obstacle  # Import the function to add and remove cube obstacles
 from path_algorithms.MapEnvironment import MapEnvironment
 from path_algorithms.RRTStarPlanner import RRTStarPlanner
 from path_algorithms.AStarPlanner import AStarPlanner
@@ -13,12 +13,13 @@ def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
     # Initialize the map environment with the JSON file path
     planning_env.start = np.array([start_pos[0], start_pos[2]])  # Use x and y coordinates for the start position
     planning_env.goal = np.array([goal_pos[0], goal_pos[2]])  # Use x and y coordinates for the goal position
-
+    nember_of_added_obstacles = 0
     # Add dynamic obstacles (e.g., cubes detected in the environment)
     for cube_pos in cube_obstacles:
         if cube_pos != goal_pos:  # Skip if cube_pos matches goal_pos
             print(f"Adding cube obstacle NOT GOAL at position {cube_pos}.")
             add_cube_obstacle(planning_env, cube_pos)
+            nember_of_added_obstacles += 1
 
     # Create an instance of the RCSPlanner with the planning environment
     print("Creating A*/RRT* planner...")
@@ -34,6 +35,7 @@ def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
 
     
     print("Visualizing the map with the computed plan and expanded nodes...")
+    remove_cube_obstacle(planning_env, nember_of_added_obstacles)
     # planner.planning_env.visualize_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(), name='4main'+str(y))  # Convert z to string
     # print('Successfully planned path')
     return plan
