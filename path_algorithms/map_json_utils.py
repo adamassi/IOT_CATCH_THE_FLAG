@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 import os
+import math
 
 
 def append_obstacle_to_json(json_path, field_key, obstacle_points, extra_fields=None):
@@ -17,7 +18,23 @@ def append_obstacle_to_json(json_path, field_key, obstacle_points, extra_fields=
         json_dict = json.load(f)
     
     field = json_dict.get(field_key, [])
-    next_id = 0 if not field else max(item.get('id', -1) for item in field) + 1
+
+    # Keep IDs unique for OBSTACLES even after removals (consider HISTORY too)
+    if field_key == 'OBSTACLES':
+        used_ids = [
+            item.get('id', -1)
+            for item in json_dict.get('OBSTACLES', [])
+            if isinstance(item, dict)
+        ]
+        used_ids.extend(
+            item.get('id', -1)
+            for item in json_dict.get('HISTORY', [])
+            if isinstance(item, dict)
+        )
+        used_ids = [item_id for item_id in used_ids if isinstance(item_id, int) and item_id >= 0]
+        next_id = 0 if not used_ids else max(used_ids) + 1
+    else:
+        next_id = 0 if not field else max(item.get('id', -1) for item in field) + 1
     
     obstacle_entry = {
         'id': next_id,
@@ -184,6 +201,29 @@ def undo_remove_obstacle(json_file="path_algorithms/map1.json"):
         # Add it back to OBSTACLES
         if 'OBSTACLES' not in json_dict:
             json_dict['OBSTACLES'] = []
+
+        # Safety: avoid duplicate IDs in case of legacy data or past ID reuse
+        existing_obstacle_ids = {
+            obs.get('id')
+            for obs in json_dict.get('OBSTACLES', [])
+            if isinstance(obs, dict)
+        }
+        restored_id = last_removed.get('id')
+        if restored_id in existing_obstacle_ids:
+            used_ids = [
+                obs.get('id', -1)
+                for obs in json_dict.get('OBSTACLES', [])
+                if isinstance(obs, dict)
+            ]
+            used_ids.extend(
+                item.get('id', -1)
+                for item in json_dict.get('HISTORY', [])
+                if isinstance(item, dict)
+            )
+            used_ids = [item_id for item_id in used_ids if isinstance(item_id, int) and item_id >= 0]
+            new_id = 0 if not used_ids else max(used_ids) + 1
+            print(f"Warning: ID {restored_id} already exists in OBSTACLES. Restoring with new ID {new_id}.")
+            last_removed['id'] = new_id
         
         json_dict['OBSTACLES'].append(last_removed)
         json_dict['HISTORY'] = history
@@ -197,3 +237,76 @@ def undo_remove_obstacle(json_file="path_algorithms/map1.json"):
     except Exception as e:
         print(f"Error undoing removal: {e}")
         return False
+
+
+# --- Fixed-boundary utilities and convenience obstacle writers ---
+# Hard-coded map boundaries (x,z) used when env is not required
+# These should cover the working map area; adjust if your map differs
+X_LIMIT = [-4.0, 4.6]
+Z_LIMIT = [-1.9, 1.9]
+
+def is_within_boundaries_fixed(points, xlimit=X_LIMIT, zlimit=Z_LIMIT):
+    """
+    Check if all points are within the fixed map boundaries.
+    Args:
+        points (list): List of [x, z] coordinates or (x,z) tuples.
+        xlimit (tuple): (min_x, max_x)
+        zlimit (tuple): (min_z, max_z)
+    Returns:
+        bool: True if all points are within boundaries, False otherwise.
+    """
+    for x, z in points:
+        if x < xlimit[0] or x > xlimit[1] or z < zlimit[0] or z > zlimit[1]:
+            return False
+    return True
+
+
+def add_circle_obstacle(circle_pos, radius=0.09, json_file="path_algorithms/map1.json", points_count=100):
+    """
+    Convenience helper to add a circular obstacle into the map JSON `OBSTACLES`.
+    Uses fixed boundaries defined by `X_LIMIT`/`Z_LIMIT` to validate placement.
+    """
+    cx, cz = circle_pos[0], circle_pos[2]
+    obstacle_points = [
+        [cx + radius * math.cos(2 * math.pi * i / (points_count - 1)),
+         cz + radius * math.sin(2 * math.pi * i / (points_count - 1))]
+        for i in range(points_count)
+    ]
+
+    if not is_within_boundaries_fixed(obstacle_points):
+        raise ValueError(f"Circle obstacle at position {circle_pos} with radius {radius}m is outside the map boundaries.")
+
+    json_path = os.path.join(os.getcwd(), json_file)
+    append_obstacle_to_json(
+        json_path,
+        'OBSTACLES',
+        obstacle_points,
+        extra_fields={"type": "circle"}
+    )
+
+
+def add_rectangle_obstacle(center_pos, width=0.25, height=0.7, json_file="path_algorithms/map1.json"):
+    """
+    Convenience helper to add a rectangular obstacle into the map JSON `OBSTACLES`.
+    Uses fixed boundaries defined by `X_LIMIT`/`Z_LIMIT` to validate placement.
+    """
+    cx, cz = center_pos[0], center_pos[2]
+    half_w, half_h = width / 2, height / 2
+    obstacle_points = [
+        [cx - half_w, cz - half_h],
+        [cx + half_w, cz - half_h],
+        [cx + half_w, cz + half_h],
+        [cx - half_w, cz + half_h],
+        [cx - half_w, cz - half_h]
+    ]
+
+    if not is_within_boundaries_fixed(obstacle_points):
+        raise ValueError(f"Rectangle obstacle at position {center_pos} with width {width}m and height {height}m is outside the map boundaries.")
+
+    json_path = os.path.join(os.getcwd(), json_file)
+    append_obstacle_to_json(
+        json_path,
+        'OBSTACLES',
+        obstacle_points,
+        extra_fields={"type": "rectangle"}
+    )

@@ -50,14 +50,14 @@ class RemoveObstacleScreen(Screen):
             rect=(
                 self.panel.x + 40,
                 self.panel.y + 50,
-                int(self.panel.w * 0.42),
+                int(self.panel.w * 0.50),
                 self.panel.h - 100,
             ),
             font=fonts["subtitle"],
-            json_path=self.json_path,
+            json_path=self.json_path if hasattr(self, "json_path") else json_path,
         )
 
-        right_x = self.map_preview.rect.right + 50
+        right_x = self.map_preview.rect.right + 35
         right_w = self.panel.right - right_x - 40
 
         self.input_label_pos = (
@@ -77,6 +77,7 @@ class RemoveObstacleScreen(Screen):
             bg_color=(0, 0, 0),
             border_color=config.ACCENT,
             placeholder="Enter obstacle ID",
+            input_type="int",
         )
 
         self.confirm_btn = Button(

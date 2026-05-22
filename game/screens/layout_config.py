@@ -25,7 +25,7 @@ class LayoutConfigScreen(Screen):
             config.ACCENT,
             config.ACCENT_HOVER,
             config.WHITE,
-            on_click=None,
+            on_click=lambda: self.manager.go_to("add_obstacle"),
         )
 
         self.remove_btn = Button(

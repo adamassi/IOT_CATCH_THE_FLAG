@@ -7,6 +7,7 @@ from screens.configure import ConfigureScreen
 from screens.layout_config import LayoutConfigScreen
 from screens.robot_config import RobotConfigScreen
 from screens.remove_obstacle import RemoveObstacleScreen
+from screens.add_obstacle import AddObstacleScreen
 
 
 class ScreenManager:
@@ -28,6 +29,7 @@ class ScreenManager:
         self._screens["layout_config"] = LayoutConfigScreen(self, fonts)
         self._screens["robot_config"] = RobotConfigScreen(self, fonts)
         self._screens["remove_obstacle"] = RemoveObstacleScreen(self, fonts)
+        self._screens["add_obstacle"] = AddObstacleScreen(self, fonts)
 
         self.go_to("menu")
 
