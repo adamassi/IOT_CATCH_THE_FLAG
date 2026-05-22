@@ -14,6 +14,7 @@ class RRTStarPlanner(object):
         self.ext_mode = ext_mode  # Extension mode (e.g., E1 or E2)
         self.goal_prob = goal_prob  # Probability of sampling the goal
         self.k = k  # Number of nearest neighbors for rewiring
+        
 
         # Set step size for extensions based on the environment size
         if planning_env.ylimit[1] < 100:

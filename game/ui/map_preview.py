@@ -1,105 +1,341 @@
+# ui/map_preview.py
+
+import json
+import math
+import os
 import pygame
+import pygame.gfxdraw
 
 
 class MapPreview:
     """
-    Simple pygame map preview.
-    Coordinates follow your matplotlib map idea:
-    X axis vertical: -5 to 5
-    Y axis horizontal: -2 to 2
+    Draws GOALS + OBSTACLES from map1.json.
+
+    Same coordinate system as your matplotlib map:
+    horizontal axis = Y
+    vertical axis = X
     """
 
-    def __init__(self, rect, font):
+    X_MIN, X_MAX = -5, 5
+    Y_MIN, Y_MAX = -2, 2
+
+    # Black map style
+    BG_COLOR = (0, 0, 0)
+    GRID_COLOR = (40, 40, 40)
+    BORDER_COLOR = (240, 240, 240)
+
+    OBSTACLE_COLOR = (205, 200, 0)
+    OBSTACLE_BORDER = (255, 240, 120)
+
+    GOAL_COLOR = (0, 220, 80)
+    GOAL_BORDER = (120, 255, 170)
+
+    TEXT_COLOR = (255, 255, 255)
+
+    def __init__(self, rect, font, json_path):
         self.rect = pygame.Rect(rect)
         self.font = font
+        self.json_path = json_path
 
-        # Example objects for UI preview only
-        self.obstacles = [
-            {"id": 101, "rect": (-1.5, 3.0, 0.4, 1.2)},
-            {"id": 102, "rect": (0.2, 2.2, 0.3, 1.4)},
-            {"id": 103, "rect": (-0.8, -0.5, 0.5, 0.8)},
-            {"id": 104, "rect": (0.9, -3.2, 0.4, 1.0)},
-        ]
+        # Bigger readable labels
+        self.id_font = pygame.font.SysFont("arial", 22, bold=True)
 
-        self.goals = [
-            {"label": "G1", "pos": (-1.2, 4.0)},
-            {"label": "G2", "pos": (1.0, 3.5)},
-        ]
+        self.goals = []
+        self.obstacles = []
 
-        self.cubes = [
-            {"label": "C1", "pos": (-0.5, 1.4)},
-            {"label": "C2", "pos": (0.7, -1.0)},
-        ]
+        self.reload()
 
-        self.robot = {"label": "R", "pos": (0.0, 0.0)}
+    # ---------------------------------------------------------
 
-    def world_to_screen(self, y_pos, x_pos):
+    def reload(self):
+
+        if not os.path.exists(self.json_path):
+            print(f"Map file not found: {self.json_path}")
+            return
+
+        with open(self.json_path, "r") as f:
+            data = json.load(f)
+
+        self.goals = data.get("GOALS", [])
+        self.obstacles = data.get("OBSTACLES", [])
+
+    # ---------------------------------------------------------
+
+    def world_to_screen(self, x_pos, y_pos):
         """
-        y_pos: horizontal coordinate, range [-2, 2]
-        x_pos: vertical coordinate, range [-5, 5]
+        Converts world coordinates to screen coordinates.
+
+        x_pos -> vertical axis [-5, 5]
+        y_pos -> horizontal axis [-2, 2]
         """
-        sx = self.rect.x + int(((y_pos + 2) / 4) * self.rect.w)
-        sy = self.rect.bottom - int(((x_pos + 5) / 10) * self.rect.h)
-        return sx, sy
+
+        sx = self.rect.x + (
+            (y_pos - self.Y_MIN)
+            / (self.Y_MAX - self.Y_MIN)
+        ) * self.rect.w
+
+        sy = self.rect.bottom - (
+            (x_pos - self.X_MIN)
+            / (self.X_MAX - self.X_MIN)
+        ) * self.rect.h
+
+        return int(sx), int(sy)
+
+    # ---------------------------------------------------------
 
     def draw(self, surface):
-        pygame.draw.rect(surface, (5, 5, 5), self.rect, border_radius=18)
-        pygame.draw.rect(surface, (240, 240, 240), self.rect, 2, border_radius=18)
+
+        pygame.draw.rect(
+            surface,
+            self.BG_COLOR,
+            self.rect,
+            border_radius=18,
+        )
+
+        pygame.draw.rect(
+            surface,
+            self.BORDER_COLOR,
+            self.rect,
+            2,
+            border_radius=18,
+        )
 
         self._draw_grid(surface)
-        self._draw_obstacles(surface)
-        self._draw_goals(surface)
-        self._draw_cubes(surface)
-        self._draw_robot(surface)
+
+        # Goals WITHOUT IDs
+        self._draw_items(
+            surface,
+            self.goals,
+            self.GOAL_COLOR,
+            self.GOAL_BORDER,
+            show_ids=False,
+        )
+
+        # Obstacles WITH IDs
+        self._draw_items(
+            surface,
+            self.obstacles,
+            self.OBSTACLE_COLOR,
+            self.OBSTACLE_BORDER,
+            show_ids=True,
+        )
+
+    # ---------------------------------------------------------
 
     def _draw_grid(self, surface):
-        grid_color = (45, 45, 45)
 
         for i in range(5):
             x = self.rect.x + int(i * self.rect.w / 4)
-            pygame.draw.line(surface, grid_color, (x, self.rect.y), (x, self.rect.bottom), 1)
+
+            pygame.draw.line(
+                surface,
+                self.GRID_COLOR,
+                (x, self.rect.y),
+                (x, self.rect.bottom),
+                1,
+            )
 
         for i in range(11):
             y = self.rect.y + int(i * self.rect.h / 10)
-            pygame.draw.line(surface, grid_color, (self.rect.x, y), (self.rect.right, y), 1)
 
-    def _draw_obstacles(self, surface):
-        for obs in self.obstacles:
-            y, x, w, h = obs["rect"]
-
-            top_left = self.world_to_screen(y, x + h)
-            bottom_right = self.world_to_screen(y + w, x)
-
-            rect = pygame.Rect(
-                top_left[0],
-                top_left[1],
-                bottom_right[0] - top_left[0],
-                bottom_right[1] - top_left[1],
+            pygame.draw.line(
+                surface,
+                self.GRID_COLOR,
+                (self.rect.x, y),
+                (self.rect.right, y),
+                1,
             )
 
-            pygame.draw.rect(surface, (210, 190, 30), rect)
-            pygame.draw.rect(surface, (255, 240, 120), rect, 2)
+    # ---------------------------------------------------------
 
-            label = self.font.render(str(obs["id"]), True, (255, 255, 255))
-            surface.blit(label, label.get_rect(center=rect.center))
+    def _draw_items(
+        self,
+        surface,
+        items,
+        fill_color,
+        border_color,
+        show_ids=True,
+    ):
 
-    def _draw_goals(self, surface):
-        for goal in self.goals:
-            sx, sy = self.world_to_screen(*goal["pos"])
-            pygame.draw.circle(surface, (0, 220, 80), (sx, sy), 12)
-            label = self.font.render(goal["label"], True, (255, 255, 255))
-            surface.blit(label, (sx + 14, sy - 10))
+        for item in items:
 
-    def _draw_cubes(self, surface):
-        for cube in self.cubes:
-            sx, sy = self.world_to_screen(*cube["pos"])
-            rect = pygame.Rect(sx - 9, sy - 9, 18, 18)
-            pygame.draw.rect(surface, (80, 160, 255), rect)
-            label = self.font.render(cube["label"], True, (255, 255, 255))
-            surface.blit(label, (sx + 12, sy - 10))
+            item_id = item.get("id", "")
+            item_type = item.get("type", "polygon")
+            coords = item.get("coordinates", [])
 
-    def _draw_robot(self, surface):
-        sx, sy = self.world_to_screen(*self.robot["pos"])
-        pygame.draw.circle(surface, (240, 70, 70), (sx, sy), 14)
-        label = self.font.render("Robot", True, (255, 255, 255))
-        surface.blit(label, (sx + 16, sy - 10))
+            if len(coords) < 3:
+                continue
+
+            if item_type == "rectangle":
+
+                center = self._draw_rectangle(
+                    surface,
+                    coords,
+                    fill_color,
+                    border_color,
+                )
+
+            elif item_type == "circle":
+
+                center = self._draw_circle(
+                    surface,
+                    coords,
+                    fill_color,
+                    border_color,
+                )
+
+            else:
+
+                center = self._draw_polygon(
+                    surface,
+                    coords,
+                    fill_color,
+                    border_color,
+                )
+
+            if show_ids:
+                self._draw_id(surface, item_id, center)
+
+    # ---------------------------------------------------------
+
+    def _draw_rectangle(
+        self,
+        surface,
+        coords,
+        fill_color,
+        border_color,
+    ):
+
+        xs = [p[0] for p in coords]
+        ys = [p[1] for p in coords]
+
+        min_x = min(xs)
+        max_x = max(xs)
+
+        min_y = min(ys)
+        max_y = max(ys)
+
+        top_left = self.world_to_screen(max_x, min_y)
+        bottom_right = self.world_to_screen(min_x, max_y)
+
+        rect = pygame.Rect(
+            top_left[0],
+            top_left[1],
+            bottom_right[0] - top_left[0],
+            bottom_right[1] - top_left[1],
+        )
+
+        pygame.draw.rect(surface, fill_color, rect)
+
+        pygame.draw.rect(
+            surface,
+            border_color,
+            rect,
+            2,
+        )
+
+        return rect.center
+
+    # ---------------------------------------------------------
+
+    def _draw_circle(
+        self,
+        surface,
+        coords,
+        fill_color,
+        border_color,
+    ):
+
+        cx = sum(p[0] for p in coords) / len(coords)
+        cy = sum(p[1] for p in coords) / len(coords)
+
+        px, py = coords[0]
+
+        radius_world = math.sqrt(
+            (px - cx) ** 2 +
+            (py - cy) ** 2
+        )
+
+        center = self.world_to_screen(cx, cy)
+
+        scale_x = self.rect.h / (self.X_MAX - self.X_MIN)
+        scale_y = self.rect.w / (self.Y_MAX - self.Y_MIN)
+
+        radius = int(radius_world * min(scale_x, scale_y))
+
+        # make tiny circles readable
+        radius = max(radius, 16)
+
+        pygame.gfxdraw.filled_circle(
+            surface,
+            center[0],
+            center[1],
+            radius,
+            fill_color,
+        )
+
+        pygame.gfxdraw.aacircle(
+            surface,
+            center[0],
+            center[1],
+            radius,
+            border_color,
+        )
+
+        pygame.draw.circle(
+            surface,
+            border_color,
+            center,
+            radius,
+            2,
+        )
+
+        return center
+
+    # ---------------------------------------------------------
+
+    def _draw_polygon(
+        self,
+        surface,
+        coords,
+        fill_color,
+        border_color,
+    ):
+
+        points = [
+            self.world_to_screen(x, y)
+            for x, y in coords
+        ]
+
+        pygame.draw.polygon(
+            surface,
+            fill_color,
+            points,
+        )
+
+        pygame.draw.polygon(
+            surface,
+            border_color,
+            points,
+            2,
+        )
+
+        avg_x = sum(p[0] for p in points) // len(points)
+        avg_y = sum(p[1] for p in points) // len(points)
+
+        return avg_x, avg_y
+
+    # ---------------------------------------------------------
+
+    def _draw_id(self, surface, item_id, center):
+
+        label = self.id_font.render(
+            str(item_id),
+            True,
+            self.TEXT_COLOR,
+        )
+
+        surface.blit(
+            label,
+            label.get_rect(center=center),
+        )

@@ -1,6 +1,5 @@
 import os
 
-from datetime import datetime
 import json
 import numpy as np
 from matplotlib import pyplot as plt
@@ -8,11 +7,11 @@ from matplotlib import patches as pat
 from matplotlib import collections as coll
 from numpy.core.fromnumeric import size
 from shapely.geometry import Point, LineString, Polygon
-from path_algorithms.map_json_utils import write_map_json_compact
+from path_algorithms.map_json_utils import write_map_json_compact, remove_obstacle_by_id
 # from path_algorithms.create_obstacles import *
 # 2.71, 0.14, 1.06
 # add circle obstacles function
-obstacle_margin = 0.12  # Margin to ensure the robot does not collide with obstacles
+obstacle_margin = 0.9  # Margin to ensure the robot does not collide with obstacles
 
 class MapEnvironment(object):
     
@@ -39,7 +38,7 @@ class MapEnvironment(object):
         all_obstacles = json_dict.get('GOALS', []) + json_dict.get('OBSTACLES', [])
         self.load_obstacles(obstacles=all_obstacles)
         self.print_rectangle_obstacles(obstacles_coords=self.obstacles)
-        #Sself.remove_obstacle_by_id(0)
+        # remove_obstacle_by_id(0)  # Example: remove obstacle with ID 0
         # # add circle obstacles in the map in  [2.71, 1.06]
         # add_circle_obstacle(self, [2.71, 0.14, 1.06])
         # # add_cube_obstacle(self, [2.71, 0.14, 1.06])
@@ -78,8 +77,8 @@ class MapEnvironment(object):
         # iterate over all obstacles
         self.obstacles, self.obstacles_edges = [], []
         for obstacle in obstacles:
-            # Extract coordinates from dict format (all obstacles now have id and coordinates)
-            coords = obstacle['coordinates']
+            # Extract coordinates from dict format; metadata like type is ignored here
+            coords = list(obstacle.get('coordinates', []))
             
             non_applicable_vertices = [x[0] < self.xlimit[0] or x[0] > self.xlimit[1]+1 or x[1] < self.ylimit[0] or x[1] > self.ylimit[1] for x in coords]
             if any(non_applicable_vertices):
@@ -120,64 +119,6 @@ class MapEnvironment(object):
                 
                 print(f"Obstacle {idx}: rectangle obstacle at position [{center_x:.2f}, 0.14, {center_z:.2f}] with width {width:.2f}m and height {height:.2f}m.")
 
-
-    def remove_obstacle_by_id(self, obstacle_id, json_file="path_algorithms/map1.json"):
-        '''
-        Remove an obstacle from the OBSTACLES section and move it to HISTORY.
-        Only non-negative IDs (obstacles) can be removed. GOALS cannot be removed.
-        @param obstacle_id The ID of the obstacle to remove (must be non-negative)
-        @param json_file The path to the JSON file
-        '''
-        # Only allow removal of non-negative IDs (OBSTACLES)
-        if obstacle_id < 0:
-            print(f"Error: Cannot remove obstacle with ID {obstacle_id}. Only non-negative IDs (OBSTACLES) can be removed. GOALS are protected.")
-            return False
-        
-        json_path = os.path.join(os.getcwd(), json_file)
-        
-        try:
-            with open(json_path) as f:
-                json_dict = json.load(f)
-            
-            # Find and remove the obstacle from OBSTACLES
-            original_count = len(json_dict.get('OBSTACLES', []))
-            obstacle_to_remove = None
-            
-            for obs in json_dict.get('OBSTACLES', []):
-                if obs.get('id') == obstacle_id:
-                    obstacle_to_remove = obs
-                    break
-            
-            if obstacle_to_remove is None:
-                print(f"Obstacle with ID {obstacle_id} not found in OBSTACLES section")
-                return False
-            
-            # Remove from OBSTACLES
-            json_dict['OBSTACLES'] = [
-                obs for obs in json_dict['OBSTACLES']
-                if obs.get('id') != obstacle_id
-            ]
-            
-            # Add to HISTORY with timestamp
-            if 'HISTORY' not in json_dict:
-                json_dict['HISTORY'] = []
-            
-            removed_entry = {
-                "id": obstacle_to_remove['id'],
-                "coordinates": obstacle_to_remove['coordinates'],
-                "removed_at": datetime.now().isoformat()
-            }
-            json_dict['HISTORY'].append(removed_entry)
-            
-            # Write back to file while keeping coordinate arrays compact
-            write_map_json_compact(json_path, json_dict)
-            
-            print(f"Obstacle with ID {obstacle_id} successfully removed and added to HISTORY")
-            return True
-        
-        except Exception as e:
-            print(f"Error removing obstacle: {e}")
-            return False
 
     def compute_distance(self, start_state, end_state):
         '''
@@ -222,7 +163,7 @@ class MapEnvironment(object):
         # obstacles: withe out firt one
         for i, polygon in enumerate(self.obstacles):
             if (line.crosses(polygon) or line.within(polygon)) or line.intersects(polygon):
-                return False
+              return False
 
         return True
 
@@ -295,6 +236,7 @@ class MapEnvironment(object):
         # Include start and goal points
         additional_points = [start, goal]
         # inflated_obstacles = [polygon.buffer(obstacle_margin) for polygon in self.obstacles[3:]]
+
          # Enlarge obstacles BEFORE generating graph nodes and edges
         inflated_obstacles = [
             polygon.buffer(obstacle_margin, join_style=2)
@@ -315,7 +257,7 @@ class MapEnvironment(object):
         #     for coord in polygon.exterior.coords[:-1]
         # ]
 # aaaaaaaaaaaaaaaaaaaa
-        # nodes = additional_points + [
+      # nodes = additional_points + [
         #     tuple(coord)
         #     for polygon in inflated_obstacles
         #     for coord in polygon.exterior.coords[:-1]
@@ -371,7 +313,6 @@ class MapEnvironment(object):
         """
         plt.figure(figsize=(6, 10))  # Adjusted to match your preferred dimensions
 
-        # Draw background
         back_img = np.zeros((2, 5))
         plt.imshow(
             back_img.T,  # Transposed to reflect axis swap
@@ -387,6 +328,7 @@ class MapEnvironment(object):
             xs, ys = zip(*swapped)
             plt.fill(xs, ys, "y", zorder=5)
 
+
         # Plot the plan if given
         if plan is not None:
             for i in range(len(plan) - 1):
@@ -400,7 +342,6 @@ class MapEnvironment(object):
                 x0, y0 = edge[0][1], edge[0][0]
                 x1, y1 = edge[1][1], edge[1][0]
                 plt.plot([x0, x1], [y0, y1], color='lightgrey', zorder=10)
-
         # Plot expanded nodes if given
         if expanded_nodes is not None:
             for node in expanded_nodes:

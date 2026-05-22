@@ -2,6 +2,8 @@
 import heapq
 import numpy as np
 
+
+
 class AStarPlanner:
     def __init__(self, planning_env):
         self.start = tuple(planning_env.start)
@@ -45,7 +47,8 @@ class AStarPlanner:
     def plan(self):
         # self.planning_env.visualize_map(name='beforePlantheAStar')
         plan = self.plan_path()
-        self.planning_env.visualize_map(plan=plan, visibility_graph=self.graph, name='AStarPlan')
+        
+        # self.planning_env.visualize_map(plan=plan, visibility_graph=self.graph, name='AStarPlan')
         if plan is not None:
             self.planning_env.visualize_map(plan=plan, visibility_graph=self.graph, name='AStarPlan')
         return plan
