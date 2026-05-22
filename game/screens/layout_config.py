@@ -29,13 +29,13 @@ class LayoutConfigScreen(Screen):
         )
 
         self.remove_btn = Button(
-            "Remove",
+           "Remove",
             (start_x + btn_w + gap, y, btn_w, btn_h),
             fonts["button"],
             config.DANGER,
             config.DANGER_HOVER,
             config.WHITE,
-            on_click=None,
+            on_click=lambda: self.manager.go_to("remove_obstacle"),
         )
 
         self.back_btn = Button(
