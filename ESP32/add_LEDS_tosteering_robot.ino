@@ -8,7 +8,7 @@
 #endif
 
 // Which pin on the Arduino is connected to the NeoPixels?
-#define PIN  12
+#define PIN  22
 // How many NeoPixels are attached to the Arduino?
 #define NUMPIXELS 6 // Popular NeoPixel ring size
 
@@ -243,6 +243,9 @@ void repeatedBeepTask(void *param) {
 
 
 void setup() {
+  #if defined(__AVR_ATtiny85__) && (F_CPU == 16000000)
+  clock_prescale_set(clock_div_1);
+  #endif
   Serial.begin(115200);
   delay(1000);
   pinMode(ENA_pin, OUTPUT);
@@ -511,11 +514,27 @@ void setup() {
 
 
 
+
+
+  pixels.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
   server.begin();
 }
 
 void loop() {
-    
+     pixels.clear(); // Set all pixel colors to 'off'
+
+  // The first NeoPixel in a strand is #0, second is 1, all the way up
+  // to the count of pixels minus one.
+  for(int i=0; i<NUMPIXELS; i++) { // For each pixel...
+
+    // pixels.Color() takes RGB values, from 0,0,0 up to 255,255,255
+    // Here we're using a moderately bright green color:
+    pixels.setPixelColor(i, pixels.Color(0, 150, 0));
+
+    pixels.show();   // Send the updated pixel colors to the hardware.
+
+    delay(DELAYVAL); // Pause before next pass through loop
+  }
   // No need for code here
 
 }
