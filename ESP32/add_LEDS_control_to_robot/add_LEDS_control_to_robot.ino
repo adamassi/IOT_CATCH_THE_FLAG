@@ -300,8 +300,11 @@ void setup() {
   }
   pixels.show(); // Update the strip to display the new colors
   delay(500);
-
   }
+  for(int i=0; i<NUMPIXELS; i++){
+    pixels.setPixelColor(i, pixels.Color(0, 255, 0)); // green color
+  }
+  pixels.show(); // Update the strip to display the new colors
 
   Serial.println(WiFi.localIP());
 
