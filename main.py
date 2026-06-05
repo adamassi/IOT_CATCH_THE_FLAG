@@ -38,7 +38,7 @@ def cube_blocks_target_base(base_pos, threshold=0.18):
             continue
 
         # Compare only x and z because y is height
-        d = dist(cube.position.get_x(), base_pos[0], cube.position.get_z(), base_pos[2])
+        d = dist(cube.position[0], base_pos[0], cube.position[2], base_pos[2])
 
         if d < threshold:
             print(f"Cube {cube.cube_id} is blocking the target base (distance: {d:.2f} m).")
@@ -223,12 +223,12 @@ def go_to_goal(goal_pos):
             
             streaming_client.update_sync()
             curr_pos = [cube_bank.get_cube_position_by_id(idx) for idx in cubes_order if idx is not current_target_id]
-            if any(check_cube_moved(prev.get_x(), curr.get_x(), prev.get_z(), curr.get_z()) for (prev, curr) in zip (cubes_positions, curr_pos)):
+            if any(check_cube_moved(prev[0], curr[0], prev[2], curr[2]) for (prev, curr) in zip (cubes_positions, curr_pos)):
                 print("continue")
                 finished = False
                 break
             
-            if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) > 0.16:
+            if dist(c_pos[0], curr_pos[0], c_pos[2], curr_pos[2]) > 0.16:
                 send_servo_request(30)
                 return []
                 
@@ -253,7 +253,7 @@ def get_path_to_target():
 
             streaming_client.update_sync()
             curr_pos = [cube_bank.get_cube_position_by_id(idx) for idx in cubes_order if idx is not current_target_id]
-            if any(check_cube_moved(prev.get_x(), curr.get_x(), prev.get_z(), curr.get_z()) for (prev, curr) in zip (cubes_positions, curr_pos)):
+            if any(check_cube_moved(prev[0], curr[0], prev[2], curr[2]) for (prev, curr) in zip (cubes_positions, curr_pos)):
                 print("continue")
                 finished = False
                 break

@@ -4,6 +4,7 @@ import os
 from shapely.geometry import Polygon  # For creating geometric shapes
 import numpy as np  # For mathematical operations like cosine and sine
 from path_algorithms.map_json_utils import write_cubes_json, append_obstacle_to_json
+from location import Location
 
 def is_within_boundaries(env, points):
     """
