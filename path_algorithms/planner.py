@@ -62,7 +62,14 @@ json_file_path = PlannerConfig.MAP_JSON_PATH  # Get the JSON file path from the 
 planning_env = MapEnvironment(json_file=json_file_path)
 
 
-def 
+def move_cube_blocking_base(cubeId):
+    new_pos = planning_env.sample_random_free_state()
+    path= get_path_to_goal(planning_env.start, new_pos, cube_obstacles=[])
+    pass
+
+
+
+
 # Function get data where the  robot car and where the cube is and calculate the path to the cube
 def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
     # global number_of_run
