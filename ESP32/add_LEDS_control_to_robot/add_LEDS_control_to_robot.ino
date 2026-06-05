@@ -292,12 +292,15 @@ void setup() {
 
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
+    // delay(1000);
+    // Serial.println("Connecting...");
     pixels.clear(); // Clear previous colors
     delay(500);
-    Serial.println("Connecting...");
+    
     for(int i=0; i<NUMPIXELS; i++){
       pixels.setPixelColor(i, pixels.Color(0, 0, 255)); // blue color
-  }
+    }
+  Serial.println("Connecting...");
   pixels.show(); // Update the strip to display the new colors
   delay(500);
   }
