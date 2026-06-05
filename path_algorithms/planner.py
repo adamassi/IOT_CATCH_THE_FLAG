@@ -78,6 +78,7 @@ def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
     planning_env.start = np.array([start_pos[0], start_pos[2]])  # Use x and y coordinates for the start position
     planning_env.goal = np.array([goal_pos[0], goal_pos[2]])  # Use x and y coordinates for the goal position
     nember_of_added_obstacles = 0
+
     # Add dynamic obstacles (e.g., cubes detected in the environment)
     for cube_pos in cube_obstacles:
         print(f"Adding cube obstacle NOT GOAL at position {cube_pos}.")
@@ -104,15 +105,14 @@ def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
         samples_per_segment=30,
         tension=0.20
         )
+    
+    print("Visualizing the map with the computed plan and expanded nodes...")
     if PlannerConfig.ALGORITHM == "ASTAR":
         planner.planning_env.visualize_map(plan=smooth_plan, visibility_graph=planner.graph, name='AStarPlan')
     elif PlannerConfig.ALGORITHM == "RRT_STAR":
         planner.planning_env.visualize_map(plan=smooth_plan, tree_edges=planner.tree.get_edges_as_states(), name='RRTStarPlan')
-    print("Visualizing the map with the computed plan and expanded nodes...")
-    # planner.planning_env.visualize_map( name='beforeRemove')
+
     clear_dynamic_cubes()  # Clear the dynamic cubes from the environment after planning
-    remove_cube_obstacle(planning_env, nember_of_added_obstacles)
-    # planner.planning_env.visualize_map( name='afterRemove')
-    # planner.planning_env.visualize_map(plan=plan, tree_edges=planner.tree.get_edges_as_states(), name='4main'+str(y))  # Convert z to string
-    # print('Successfully planned path')
+    remove_cube_obstacle(planning_env, len(cube_obstacles))
+
     return smooth_plan
