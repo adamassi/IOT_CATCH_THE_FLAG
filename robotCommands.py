@@ -71,5 +71,10 @@ def send_stop_beeping_request():
         # print("STOP BEEPING request sent. Response:", response.text)
     except Exception as e:
         print("Error sending STOP BEEPING request:", e)
-
+def send_led_blue_request():
+    try:
+        response = requests.get(f"{ESPConfig.ESP_IP}/blue")
+        # print("LED BLUE request sent. Response:", response.text)
+    except Exception as e:
+        print("Error sending LED BLUE request:", e)
 

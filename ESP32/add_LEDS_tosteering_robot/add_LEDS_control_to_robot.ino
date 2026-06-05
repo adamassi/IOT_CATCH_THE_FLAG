@@ -2,36 +2,27 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <ESP32Servo.h>
-#include <Adafruit_NeoPixel.h>
+
+
 #ifdef __AVR__
  #include <avr/power.h> // Required for 16 MHz Adafruit Trinket
 #endif
 
+
+
+
+
+
+
+
+
+
 // Which pin on the Arduino is connected to the NeoPixels?
-#define PIN  19
+#define LEDPIN  19
 // How many NeoPixels are attached to the Arduino?
 #define NUMPIXELS 6 // Popular NeoPixel ring size
 
-// When setting up the NeoPixel library, we tell it how many pixels,
-// and which pin to use to send signals. Note that for older NeoPixel
-// strips you might need to change the third parameter -- see the
-// strandtest example for more information on possible values.
-Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
-
-#define DELAYVAL 100 // Time (in milliseconds) to pause between pixels
-
-uint32_t Wheel(byte WheelPos) {
-  WheelPos = 255 - WheelPos;
-  if (WheelPos < 85) {
-    return pixels.Color(255 - WheelPos * 3, 0, WheelPos * 3);
-  }
-  if (WheelPos < 170) {
-    WheelPos -= 85;
-    return pixels.Color(0, WheelPos * 3, 255 - WheelPos * 3);
-  }
-  WheelPos -= 170;
-  return pixels.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
-}
+Adafruit_NeoPixel pixels(NUMPIXELS, LEDPIN, NEO_GRB + NEO_KHZ800);
 
 
 Servo myServo;
@@ -72,9 +63,6 @@ const int resolution = 8;
 const char *input_parameter = "value";
 
 AsyncWebServer server(80);
-
-    
-
 
 const char index_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE HTML><html>
@@ -256,9 +244,6 @@ void repeatedBeepTask(void *param) {
 
 
 void setup() {
-  #if defined(__AVR_ATtiny85__) && (F_CPU == 16000000)
-  clock_prescale_set(clock_div_1);
-  #endif
   Serial.begin(115200);
   delay(1000);
   pinMode(ENA_pin, OUTPUT);
@@ -266,6 +251,7 @@ void setup() {
   pinMode(IN2, OUTPUT);
   pinMode(IN3, OUTPUT);
   pinMode(IN4, OUTPUT);
+  pinMode(LEDPIN, OUTPUT);
 
   ledcSetup(pwm_channel1, frequency, resolution);
   ledcSetup(pwm_channel2, frequency, resolution);
@@ -284,6 +270,15 @@ void setup() {
   ledcWrite(pwm_channel4, 0);
   digitalWrite(ENA_pin, HIGH);
 
+
+  pixels.begin();
+  pixels.clear(); // Initialize all pixels to 'off'
+
+
+    for(int i=0; i<NUMPIXELS; i++){
+        pixels.setPixelColor(i, pixels.Color(255, 0, 0)); // Red color
+    }
+    pixels.show(); // Update the strip to display the new colors
 
 
   // ledcSetup(servo_channel, frequency, resolution);
@@ -521,29 +516,27 @@ void setup() {
     keepBeeping = false;
     request->send(200, "text/plain", "Stopped beeping");
   });
-  
+  server.on("/connecting",HTTP_GET, [](AsyncWebServerRequest *request) {
+    
+    pixels.clear(); // Set all pixel colors to 'off'
+
+    for (int i = 0; i < NUMPIXELS; i++) {
+        pixels.setPixelColor(i, pixels.Color(0, 0, 255)); // Blue
+      }
+    
+      pixels.show();
+    request->send(200, "text/plain", "LED blue");
+  });
 
 
 
 
 
 
-
-
-  pixels.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
   server.begin();
 }
 
 void loop() {
-  pixels.clear(); // Set all pixel colors to 'off'
 
-  // Show a rainbow across all pixels instead of only green.
-  for (int i = 0; i < NUMPIXELS; i++) {
-    int pixelHue = (i * 256 / NUMPIXELS + millis() / 20) & 255;
-    pixels.setPixelColor(i, Wheel(pixelHue));
-  }
-
-  pixels.show();   // Send the updated pixel colors to the hardware.
-  delay(DELAYVAL);  // Small pause before updating again
-
+  // No need for code here
 }
