@@ -292,9 +292,19 @@ void setup() {
 
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
+    pixels.clear(); // Clear previous colors
+    delay(500);
     Serial.println("Connecting...");
+    for(int i=0; i<NUMPIXELS; i++){
+      pixels.setPixelColor(i, pixels.Color(0, 0, 255)); // blue color
   }
+  pixels.show(); // Update the strip to display the new colors
+  delay(500);
+  }
+  for(int i=0; i<NUMPIXELS; i++){
+    pixels.setPixelColor(i, pixels.Color(0, 255, 0)); // green color
+  }
+  pixels.show(); // Update the strip to display the new colors
 
   Serial.println(WiFi.localIP());
 
