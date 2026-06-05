@@ -70,10 +70,9 @@ def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
     nember_of_added_obstacles = 0
     # Add dynamic obstacles (e.g., cubes detected in the environment)
     for cube_pos in cube_obstacles:
-        if cube_pos != goal_pos:  # Skip if cube_pos matches goal_pos
-            print(f"Adding cube obstacle NOT GOAL at position {cube_pos}.")
-            add_cube_obstacle(planning_env, cube_pos)
-            nember_of_added_obstacles += 1
+        print(f"Adding cube obstacle NOT GOAL at position {cube_pos}.")
+        add_cube_obstacle(planning_env, cube_pos)
+        nember_of_added_obstacles += 1
     
 
     # Create an instance of the RCSPlanner with the planning environment

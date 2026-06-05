@@ -3,15 +3,13 @@ import socket
 from natnet import DataDescriptions, DataFrame, NatNetClient
 import numpy as np
 import optitrack_data_handling
-#from helperFunc import dist, is_out_of_board 
-# from helper_functions import dist, angle_between_points ,out_limits, is_flipped
 from robotCommands import *
 from conversion import normalize_angle
 from helper_functions import *
-# from shapely.geometry import Polygon  # Ensure this is imported
 from path_algorithms.planner import *
 from PARAMETERS import *
-from cubeBank import CubeBank
+from cubeBank import CubeBank, Cube
+from location import Location
 
 
 word = "OIT"  # Example word to extract order from
@@ -55,31 +53,28 @@ def receive_new_desc(desc: DataDescriptions):
             #print(desc)
             x = 1
 
-
 def receive_new_frame(data_frame: DataFrame):
+    # This function is triggered when a new data frame is received from the OptiTrack system.
+    # It processes the data frame to extract the positions, rotations, and radii of the chaser and target objects.
+    global cube_bank  # Access the global cube bank to update cube positions
     global c_pos, c_rot, c_rad
-    global t_pos, t_rot, t_rad
-    global t_pos1, t_rot1, t_rad1  # Add variables for ctf_cube1
-    global t_pos2, t_rot2, t_rad2  # Add variables for ctf_cube2
-    global t_pos3, t_rot3, t_rad3
-
     for ms in data_frame.rigid_bodies:
         if ms.id_num == RigidBodyIDs.CAR:
             # Handle the chaser's data
             c_pos, c_rot, c_rad = optitrack_data_handling.handle_frame(ms)
-        if ms.id_num == current_target_id:
-            # Handle the target's data (ctf_cube)
-            t_pos, t_rot, t_rad = optitrack_data_handling.handle_frame(ms)
-        if ms.id_num == RigidBodyIDs.CUBE_1:
-            # Handle the first cube's data (ctf_cube1)``
-            t_pos1, t_rot1, t_rad1 = optitrack_data_handling.handle_frame(ms)
-        if ms.id_num == RigidBodyIDs.CUBE_2:
-            # Handle the second cube's data (ctf_cube2)
-            t_pos2, t_rot2, t_rad2 = optitrack_data_handling.handle_frame(ms)
-        if ms.id_num == RigidBodyIDs.CUBE_3:
-            # Handle the third cube's data (ctf_cube3)
-            t_pos3, t_rot3, t_rad3 = optitrack_data_handling.handle_frame(ms)   
-    #print("received new frame")
+        if cube_bank.check_if_cube_in_bank(ms.id_num):
+            pos, rot, rad = optitrack_data_handling.handle_frame(ms)
+            cube_bank.update_cube(ms.id_num, Location(pos, rot, rad))
+
+def check_board_validity():
+    # This function checks if the robot and the cubes are within the defined limits of the board and checks if the robot is flipped.
+    # It uses the `is_out_of_board` function to determine if either the chaser or target is out of bounds.
+
+    if is_out_of_board(c_pos[0], c_pos[2]):
+        print("The robot is out of the board limits. Please check the position.")
+        exit()
+
+    cube_bank.validate_cubes()  # Validate the cubes in the cube bank to ensure they are within limits and not flipped
 
 
 def turnToTarget(is_cube = True, curr_t_pos = t_pos):
@@ -208,23 +203,25 @@ def go_to_goal(goal_pos):
 
 
 def get_path_to_target():
-    finshed = False
-    while not finshed:
+    finished = False
+    while not finished:
         streaming_client.update_sync()
+
         cur_t_pos2 = t_pos2  # Use the current position of t_pos2
         cur_t_pos1 = t_pos1  # Use the current position of t_pos1
         cur_t_pos3 = t_pos3  # Use the current position of t_pos3
-        plan = get_path_to_goal(c_pos, t_pos, [t_pos1,t_pos2,t_pos3])  # Pass t_pos1 as a dynamic obstacle
-        finshed = True
-        for i in range(len(plan) - 1):
-            is_flipped([t_rot1, t_rot2, t_rot3])
-            out_limits(c_pos, t_pos)
-            go_to_pos = [plan[i+1][0], 0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
+        cubes_positions = [cube_bank.get_cube_position_by_id(idx) for idx in cubes_order if idx is not current_target_id]  # Update cube positions in the cube bank
+        plan = get_path_to_goal(c_pos, current_target_pos, cubes_positions)  # Pass t_pos1 as a dynamic obstacle
+        finished = True
+        for point in range(len(plan) - 1):
+            check_board_validity()  # Check if the robot and cubes are within the defined limits of the board and check if the robot is flipped
+
+            go_to_pos = [plan[point+1][0], 0, plan[point+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
             turnToTarget(False, go_to_pos)
             GoToTarget(False, go_to_pos)
             if check_cube_moved(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) or check_cube_moved(t_pos1[0], cur_t_pos1[0], t_pos1[2], cur_t_pos1[2]) or check_cube_moved(t_pos3[0], cur_t_pos3[0], t_pos3[2], cur_t_pos3[2]):    
                 print("continue")
-                finshed = False
+                finished = False
                 break
 
 
@@ -232,7 +229,6 @@ cube_bank = CubeBank()  # Initialize the cube bank to manage cube information an
 cube_bank.load_cubes_from_json(CUBES_BANK_JSON_PATH)  # Load cube data from JSON file
 for cube in cube_bank.get_all_cubes():
     print(f"Cube ID: {cube.cube_id}, Letter: {cube.letter}, Position: {cube.position}")  # Print cube information for verification
-
 
 # Initialize the NatNet client to connect to the OptiTrack system and set up event handlers for receiving data descriptions and data frames.
 streaming_client = NatNetClient(
@@ -265,21 +261,22 @@ try:
 
         print("Streaming started. Waiting for data...", flush=True)
                
-        for i in range(3):
-            current_target_id = arr[i]  # Get the current target ID from the array
-            
-            
-            out_limits(c_pos, t_pos)
-            is_flipped([t_rot1, t_rot2, t_rot3])
-            if not correct_slot(i,t_pos):
+        cubes_order = cube_bank.get_cubes_ordered_by_word(word)  # Get the current cubes from the cube bank
+        for idx in range(len(cubes_order)):
+            current_target_id = cubes_order[idx]  # Get the current target ID from the array
+            current_target_pos = cube_bank.get_cube_position_by_id(current_target_id)  # Get the current target position from the cube bank
+
+            check_board_validity()  # Check if the robot and cubes are within the defined limits of the board and check if the robot is flipped
+
+            if not correct_slot(idx,current_target_pos):  # Check if the target position is in the correct slot
                 plan = []
                 while len(plan) == 0:
                     get_path_to_target()  # Get the path to the target position and move there
                     send_servo_request(80) # close the servo
-                    plan = go_to_goal(PositionConfig.bases[i])  # Move to the base position first
-                turnToTarget(False, [plan[-1][0]+0.4,0.09, y_base[i]])
+                    plan = go_to_goal(PositionConfig.bases[idx])  # Move to the base position first
+                turnToTarget(False, [plan[-1][0]+0.4,0.09, y_base[idx]])  # Turn towards the target position after reaching the base
                 #sys.stdout.flush()  # Ensure that the output is flushed immediately
-                GoToTarget(False, [plan[-1][0]+0.4,0.09, y_base[i]])  # Move slightly forward after reaching the target
+                GoToTarget(False, [plan[-1][0]+0.4,0.09, y_base[idx]])  # Move slightly forward after reaching the target
                 send_servo_request(30)
                 #sys.stdout.flush()  # Ensure that the output is flushed immediately
                 GoBack()

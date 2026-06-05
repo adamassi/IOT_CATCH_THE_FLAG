@@ -1,5 +1,6 @@
 import json
-
+from state_validators import is_robot_off_limits, is_flipped
+from location import Location
 
 class Cube:
     def __init__(self, cube_id, letter, position=None):
@@ -56,3 +57,34 @@ class CubeBank:
 
     def get_all_cubes(self):
         return list(self.cubes.values())
+    
+    def get_cubes_ordered_by_word(self, word):
+        ordered_cubes = []
+        for letter in word:
+            for cube in self.cubes.values():
+                if cube.letter == letter:
+                    ordered_cubes.append(cube.cube_id)
+                    break  # Move to the next letter after finding the first matching cube
+        return ordered_cubes
+    
+    def check_if_cube_in_bank(self, cube_id):
+        return cube_id in self.cubes
+    
+    def validate_cubes(self):
+        for cube in self.cubes.values():
+            if cube.position is None:
+                print(f"Cube {cube.cube_id} does not have a position. Please check the cube data.")
+                exit()
+            if is_robot_off_limits(cube.position.get_x(), cube.position.get_z()):
+                print(f"Cube {cube.cube_id} is out of the board limits. Please check the position.")
+                exit()
+            if is_flipped(cube.position.get_rotation_x(), cube.position.get_rotation_y()):
+                print(f"Cube {cube.cube_id} is flipped. Please check the position.")
+                exit()
+    
+    def get_cube_position_by_id(self, cube_id):
+        if cube_id in self.cubes:
+            return self.cubes[cube_id].position.get_position()
+        else:
+            print(f"Cube with ID {cube_id} does not exist.")
+            return None
