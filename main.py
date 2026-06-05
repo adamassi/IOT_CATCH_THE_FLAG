@@ -21,8 +21,7 @@ t_pos3, t_rot3, t_rad3 = [0,0,0], 0, 0
 t_pos, t_rot, t_rad = [0,0,0], 0, 0
 y_base = [-0.15, 0.28, 0.67]  # List of base positions for the cubes
 current_target_id = 604
-
-
+current_target_pos = [0,0,0]
 
 def get_all_cube_positions():
     return {
@@ -138,6 +137,8 @@ def receive_new_frame(data_frame: DataFrame):
         if cube_bank.check_if_cube_in_bank(ms.id_num):
             pos, rot, rad = optitrack_data_handling.handle_frame(ms)
             cube_bank.update_cube(ms.id_num, Location(pos, rot, rad))
+            if ms.id_num == current_target_id:
+                current_target_pos = cube_bank.get_cube_position_by_id(current_target_id)
 
 def check_board_validity():
     # This function checks if the robot and the cubes are within the defined limits of the board and checks if the robot is flipped.
@@ -229,29 +230,8 @@ def GoBack( ):
                 break
         send_stop_beeping_request()
             
-            
-
-   
 
 
-
-def move_cube_to_base(base_pos):
-    plan = []
-    start_time = time.time()
-
-    while len(plan) == 0:
-        if time.time() - start_time >= PlannerConfig.PATH_TIMEOUT_SECONDS:
-            print(f"Path planning timed out after {PlannerConfig.PATH_TIMEOUT_SECONDS} seconds.")
-            return np.array([])
-        get_path_to_target()      # go to the cube
-        send_servo_request(80)    # close servo / pick cube
-        plan = go_to_goal(base_pos)  # carry cube to base
-        if len(plan) == 0:
-            blocking_cube_id = cube_blocks_target_base(base_pos, current_target_id)
-            if blocking_cube_id is not None:
-                move_cube_blocking_base(blocking_cube_id)  # Move the blocking cube out of the way
-                print(f"Cube {blocking_cube_id} is blocking the target base.")
-    return plan
 def move_cube_to_base(base_pos):
     plan = []
     start_time = time.time()
@@ -370,8 +350,7 @@ try:
         cubes_order = cube_bank.get_cubes_ordered_by_word(word)  # Get the current cubes from the cube bank
         for idx in range(len(cubes_order)):
             current_target_id = cubes_order[idx]  # Get the current target ID from the array
-            current_target_pos = cube_bank.get_cube_position_by_id(current_target_id)  # Get the current target position from the cube bank
-
+        
             check_board_validity()  # Check if the robot and cubes are within the defined limits of the board and check if the robot is flipped
 
             if not correct_slot(idx,current_target_pos):  # Check if the target position is in the correct slot
@@ -379,12 +358,10 @@ try:
                 if blocking_cube_id is not None:
                     print(f"Cube {blocking_cube_id} is blocking the target base.")
                 plan = []
-                plan=move_cube_to_base(PositionConfig.bases[idx])  # Move the cube to the base position
+                plan = move_cube_to_base(PositionConfig.bases[idx])  # Move the cube to the base position
                 turnToTarget(False, [plan[-1][0]+0.4,0.09, y_base[idx]])
-                #sys.stdout.flush()  # Ensure that the output is flushed immediately
                 GoToTarget(False, [plan[-1][0]+0.4,0.09, y_base[idx]])  # Move slightly forward after reaching the target
                 send_servo_request(30)
-                #sys.stdout.flush()  # Ensure that the output is flushed immediately
                 GoBack()
 
 # Handle connection-related errors specifically
