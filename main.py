@@ -15,24 +15,12 @@ from location import Location
 word = "OIT"  # Example word to extract order from
 
 c_pos, c_rot, c_rad = [0,0,0], 0, 0
-t_pos1, t_rot1, t_rad1 = [0,0,0], 0, 0
-t_pos2, t_rot2, t_rad2 = [0,0,0], 0, 0
-t_pos3, t_rot3, t_rad3 = [0,0,0], 0, 0
-t_pos, t_rot, t_rad = [0,0,0], 0, 0
+
 y_base = [-0.15, 0.28, 0.67]  # List of base positions for the cubes
 current_target_id = 604
+current_target_pos = [0,0,0]
 
-
-
-def get_all_cube_positions():
-    return {
-        RigidBodyIDs.CUBE_1: t_pos1,
-        RigidBodyIDs.CUBE_2: t_pos2,
-        RigidBodyIDs.CUBE_3: t_pos3,
-    }
-
-
-def cube_blocks_target_base(base_pos, current_cube_id, threshold=0.18):
+def cube_blocks_target_base(base_pos, threshold=0.18):
     """
     Check if another cube is blocking the target base for the current cube.
 
@@ -44,58 +32,20 @@ def cube_blocks_target_base(base_pos, current_cube_id, threshold=0.18):
     Returns:
         blocking_cube_id if blocked, otherwise None
     """
-    cube_positions = get_all_cube_positions()
-
-    for cube_id, cube_pos in cube_positions.items():
+    for cube in cube_bank.get_all_cubes():
         # Do not count the cube we are currently moving
-        if cube_id == current_cube_id:
+        if cube.cube_id == current_target_id:
             continue
 
         # Compare only x and z because y is height
-        d = dist(cube_pos[0], base_pos[0], cube_pos[2], base_pos[2])
+        d = dist(cube.position.get_x(), base_pos[0], cube.position.get_z(), base_pos[2])
 
         if d < threshold:
-            print(f"Cube {cube_id} is blocking the target base (distance: {d:.2f} m).")
-            return cube_id
-
+            print(f"Cube {cube.cube_id} is blocking the target base (distance: {d:.2f} m).")
+            return cube.cube_id
     return None
 
 
-def get_all_cube_positions():
-    return {
-        RigidBodyIDs.CUBE_1: t_pos1,
-        RigidBodyIDs.CUBE_2: t_pos2,
-        RigidBodyIDs.CUBE_3: t_pos3,
-    }
-
-
-def cube_blocks_target_base(base_pos, current_cube_id, threshold=0.18):
-    """
-    Check if another cube is blocking the target base for the current cube.
-
-    Args:
-        base_pos: target base position [x, y, z]
-        current_cube_id: ID of the cube we are currently moving
-        threshold: distance in meters to consider the base blocked
-
-    Returns:
-        blocking_cube_id if blocked, otherwise None
-    """
-    cube_positions = get_all_cube_positions()
-
-    for cube_id, cube_pos in cube_positions.items():
-        # Do not count the cube we are currently moving
-        if cube_id == current_cube_id:
-            continue
-
-        # Compare only x and z because y is height
-        d = dist(cube_pos[0], base_pos[0], cube_pos[2], base_pos[2])
-
-        if d < threshold:
-            print(f"Cube {cube_id} is blocking the target base (distance: {d:.2f} m).")
-            return cube_id
-
-    return None
 def check_cube_moved(x_curr, x_prev, z_curr, z_prev, threshold=0.1):
     """
     Check if the cube has moved by comparing current and previous positions.
@@ -138,6 +88,8 @@ def receive_new_frame(data_frame: DataFrame):
         if cube_bank.check_if_cube_in_bank(ms.id_num):
             pos, rot, rad = optitrack_data_handling.handle_frame(ms)
             cube_bank.update_cube(ms.id_num, Location(pos, rot, rad))
+            if ms.id_num == current_target_id:
+                current_target_pos = cube_bank.get_cube_position_by_id(current_target_id)
 
 def check_board_validity():
     # This function checks if the robot and the cubes are within the defined limits of the board and checks if the robot is flipped.
@@ -150,14 +102,14 @@ def check_board_validity():
     cube_bank.validate_cubes()  # Validate the cubes in the cube bank to ensure they are within limits and not flipped
 
 
-def turnToTarget(is_cube = True, curr_t_pos = t_pos):
+def turnToTarget(is_cube = True, curr_t_pos = current_target_pos):
     left, right, stop = 1, 2, 3
     turning_state = stop
     while True:
         streaming_client.update_sync()
         curr_c_pos, curr_c_rad = c_pos, c_rad
         if is_cube:
-            curr_t_pos = t_pos
+            curr_t_pos = current_target_pos
         angle = angle_between_points(curr_c_pos, curr_t_pos)
         normalized_angle = normalize_angle(angle - curr_c_rad)
         if abs(normalized_angle) < 0.07:
@@ -173,7 +125,7 @@ def turnToTarget(is_cube = True, curr_t_pos = t_pos):
                 send_right_request(60)
     # time.sleep(1)
 
-def GoToTarget(is_cube = True, curr_t_pos = t_pos):
+def GoToTarget(is_cube = True, curr_t_pos = current_target_pos):
     """Drive the chaser toward a target position until close.
 
     Args:
@@ -199,7 +151,7 @@ def GoToTarget(is_cube = True, curr_t_pos = t_pos):
 
             # If tracking a cube, always use the live global `t_pos`
             if is_cube:
-                curr_t_pos = t_pos
+                curr_t_pos = current_target_pos
 
             # If we got close enough, stop and exit
             if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) < 0.14:
@@ -229,10 +181,6 @@ def GoBack( ):
                 break
         send_stop_beeping_request()
             
-            
-
-   
-
 
 
 def move_cube_to_base(base_pos):
@@ -243,23 +191,7 @@ def move_cube_to_base(base_pos):
         if time.time() - start_time >= PlannerConfig.PATH_TIMEOUT_SECONDS:
             print(f"Path planning timed out after {PlannerConfig.PATH_TIMEOUT_SECONDS} seconds.")
             return np.array([])
-        get_path_to_target()      # go to the cube
-        send_servo_request(80)    # close servo / pick cube
-        plan = go_to_goal(base_pos)  # carry cube to base
-        if len(plan) == 0:
-            blocking_cube_id = cube_blocks_target_base(base_pos, current_target_id)
-            if blocking_cube_id is not None:
-                move_cube_blocking_base(blocking_cube_id)  # Move the blocking cube out of the way
-                print(f"Cube {blocking_cube_id} is blocking the target base.")
-    return plan
-def move_cube_to_base(base_pos):
-    plan = []
-    start_time = time.time()
-
-    while len(plan) == 0:
-        if time.time() - start_time >= PlannerConfig.PATH_TIMEOUT_SECONDS:
-            print(f"Path planning timed out after {PlannerConfig.PATH_TIMEOUT_SECONDS} seconds.")
-            return np.array([])
+        
         get_path_to_target()      # go to the cube
         send_servo_request(80)    # close servo / pick cube
         plan = go_to_goal(base_pos)  # carry cube to base
@@ -273,34 +205,29 @@ def move_cube_to_base(base_pos):
 # use it to go to the base position
 def go_to_goal(goal_pos):
 
-    finshed = False
-    while not finshed:
+    finished = False
+    while not finished:
         streaming_client.update_sync()
-        cur_t_pos1 = t_pos1
-        cur_t_pos2 = t_pos2  # Use the current position of t_pos2
-        cur_t_pos3 = t_pos3  # Use the current position of t_pos3
-        obsticles = [t_pos1, t_pos2, t_pos3]  # List of dynamic obstacles (cubes)
-        if current_target_id == 606:
-            obsticles.remove(t_pos2)
-        elif current_target_id == 604:
-            obsticles.remove(t_pos1) 
-        elif current_target_id == 607:
-            obsticles.remove(t_pos3)
-        plan = get_path_to_goal(c_pos, goal_pos,obsticles)
-        finshed = True
+
+        cubes_positions = [cube_bank.get_cube_position_by_id(idx) for idx in cubes_order if idx is not current_target_id]  # Update cube positions in the cube bank
+        plan = get_path_to_goal(c_pos, goal_pos, cubes_positions)
+        finished = True
         for i in range(len(plan) - 1):
-            
-            is_flipped([t_rot1, t_rot2, t_rot3])
+            check_board_validity()  # Check if the robot and cubes are within the defined limits of the board and check if the robot is flipped
            
             go_to_pos = [plan[i+1][0], 0, plan[i+1][1]]
-            # print("Current position:", go_to_pos)
+            
             turnToTarget(False, go_to_pos)
             GoToTarget(False, go_to_pos)
-            if(check_cube_moved(t_pos1[0], cur_t_pos1[0], t_pos1[2], cur_t_pos1[2]) and current_target_id!=604) or (check_cube_moved(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) and current_target_id!=606) or (check_cube_moved(t_pos3[0], cur_t_pos3[0], t_pos3[2], cur_t_pos3[2]) and current_target_id!=607) :
-                # print("continue")
-                finshed = False
+            
+            streaming_client.update_sync()
+            curr_pos = [cube_bank.get_cube_position_by_id(idx) for idx in cubes_order if idx is not current_target_id]
+            if any(check_cube_moved(prev.get_x(), curr.get_x(), prev.get_z(), curr.get_z()) for (prev, curr) in zip (cubes_positions, curr_pos)):
+                print("continue")
+                finished = False
                 break
-            if dist(c_pos[0], t_pos[0], c_pos[2], t_pos[2]) > 0.16:
+            
+            if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) > 0.16:
                 send_servo_request(30)
                 return []
                 
@@ -313,9 +240,6 @@ def get_path_to_target():
     while not finished:
         streaming_client.update_sync()
 
-        cur_t_pos2 = t_pos2  # Use the current position of t_pos2
-        cur_t_pos1 = t_pos1  # Use the current position of t_pos1
-        cur_t_pos3 = t_pos3  # Use the current position of t_pos3
         cubes_positions = [cube_bank.get_cube_position_by_id(idx) for idx in cubes_order if idx is not current_target_id]  # Update cube positions in the cube bank
         plan = get_path_to_goal(c_pos, current_target_pos, cubes_positions)  # Pass t_pos1 as a dynamic obstacle
         finished = True
@@ -325,7 +249,10 @@ def get_path_to_target():
             go_to_pos = [plan[point+1][0], 0, plan[point+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
             turnToTarget(False, go_to_pos)
             GoToTarget(False, go_to_pos)
-            if check_cube_moved(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) or check_cube_moved(t_pos1[0], cur_t_pos1[0], t_pos1[2], cur_t_pos1[2]) or check_cube_moved(t_pos3[0], cur_t_pos3[0], t_pos3[2], cur_t_pos3[2]):    
+
+            streaming_client.update_sync()
+            curr_pos = [cube_bank.get_cube_position_by_id(idx) for idx in cubes_order if idx is not current_target_id]
+            if any(check_cube_moved(prev.get_x(), curr.get_x(), prev.get_z(), curr.get_z()) for (prev, curr) in zip (cubes_positions, curr_pos)):
                 print("continue")
                 finished = False
                 break
@@ -370,21 +297,18 @@ try:
         cubes_order = cube_bank.get_cubes_ordered_by_word(word)  # Get the current cubes from the cube bank
         for idx in range(len(cubes_order)):
             current_target_id = cubes_order[idx]  # Get the current target ID from the array
-            current_target_pos = cube_bank.get_cube_position_by_id(current_target_id)  # Get the current target position from the cube bank
-
+        
             check_board_validity()  # Check if the robot and cubes are within the defined limits of the board and check if the robot is flipped
 
             if not correct_slot(idx,current_target_pos):  # Check if the target position is in the correct slot
-                blocking_cube_id = cube_blocks_target_base(base_pos, current_target_id)
+                blocking_cube_id = cube_blocks_target_base(PositionConfig.bases[idx])
                 if blocking_cube_id is not None:
                     print(f"Cube {blocking_cube_id} is blocking the target base.")
                 plan = []
-                plan=move_cube_to_base(PositionConfig.bases[idx])  # Move the cube to the base position
+                plan = move_cube_to_base(PositionConfig.bases[idx])  # Move the cube to the base position
                 turnToTarget(False, [plan[-1][0]+0.4,0.09, y_base[idx]])
-                #sys.stdout.flush()  # Ensure that the output is flushed immediately
                 GoToTarget(False, [plan[-1][0]+0.4,0.09, y_base[idx]])  # Move slightly forward after reaching the target
                 send_servo_request(30)
-                #sys.stdout.flush()  # Ensure that the output is flushed immediately
                 GoBack()
 
 # Handle connection-related errors specifically
