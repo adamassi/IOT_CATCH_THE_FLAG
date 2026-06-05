@@ -59,6 +59,43 @@ def cube_blocks_target_base(base_pos, current_cube_id, threshold=0.18):
             return cube_id
 
     return None
+
+
+def get_all_cube_positions():
+    return {
+        RigidBodyIDs.CUBE_1: t_pos1,
+        RigidBodyIDs.CUBE_2: t_pos2,
+        RigidBodyIDs.CUBE_3: t_pos3,
+    }
+
+
+def cube_blocks_target_base(base_pos, current_cube_id, threshold=0.18):
+    """
+    Check if another cube is blocking the target base for the current cube.
+
+    Args:
+        base_pos: target base position [x, y, z]
+        current_cube_id: ID of the cube we are currently moving
+        threshold: distance in meters to consider the base blocked
+
+    Returns:
+        blocking_cube_id if blocked, otherwise None
+    """
+    cube_positions = get_all_cube_positions()
+
+    for cube_id, cube_pos in cube_positions.items():
+        # Do not count the cube we are currently moving
+        if cube_id == current_cube_id:
+            continue
+
+        # Compare only x and z because y is height
+        d = dist(cube_pos[0], base_pos[0], cube_pos[2], base_pos[2])
+
+        if d < threshold:
+            print(f"Cube {cube_id} is blocking the target base (distance: {d:.2f} m).")
+            return cube_id
+
+    return None
 def check_cube_moved(x_curr, x_prev, z_curr, z_prev, threshold=0.1):
     """
     Check if the cube has moved by comparing current and previous positions.
@@ -198,6 +235,23 @@ def GoBack( ):
 
 
 
+def move_cube_to_base(base_pos):
+    plan = []
+    start_time = time.time()
+
+    while len(plan) == 0:
+        if time.time() - start_time >= PlannerConfig.PATH_TIMEOUT_SECONDS:
+            print(f"Path planning timed out after {PlannerConfig.PATH_TIMEOUT_SECONDS} seconds.")
+            return np.array([])
+        get_path_to_target()      # go to the cube
+        send_servo_request(80)    # close servo / pick cube
+        plan = go_to_goal(base_pos)  # carry cube to base
+        if len(plan) == 0:
+            blocking_cube_id = cube_blocks_target_base(base_pos, current_target_id)
+            if blocking_cube_id is not None:
+                move_cube_blocking_base(blocking_cube_id)  # Move the blocking cube out of the way
+                print(f"Cube {blocking_cube_id} is blocking the target base.")
+    return plan
 def move_cube_to_base(base_pos):
     plan = []
     start_time = time.time()
