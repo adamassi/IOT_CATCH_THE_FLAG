@@ -22,24 +22,6 @@ class PositionConfig:
     base_pos2 = [3.7, 0.09, 0.28]
     base_pos3 = [3.7, 0.09, -0.15]  # Define a second base position for the second cube
     bases = [base_pos3, base_pos2, base_pos1]  # List of base positions
-    BASES_BORDERS = {
-        'first': {
-            'start': [4.05, 0.14, -0.28],
-            'end': [4.33, 0.14, -0.28],
-        },
-        'second': {
-            'start': [4.05, 0.14, 0.07],
-            'end': [4.33, 0.14, 0.07],
-        },
-        'third': {
-            'start': [4.05, 0.14, 0.42],
-            'end': [4.33, 0.14, 0.42],
-        },
-        'fourth': {
-            'start': [4.05, 0.14, 0.75],
-            'end': [4.33, 0.14, 0.75],
-        },
-    }
 
 class RigidBodyIDs:
     CAR = 605
@@ -47,6 +29,8 @@ class RigidBodyIDs:
     CUBE_2 = 606
     CUBE_3 = 607
     CUBES_IDS = [CUBE_1, CUBE_2, CUBE_3]
+
+CUBES_BANK_JSON_PATH = "path_algorithms/cube_bank.json"  # Path to the JSON file containing cube information
 
 class PlannerConfig:
     MAP_JSON_PATH = "path_algorithms/map1.json"

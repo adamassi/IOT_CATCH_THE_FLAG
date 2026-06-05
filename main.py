@@ -11,6 +11,7 @@ from helper_functions import *
 # from shapely.geometry import Polygon  # Ensure this is imported
 from path_algorithms.planner import *
 from PARAMETERS import *
+from cubeBank import CubeBank
 
 
 word = "OIT"  # Example word to extract order from
@@ -24,7 +25,21 @@ y_base = [-0.15, 0.28, 0.67]  # List of base positions for the cubes
 z = 1  # Initialize a global variable for iteration count
 current_target_id = 604
 
+def check_cube_moved(x_curr, x_prev, z_curr, z_prev, threshold=0.1):
+    """
+    Check if the cube has moved by comparing current and previous positions.
 
+    Args:
+        x_curr (float): Current x-coordinate of the cube.
+        z_curr (float): Current z-coordinate of the cube.
+        x_prev (float): Previous x-coordinate of the cube.
+        z_prev (float): Previous z-coordinate of the cube.
+        threshold (float): Distance threshold to determine if the cube has moved.
+
+    Returns:
+        bool: True if the cube has moved beyond the threshold, False otherwise.
+    """
+    return dist(x_curr, x_prev, z_curr, z_prev) > threshold
 
 def receive_new_desc(desc: DataDescriptions):
     # This function is triggered when new data descriptions are received from the OptiTrack #system.
@@ -39,8 +54,6 @@ def receive_new_desc(desc: DataDescriptions):
             # If a match is found, print the entire data description.
             #print(desc)
             x = 1
-
-
 
 
 def receive_new_frame(data_frame: DataFrame):
@@ -68,30 +81,6 @@ def receive_new_frame(data_frame: DataFrame):
             t_pos3, t_rot3, t_rad3 = optitrack_data_handling.handle_frame(ms)   
     #print("received new frame")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-streaming_client = NatNetClient(
-    server_ip_address = OptiTrackConfig.SERVER_IP, #"132.68.35.255",  # IP address of the OptiTrack server
-    local_ip_address=socket.gethostbyname(socket.gethostname()),  # Local IP address
-    use_multicast=False  # Use unicast instead of multicast for communication
-)
-
-
-
-
-streaming_client.on_data_description_received_event.handlers.append(receive_new_desc)
-streaming_client.on_data_frame_received_event.handlers.append(receive_new_frame)
 
 def turnToTarget(is_cube = True, curr_t_pos = t_pos):
     left, right, stop = 1, 2, 3
@@ -206,7 +195,7 @@ def go_to_goal(goal_pos):
             # print("Current position:", go_to_pos)
             turnToTarget(False, go_to_pos)
             GoToTarget(False, go_to_pos)
-            if(dist(t_pos1[0], cur_t_pos1[0], t_pos1[2], cur_t_pos1[2]) > 0.1 and current_target_id!=604) or ( dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1 and current_target_id!=606) or (dist(t_pos3[0], cur_t_pos3[0], t_pos3[2], cur_t_pos3[2])> 0.1 and current_target_id!=607) :
+            if(check_cube_moved(t_pos1[0], cur_t_pos1[0], t_pos1[2], cur_t_pos1[2]) and current_target_id!=604) or (check_cube_moved(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) and current_target_id!=606) or (check_cube_moved(t_pos3[0], cur_t_pos3[0], t_pos3[2], cur_t_pos3[2]) and current_target_id!=607) :
                 # print("continue")
                 finshed = False
                 break
@@ -231,36 +220,53 @@ def get_path_to_target():
             is_flipped([t_rot1, t_rot2, t_rot3])
             out_limits(c_pos, t_pos)
             go_to_pos = [plan[i+1][0], 0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
-            # print("Current position:", go_to_pos)
-            # turnToTarget(False, go_to_pos)
             turnToTarget(False, go_to_pos)
             GoToTarget(False, go_to_pos)
-            if dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1 or dist(t_pos1[0], cur_t_pos1[0], t_pos1[2], cur_t_pos1[2]) > 0.1 or dist(t_pos3[0], cur_t_pos3[0], t_pos3[2], cur_t_pos3[2]) > 0.1:    
+            if check_cube_moved(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) or check_cube_moved(t_pos1[0], cur_t_pos1[0], t_pos1[2], cur_t_pos1[2]) or check_cube_moved(t_pos3[0], cur_t_pos3[0], t_pos3[2], cur_t_pos3[2]):    
                 print("continue")
                 finshed = False
                 break
-         
+
+
+cube_bank = CubeBank()  # Initialize the cube bank to manage cube information and positions
+cube_bank.load_cubes_from_json(CUBES_BANK_JSON_PATH)  # Load cube data from JSON file
+for cube in cube_bank.get_all_cubes():
+    print(f"Cube ID: {cube.cube_id}, Letter: {cube.letter}, Position: {cube.position}")  # Print cube information for verification
+
+
+# Initialize the NatNet client to connect to the OptiTrack system and set up event handlers for receiving data descriptions and data frames.
+streaming_client = NatNetClient(
+    server_ip_address = OptiTrackConfig.SERVER_IP, #"132.68.35.255",  # IP address of the OptiTrack server
+    local_ip_address=socket.gethostbyname(socket.gethostname()),  # Local IP address
+    use_multicast=False  # Use unicast instead of multicast for communication
+)
+
+# Attach the event handlers to the streaming client to process incoming data descriptions and data frames.
+streaming_client.on_data_description_received_event.handlers.append(receive_new_desc)
+streaming_client.on_data_frame_received_event.handlers.append(receive_new_frame)
+
+
 try:
     arr = extract_order(word) 
     
     print(arr)
-    current_target_id = arr[0]  # Get the first target ID from the array
+
+    # Initial servo position (e.g., Open Claw)
     send_servo_request(30)
+    
     with streaming_client:
+
+        # Request the model definitions from the OptiTrack server to initialize the data stream.
         streaming_client.request_modeldef()
 
+        # Continuously update the streaming client to receive data frames and process them with the defined handlers.
         streaming_client.update_sync()
-        #streaming_client.run_async()
+        
         time.sleep(1)  # Allow some time for the client to start and receive data
 
-        #sys.stdout.flush()  # Ensure that the output is flushed immediately
         print("Streaming started. Waiting for data...", flush=True)
-        
-        
-       
-        #sys.stdout.flush()  # Ensure that the output is flushed immediately
+               
         for i in range(3):
-            print(i)
             current_target_id = arr[i]  # Get the current target ID from the array
             
             
@@ -278,10 +284,6 @@ try:
                 send_servo_request(30)
                 #sys.stdout.flush()  # Ensure that the output is flushed immediately
                 GoBack()
-            
-        
-        
-   
 
 # Handle connection-related errors specifically
 except ConnectionResetError as e:
