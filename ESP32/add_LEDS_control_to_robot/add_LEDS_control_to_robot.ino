@@ -2,6 +2,7 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <ESP32Servo.h>
+#include <Adafruit_NeoPixel.h>
 
 
 #ifdef __AVR__
@@ -275,10 +276,10 @@ void setup() {
   pixels.clear(); // Initialize all pixels to 'off'
 
 
-    for(int i=0; i<NUMPIXELS; i++){
-        pixels.setPixelColor(i, pixels.Color(255, 0, 0)); // Red color
-    }
-    pixels.show(); // Update the strip to display the new colors
+  for(int i=0; i<NUMPIXELS; i++){
+      pixels.setPixelColor(i, pixels.Color(255, 0, 0)); // Red color
+  }
+  pixels.show(); // Update the strip to display the new colors
 
 
   // ledcSetup(servo_channel, frequency, resolution);
