@@ -213,6 +213,29 @@ class MapEnvironment(object):
 
         return True
 
+    def sample_random_free_state(self, max_tries=1000):
+        """
+        Choose a random point inside the map that is not inside an obstacle.
+
+        Args:
+            max_tries (int): Maximum number of random samples to try.
+
+        Returns:
+            np.ndarray: Random valid point [x, y].
+
+        Raises:
+            RuntimeError: If no valid point was found after max_tries.
+        """
+        for _ in range(max_tries):
+            x = np.random.uniform(self.xlimit[0], self.xlimit[1])
+            y = np.random.uniform(self.ylimit[0], self.ylimit[1])
+            random_state = np.array([x, y])
+
+            if self.state_validity_checker(random_state):
+                return random_state
+
+        raise RuntimeError("Could not find a random free state.")
+
     def compute_heuristic(self, state):
         '''
         #NOT RELEVANT FOR THIS ASSIGNMENT

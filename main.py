@@ -20,9 +20,45 @@ t_pos2, t_rot2, t_rad2 = [0,0,0], 0, 0
 t_pos3, t_rot3, t_rad3 = [0,0,0], 0, 0
 t_pos, t_rot, t_rad = [0,0,0], 0, 0
 y_base = [-0.15, 0.28, 0.67]  # List of base positions for the cubes
-z = 1  # Initialize a global variable for iteration count
 current_target_id = 604
 
+
+
+def get_all_cube_positions():
+    return {
+        RigidBodyIDs.CUBE_1: t_pos1,
+        RigidBodyIDs.CUBE_2: t_pos2,
+        RigidBodyIDs.CUBE_3: t_pos3,
+    }
+
+
+def cube_blocks_target_base(base_pos, current_cube_id, threshold=0.18):
+    """
+    Check if another cube is blocking the target base for the current cube.
+
+    Args:
+        base_pos: target base position [x, y, z]
+        current_cube_id: ID of the cube we are currently moving
+        threshold: distance in meters to consider the base blocked
+
+    Returns:
+        blocking_cube_id if blocked, otherwise None
+    """
+    cube_positions = get_all_cube_positions()
+
+    for cube_id, cube_pos in cube_positions.items():
+        # Do not count the cube we are currently moving
+        if cube_id == current_cube_id:
+            continue
+
+        # Compare only x and z because y is height
+        d = dist(cube_pos[0], base_pos[0], cube_pos[2], base_pos[2])
+
+        if d < threshold:
+            print(f"Cube {cube_id} is blocking the target base (distance: {d:.2f} m).")
+            return cube_id
+
+    return None
 def check_cube_moved(x_curr, x_prev, z_curr, z_prev, threshold=0.1):
     """
     Check if the cube has moved by comparing current and previous positions.
@@ -162,7 +198,23 @@ def GoBack( ):
 
 
 
+def move_cube_to_base(base_pos):
+    plan = []
+    start_time = time.time()
 
+    while len(plan) == 0:
+        if time.time() - start_time >= PlannerConfig.PATH_TIMEOUT_SECONDS:
+            print(f"Path planning timed out after {PlannerConfig.PATH_TIMEOUT_SECONDS} seconds.")
+            return np.array([])
+        get_path_to_target()      # go to the cube
+        send_servo_request(80)    # close servo / pick cube
+        plan = go_to_goal(base_pos)  # carry cube to base
+        if len(plan) == 0:
+            blocking_cube_id = cube_blocks_target_base(base_pos, current_target_id)
+            if blocking_cube_id is not None:
+                move_cube_blocking_base(blocking_cube_id)  # Move the blocking cube out of the way
+                print(f"Cube {blocking_cube_id} is blocking the target base.")
+    return plan
 
 # use it to go to the base position
 def go_to_goal(goal_pos):
@@ -269,12 +321,12 @@ try:
             check_board_validity()  # Check if the robot and cubes are within the defined limits of the board and check if the robot is flipped
 
             if not correct_slot(idx,current_target_pos):  # Check if the target position is in the correct slot
+                blocking_cube_id = cube_blocks_target_base(base_pos, current_target_id)
+                if blocking_cube_id is not None:
+                    print(f"Cube {blocking_cube_id} is blocking the target base.")
                 plan = []
-                while len(plan) == 0:
-                    get_path_to_target()  # Get the path to the target position and move there
-                    send_servo_request(80) # close the servo
-                    plan = go_to_goal(PositionConfig.bases[idx])  # Move to the base position first
-                turnToTarget(False, [plan[-1][0]+0.4,0.09, y_base[idx]])  # Turn towards the target position after reaching the base
+                plan=move_cube_to_base(PositionConfig.bases[idx])  # Move the cube to the base position
+                turnToTarget(False, [plan[-1][0]+0.4,0.09, y_base[idx]])
                 #sys.stdout.flush()  # Ensure that the output is flushed immediately
                 GoToTarget(False, [plan[-1][0]+0.4,0.09, y_base[idx]])  # Move slightly forward after reaching the target
                 send_servo_request(30)
