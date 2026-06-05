@@ -58,7 +58,7 @@ class PlannerConfig:
     GOAL_PROBABILITY = 0.40
     EXTENSION_MODE = 'E2'
     K_NEAREST = 10
-
+    PATH_TIMEOUT_SECONDS = 60
 class PlotConfig:
     X_LIM = (-1.9, 1.97)
     Y_LIM = (-3.33, 4.3)

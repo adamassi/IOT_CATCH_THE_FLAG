@@ -242,7 +242,6 @@ def get_path_to_target():
          
 try:
     arr = extract_order(word) 
-    
     print(arr)
     current_target_id = arr[0]  # Get the first target ID from the array
     send_servo_request(30)
