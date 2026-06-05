@@ -248,7 +248,6 @@ streaming_client.on_data_frame_received_event.handlers.append(receive_new_frame)
 
 try:
     arr = extract_order(word) 
-    
     print(arr)
 
     # Initial servo position (e.g., Open Claw)
