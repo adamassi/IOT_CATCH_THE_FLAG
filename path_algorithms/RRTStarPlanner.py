@@ -23,7 +23,7 @@ class RRTStarPlanner(object):
         else:
             self.step_size = 10
 
-    def plan(self):
+    def plan(self, timeout_seconds=60):
         '''
         Compute and return the plan. The function should return a numpy array containing the states (positions) of the robot.
         '''
@@ -43,6 +43,10 @@ class RRTStarPlanner(object):
 
         # Main loop: Continue until the goal is added to the tree
         while not goal_added:
+            if timeout_seconds is not None and time.time() - start_time >= timeout_seconds:
+                print(f"Path planning timed out after {timeout_seconds} seconds.")
+                return np.array([])
+
             num_iter += 1
             goal = False  # Flag to indicate if the current sample is the goal
 
