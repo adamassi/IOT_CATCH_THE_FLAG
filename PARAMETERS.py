@@ -36,8 +36,8 @@ class PlannerConfig:
     MAP_JSON_PATH = "path_algorithms/map1.json"
     # Choose path planning algorithm:
     # Options: "RRT_STAR", "ASTAR" default is RRT_STAR
-    # ALGORITHM = "RRT_STAR"
-    ALGORITHM = "ASTAR"
+    ALGORITHM = "RRT_STAR"
+    # ALGORITHM = "ASTAR"
     # RRT* parameters
     GOAL_PROBABILITY = 0.40
     EXTENSION_MODE = 'E2'

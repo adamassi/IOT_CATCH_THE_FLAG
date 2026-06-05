@@ -76,9 +76,9 @@ class AStarPlanner:
             return np.array([])
 
         while open_set:
-            if self._timeout_reached():
-                print(f"A* path planning timed out after {self.timeout_seconds} seconds.")
-                return np.array([])
+            # if self._timeout_reached():
+            #     print(f"A* path planning timed out after {self.timeout_seconds} seconds.")
+            #     return np.array([])
 
             _, current = heapq.heappop(open_set)
 

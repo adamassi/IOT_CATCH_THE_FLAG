@@ -81,6 +81,7 @@ def receive_new_frame(data_frame: DataFrame):
     # It processes the data frame to extract the positions, rotations, and radii of the chaser and target objects.
     global cube_bank  # Access the global cube bank to update cube positions
     global c_pos, c_rot, c_rad
+    global current_target_pos, current_target_id
     for ms in data_frame.rigid_bodies:
         if ms.id_num == RigidBodyIDs.CAR:
             # Handle the chaser's data
@@ -195,11 +196,11 @@ def move_cube_to_base(base_pos):
         get_path_to_target()      # go to the cube
         send_servo_request(80)    # close servo / pick cube
         plan = go_to_goal(base_pos)  # carry cube to base
-        if len(plan) == 0:
-            blocking_cube_id = cube_blocks_target_base(base_pos, current_target_id)
-            if blocking_cube_id is not None:
-                move_cube_blocking_base(blocking_cube_id)  # Move the blocking cube out of the way
-                print(f"Cube {blocking_cube_id} is blocking the target base.")
+        # if len(plan) == 0:
+        #     blocking_cube_id = cube_blocks_target_base(base_pos, current_target_id)
+        #     if blocking_cube_id is not None:
+        #         move_cube_blocking_base(blocking_cube_id)  # Move the blocking cube out of the way
+        #         print(f"Cube {blocking_cube_id} is blocking the target base.")
     return plan
 
 # use it to go to the base position
@@ -260,8 +261,8 @@ def get_path_to_target():
 
 cube_bank = CubeBank()  # Initialize the cube bank to manage cube information and positions
 cube_bank.load_cubes_from_json(CUBES_BANK_JSON_PATH)  # Load cube data from JSON file
-for cube in cube_bank.get_all_cubes():
-    print(f"Cube ID: {cube.cube_id}, Letter: {cube.letter}, Position: {cube.position}")  # Print cube information for verification
+#for cube in cube_bank.get_all_cubes():
+   # print(f"Cube ID: {cube.cube_id}, Letter: {cube.letter}, Position: {cube.position}")  # Print cube information for verification
 
 # Initialize the NatNet client to connect to the OptiTrack system and set up event handlers for receiving data descriptions and data frames.
 streaming_client = NatNetClient(
@@ -297,13 +298,13 @@ try:
         cubes_order = cube_bank.get_cubes_ordered_by_word(word)  # Get the current cubes from the cube bank
         for idx in range(len(cubes_order)):
             current_target_id = cubes_order[idx]  # Get the current target ID from the array
-        
+
             check_board_validity()  # Check if the robot and cubes are within the defined limits of the board and check if the robot is flipped
 
             if not correct_slot(idx,current_target_pos):  # Check if the target position is in the correct slot
-                blocking_cube_id = cube_blocks_target_base(PositionConfig.bases[idx])
-                if blocking_cube_id is not None:
-                    print(f"Cube {blocking_cube_id} is blocking the target base.")
+                # blocking_cube_id = cube_blocks_target_base(PositionConfig.bases[idx])
+                # if blocking_cube_id is not None:
+                #     print(f"Cube {blocking_cube_id} is blocking the target base.")
                 plan = []
                 plan = move_cube_to_base(PositionConfig.bases[idx])  # Move the cube to the base position
                 turnToTarget(False, [plan[-1][0]+0.4,0.09, y_base[idx]])

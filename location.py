@@ -20,7 +20,7 @@ class Location:
         return self.position.z
     
     def get_position(self):
-        return self.position
+        return [self.position.x, self.position.y, self.position.z]
     
     def get_rotation_x(self):
         return self.rotation[0]
