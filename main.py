@@ -10,6 +10,7 @@ from conversion import normalize_angle
 from helper_functions import *
 # from shapely.geometry import Polygon  # Ensure this is imported
 from path_algorithms.planner import *
+from PARAMETERS import *
 
 
 word = "OIT"  # Example word to extract order from
@@ -209,7 +210,7 @@ def go_to_goal(goal_pos):
                 # print("continue")
                 finshed = False
                 break
-            if dist(c_pos[0], t_pos[0], c_pos[2], t_pos[2]) > 0.15:
+            if dist(c_pos[0], t_pos[0], c_pos[2], t_pos[2]) > 0.16:
                 send_servo_request(30)
                 return []
                 
@@ -241,8 +242,9 @@ def get_path_to_target():
          
 try:
     arr = extract_order(word) 
+    
     print(arr)
-    y= arr[0]  # Get the first target ID from the array
+    current_target_id = arr[0]  # Get the first target ID from the array
     send_servo_request(30)
     with streaming_client:
         streaming_client.request_modeldef()
@@ -267,7 +269,7 @@ try:
             if not correct_slot(i,t_pos):
                 plan = []
                 while len(plan) == 0:
-                    get_path_to_target()  # Get the path to the target position
+                    get_path_to_target()  # Get the path to the target position and move there
                     send_servo_request(80) # close the servo
                     plan = go_to_goal(PositionConfig.bases[i])  # Move to the base position first
                 turnToTarget(False, [plan[-1][0]+0.4,0.09, y_base[i]])
@@ -286,6 +288,9 @@ except ConnectionResetError as e:
     print(f"Dear friend !!\nOptitrack connection failed:\nPlease check if the Optitrack #system is on and streaming.\n\n\n{e}")
 
     exit()  # Exit the program
+
+except ValueError as e:
+    print(e)
 
 # Handle any other unexpected exceptions
 except Exception as e:

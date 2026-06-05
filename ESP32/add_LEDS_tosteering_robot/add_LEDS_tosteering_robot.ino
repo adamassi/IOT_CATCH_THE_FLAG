@@ -8,7 +8,7 @@
 #endif
 
 // Which pin on the Arduino is connected to the NeoPixels?
-#define PIN  22
+#define PIN  19
 // How many NeoPixels are attached to the Arduino?
 #define NUMPIXELS 6 // Popular NeoPixel ring size
 
@@ -19,6 +19,19 @@
 Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
 #define DELAYVAL 100 // Time (in milliseconds) to pause between pixels
+
+uint32_t Wheel(byte WheelPos) {
+  WheelPos = 255 - WheelPos;
+  if (WheelPos < 85) {
+    return pixels.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+  }
+  if (WheelPos < 170) {
+    WheelPos -= 85;
+    return pixels.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+  }
+  WheelPos -= 170;
+  return pixels.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+}
 
 
 Servo myServo;
@@ -521,20 +534,15 @@ void setup() {
 }
 
 void loop() {
-     pixels.clear(); // Set all pixel colors to 'off'
+  pixels.clear(); // Set all pixel colors to 'off'
 
-  // The first NeoPixel in a strand is #0, second is 1, all the way up
-  // to the count of pixels minus one.
-  for(int i=0; i<NUMPIXELS; i++) { // For each pixel...
-
-    // pixels.Color() takes RGB values, from 0,0,0 up to 255,255,255
-    // Here we're using a moderately bright green color:
-    pixels.setPixelColor(i, pixels.Color(0, 150, 0));
-
-    pixels.show();   // Send the updated pixel colors to the hardware.
-
-    delay(DELAYVAL); // Pause before next pass through loop
+  // Show a rainbow across all pixels instead of only green.
+  for (int i = 0; i < NUMPIXELS; i++) {
+    int pixelHue = (i * 256 / NUMPIXELS + millis() / 20) & 255;
+    pixels.setPixelColor(i, Wheel(pixelHue));
   }
-  // No need for code here
+
+  pixels.show();   // Send the updated pixel colors to the hardware.
+  delay(DELAYVAL);  // Small pause before updating again
 
 }

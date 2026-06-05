@@ -22,6 +22,9 @@ def extract_order(word):
             arr.append(606)
         elif c=='I':
             arr.append(604)
+    if not arr:
+        raise ValueError(f"No valid cube order extracted from word: {word}")
+
     return arr
 
 

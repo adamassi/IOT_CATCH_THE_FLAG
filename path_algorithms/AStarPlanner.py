@@ -50,5 +50,5 @@ class AStarPlanner:
         
         # self.planning_env.visualize_map(plan=plan, visibility_graph=self.graph, name='AStarPlan')
         if plan is not None:
-            self.planning_env.visualize_map(plan=plan, visibility_graph=self.graph, name='AStarPlan')
+            self.planning_env.visualize_map(plan=plan, visibility_graph=self.graph, name='AStarPlan_BeforeSmoothing')
         return plan
