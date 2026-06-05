@@ -6,10 +6,10 @@ from PARAMETERS import PlannerConfig
 
 
 class AStarPlanner:
-    def __init__(self, env, timeout_seconds=None):
-        self.start = tuple(env.start)
-        self.goal = tuple(env.goal)
-        self.planning_env = env
+    def __init__(self, planning_env, timeout_seconds=None):
+        self.start = tuple(planning_env.start)
+        self.goal = tuple(planning_env.goal)
+        self.planning_env = planning_env
         self.timeout_seconds = timeout_seconds
         self.start_time = time.time()
 
@@ -73,12 +73,12 @@ class AStarPlanner:
         f_score[self.start] = np.linalg.norm(np.array(self.start) - np.array(self.goal))
 
         if not open_set:
-            return None
+            return np.array([])
 
         while open_set:
             if self._timeout_reached():
                 print(f"A* path planning timed out after {self.timeout_seconds} seconds.")
-                return None
+                return np.array([])
 
             _, current = heapq.heappop(open_set)
 
@@ -93,7 +93,8 @@ class AStarPlanner:
             for neighbor, distance in self.graph[current]:
                 if self._timeout_reached():
                     print(f"A* path planning timed out after {self.timeout_seconds} seconds.")
-                    return None
+                    return np.array([])
+
 
                 tentative_g_score = g_score[current] + distance
                 if tentative_g_score < g_score[neighbor]:
@@ -105,7 +106,8 @@ class AStarPlanner:
                     if neighbor not in [i[1] for i in open_set]:
                         heapq.heappush(open_set, (f_score[neighbor], neighbor))
 
-        return None
+        print("A* failed to find a path ")
+        return np.array([])
 
     def plan(self, timeout_seconds=PlannerConfig.PATH_TIMEOUT_SECONDS):
         

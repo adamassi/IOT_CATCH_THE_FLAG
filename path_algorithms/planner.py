@@ -60,6 +60,9 @@ def bezier_smooth_plan(plan, samples_per_segment=25, tension=0.25):
 
 json_file_path = PlannerConfig.MAP_JSON_PATH  # Get the JSON file path from the configuration
 planning_env = MapEnvironment(json_file=json_file_path)
+
+
+def 
 # Function get data where the  robot car and where the cube is and calculate the path to the cube
 def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
     # global number_of_run
@@ -89,6 +92,7 @@ def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
     print(f"Planning path from {planning_env.start} to {planning_env.goal}...")
     # Execute the planning algorithm to get the path
     plan = planner.plan()
+
     smooth_plan = bezier_smooth_plan(
         plan,
         samples_per_segment=30,

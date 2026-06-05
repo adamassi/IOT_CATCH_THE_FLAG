@@ -9,6 +9,7 @@ def angle_between_points(p1, p2):
 limit_X = 4.5
 limit_Y = 1.9
 
+
 def extract_order(word):
     """
     Extracts the order of characters from the input word.

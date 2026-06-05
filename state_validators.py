@@ -2,6 +2,7 @@ limit_X = 4.5
 limit_Y = 1.9
 def is_flipped(cube_ror=[[0, 0, 0]]):
     for i in range(len(cube_ror)):
+        print(f"Cube {i} rotation: {cube_ror[i]}")
         if abs(cube_ror[i][0]) > 60.0 or abs(cube_ror[i][1]) > 60:
             print("The robot is flipped. Please check the position.")
             raise ValueError("The robot is flipped. Please check the position.")
