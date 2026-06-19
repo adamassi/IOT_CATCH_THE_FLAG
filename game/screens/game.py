@@ -129,14 +129,19 @@ class GameScreen(Screen):
     # Button callbacks
     # -----------------------
     def on_run(self):
-        # No UI input yet, always send "IOT"
+        print(f"[GAME] on_run  running={self.runner.state.running}  paused={self.runner.state.paused}")
+        # Never start a new process while the current one is paused
+        if self.runner.state.paused:
+            return
         if not self.runner.state.running:
             self.runner.start("IOT")
 
     def on_pause(self):
+        print(f"[GAME] on_pause  running={self.runner.state.running}  paused={self.runner.state.paused}")
         self.runner.toggle_pause()
 
     def on_stop(self):
+        print(f"[GAME] on_stop  running={self.runner.state.running}  paused={self.runner.state.paused}")
         self.runner.stop()
 
     # -----------------------

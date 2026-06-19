@@ -142,6 +142,7 @@ class ProcessRunner:
             python main.py OIT
         """
 
+        print(f"[RUNNER] START CALLED  running={self.state.running}  paused={self.state.paused}  finished={self.state.finished}")
         # If a process is already running, do not start another one.
         if self.state.running and not self.state.finished:
             return
@@ -180,6 +181,7 @@ class ProcessRunner:
             bufsize=1,
             cwd=self.workdir or None,
         )
+        print(f"[RUNNER] subprocess started  pid={self._proc.pid}")
 
         def _read_stdout():
             """
@@ -253,7 +255,9 @@ class ProcessRunner:
         if rc is not None and not self.state.finished:
             self.state.finished = True
             self.state.running = False
+            self.state.paused = False  # process died — clear paused so button shows "Pause" not "Resume"
             self.state.returncode = rc
+            print(f"[RUNNER] process exited  returncode={rc}  pid={self._proc.pid}")
 
     def elapsed_seconds(self) -> float:
         """
@@ -303,6 +307,7 @@ class ProcessRunner:
         - If currently paused, resume it.
 
         """
+        print(f"[RUNNER] TOGGLE_PAUSE CALLED  pid={self._proc.pid if self._proc else None}  paused={self.state.paused}  finished={self.state.finished}")
         # Nothing to pause if no process exists or it already finished
         if not self._proc or self.state.finished:
             return
@@ -324,6 +329,7 @@ class ProcessRunner:
 
                 # Stop the robot physically now that the script is frozen
                 send_stop_request()
+                print(f"[RUNNER] paused  pid={self._proc.pid}")
 
                 self.state.paused = True
                 self.state.running = True
@@ -351,6 +357,7 @@ class ProcessRunner:
                 else:
                     os.kill(self._proc.pid, signal.SIGCONT)
 
+                print(f"[RUNNER] resumed  pid={self._proc.pid}")
                 self.state.paused = False
                 self.state.running = True
                 self.state.finished = False
