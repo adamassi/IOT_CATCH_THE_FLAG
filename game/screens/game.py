@@ -8,6 +8,7 @@ from screens.base import Screen
 from ui.button import Button
 from utils.draw import draw_soft_shadow, draw_panel
 from utils.process_runner import ProcessRunner
+from ui.mute_button import MuteButton
 
 
 class GameScreen(Screen):
@@ -79,6 +80,10 @@ class GameScreen(Screen):
             on_click=lambda: self.manager.go_to("menu"),
         )
 
+        self.mute_btn = MuteButton(
+            (config.WIDTH - 95, 35, 60, 55),
+            fonts["button"],
+        )
         # ------------------------------------------------------------
         # Big centered game panel (pushed down under the buttons)
         # ------------------------------------------------------------
@@ -165,6 +170,7 @@ class GameScreen(Screen):
         self.btn_run.handle_event(event)
         self.btn_pause.handle_event(event)
         self.btn_stop.handle_event(event)
+        self.mute_btn.handle_event(event)
 
         # Mouse wheel scrolling (only when hovering log area)
         if event.type == pygame.MOUSEWHEEL:
@@ -282,8 +288,10 @@ class GameScreen(Screen):
             txt = self.fonts["subtitle"].render(ln[:220], True, config.WHITE)
             surface.blit(txt, (x, y))
             y += self._line_h
-
         surface.set_clip(old_clip)
 
         # Back button
         self.back_btn.draw(surface)
+
+        # Mute button
+        self.mute_btn.draw(surface)

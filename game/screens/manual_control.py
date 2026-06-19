@@ -24,6 +24,7 @@ class ManualControlScreen(Screen):
             from robotCommands import (
                 send_servo_request,
                 send_go_request,
+                send_speed_request,
                 send_stop_request,
                 send_back_request,
                 send_left_request,
@@ -33,6 +34,7 @@ class ManualControlScreen(Screen):
 
             self.send_servo_request = send_servo_request
             self.send_go_request = send_go_request
+            self.send_speed_request = send_speed_request
             self.send_stop_request = send_stop_request
             self.send_back_request = send_back_request
             self.send_left_request = send_left_request
@@ -44,6 +46,7 @@ class ManualControlScreen(Screen):
 
             self.send_servo_request = lambda angle=45: None
             self.send_go_request = lambda: None
+            self.send_speed_request = lambda speed=250: None
             self.send_stop_request = lambda: None
             self.send_back_request = lambda speed=0: None
             self.send_left_request = lambda: None
@@ -179,26 +182,13 @@ class ManualControlScreen(Screen):
 
     def on_speed_changed(self, speed):
         speed = int(speed)
-
+        self.send_speed_request(speed)
         if speed == 0:
-            self.send_stop_request()
             self.status_message = "Speed set to 0 — stopped"
-            return
-
-        motor_speed = abs(speed)
-
-        if speed > 0:
-            self.send_steer_request(motor_speed, motor_speed)
-            self.status_message = f"Moving forward at speed {motor_speed}"
+        elif speed > 0:
+            self.status_message = f"Moving forward at speed {speed}"
         else:
-            # negative slider value means backward direction,
-            # but motor command receives positive absolute speed
-            try:
-                self.send_back_request(motor_speed)
-            except TypeError:
-                self.send_back_request()
-
-            self.status_message = f"Moving backward at speed {motor_speed}"
+            self.status_message = f"Moving backward at speed {abs(speed)}"
 
     def forward(self):
         self.send_go_request()
