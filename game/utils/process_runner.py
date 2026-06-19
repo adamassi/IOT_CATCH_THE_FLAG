@@ -5,20 +5,21 @@ import time
 import queue
 import threading
 import subprocess
+from pathlib import Path
 from dataclasses import dataclass, field
+
+# Local fix: allow importing robotCommands.py from project root
+ROOT_DIR = Path(__file__).resolve().parents[2]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+from robotCommands import *
 
 # Optional: only used for Windows pause/resume
 try:
     import psutil  # type: ignore
 except Exception:
     psutil = None
-
-# Optional hardware stop helpers (same ones used in your Streamlit app)
-try:
-    from stam import send_stop_request, send_stop_beeping_request  # type: ignore
-except Exception:
-    send_stop_request = None
-    send_stop_beeping_request = None
 
 
 @dataclass
@@ -120,14 +121,7 @@ class ProcessRunner:
         except Exception as e:
             self.state.last_error = str(e)
 
-        # Optional: hardware stop (mirrors your Streamlit stop behavior) :contentReference[oaicite:2]{index=2}
-        try:
-            if send_stop_request:
-                send_stop_request()
-            if send_stop_beeping_request:
-                send_stop_beeping_request()
-        except Exception:
-            pass
+        send_stop_request()
 
         self.state.paused = False
         self.state.running = False

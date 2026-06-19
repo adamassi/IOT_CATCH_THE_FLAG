@@ -23,9 +23,9 @@ class GameScreen(Screen):
         # __file__ = .../game/screens/game.py
         # go up 2 levels -> .../game
         # go up 1 more     -> project_root (contains 4_main_for_web.py)
-        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
-        self.script_path = os.path.join(project_root, "4_main_for_web.py")
+        self.script_path = os.path.join(project_root, "thread_control_test.py")
         self.image_path = os.path.join(project_root, "map-RRTfor_web.png")
 
         self.runner = ProcessRunner(script_path=self.script_path, workdir=project_root, max_lines=2000)
