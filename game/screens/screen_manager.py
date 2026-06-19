@@ -1,6 +1,8 @@
 # screens/screen_manager.py
 from __future__ import annotations
-from typing import Callable, Dict
+from typing import Dict
+
+from screens.base import Screen
 from screens.menu import MenuScreen
 from screens.game import GameScreen
 from screens.configure import ConfigureScreen
@@ -8,21 +10,16 @@ from screens.layout_config import LayoutConfigScreen
 from screens.robot_config import RobotConfigScreen
 from screens.remove_obstacle import RemoveObstacleScreen
 from screens.add_obstacle import AddObstacleScreen
+from screens.manual_control import ManualControlScreen
 
 
 class ScreenManager:
-    """
-    Owns the currently active screen and handles switching between screens.
-    Keeps app.py clean and makes adding screens easy.
-    """
-
     def __init__(self, quit_game, fonts):
         self._quit_game = quit_game
         self._fonts = fonts
-        self._screens : Dict[str, Screen] = {}
+        self._screens: Dict[str, Screen] = {}
         self._current_name = None
-        
-        # Register screens here (or expose register() if you prefer)
+
         self._screens["menu"] = MenuScreen(self, quit_game, fonts)
         self._screens["game"] = GameScreen(self, fonts)
         self._screens["configure"] = ConfigureScreen(self, fonts)
@@ -30,6 +27,7 @@ class ScreenManager:
         self._screens["robot_config"] = RobotConfigScreen(self, fonts)
         self._screens["remove_obstacle"] = RemoveObstacleScreen(self, fonts)
         self._screens["add_obstacle"] = AddObstacleScreen(self, fonts)
+        self._screens["manual_control"] = ManualControlScreen(self, fonts)
 
         self.go_to("menu")
 
