@@ -126,6 +126,11 @@ def turnToTarget(is_cube = True, curr_t_pos = current_target_pos):
                 send_right_request(60)
     # time.sleep(1)
 
+def heading_error_to(target_pos):
+    """Return signed heading error (radians) from current pose to target_pos."""
+    angle = angle_between_points(c_pos, target_pos)
+    return normalize_angle(angle - c_rad)
+
 def GoToTarget(is_cube = True, curr_t_pos = current_target_pos):
     """Drive the chaser toward a target position until close.
 
@@ -156,7 +161,8 @@ def GoToTarget(is_cube = True, curr_t_pos = current_target_pos):
 
             # If we got close enough, stop and exit
             if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) < 0.14:
-                send_stop_request() #the problem if we remove this line is harder to catch the target 
+                if is_cube:
+                    send_stop_request() #the problem if we remove this line is harder to catch the target 
                 #1/3/2026
                 break
 
@@ -218,16 +224,18 @@ def go_to_goal(goal_pos):
            
             go_to_pos = [plan[i+1][0], 0, plan[i+1][1]]
             
-            turnToTarget(False, go_to_pos)
+            # Only turn in place for large heading errors; GoToTarget handles small corrections while driving
+            if abs(heading_error_to(go_to_pos)) > 0.35:
+                turnToTarget(False, go_to_pos)
             GoToTarget(False, go_to_pos)
-            
+
             streaming_client.update_sync()
             curr_pos = [cube_bank.get_cube_position_by_id(idx) for idx in cubes_order if idx is not current_target_id]
             if any(check_cube_moved(prev[0], curr[0], prev[2], curr[2]) for (prev, curr) in zip (cubes_positions, curr_pos)):
                 print("continue")
                 finished = False
                 break
-            
+
             if dist(c_pos[0], current_target_pos[0], c_pos[2], current_target_pos[2]) > 0.16:
                 send_servo_request(30)
                 return []
@@ -248,8 +256,14 @@ def get_path_to_target():
             check_board_validity()  # Check if the robot and cubes are within the defined limits of the board and check if the robot is flipped
 
             go_to_pos = [plan[point+1][0], 0, plan[point+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
-            turnToTarget(False, go_to_pos)
-            GoToTarget(False, go_to_pos)
+            # Only turn in place for large heading errors; GoToTarget handles small corrections while driving
+            if abs(heading_error_to(go_to_pos)) > 0.35:
+                turnToTarget(False, go_to_pos)
+            if point == len(plan) - 2:
+
+                GoToTarget(True, go_to_pos)
+            else:
+                GoToTarget(False, go_to_pos)
 
             streaming_client.update_sync()
             curr_pos = [cube_bank.get_cube_position_by_id(idx) for idx in cubes_order if idx is not current_target_id]
