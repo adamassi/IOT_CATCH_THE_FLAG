@@ -1,4 +1,5 @@
 import time
+import math
 import socket
 from natnet import DataDescriptions, DataFrame, NatNetClient
 import numpy as np
@@ -168,6 +169,31 @@ def GoToTarget(is_cube = True, curr_t_pos = current_target_pos):
                 turnToTarget(is_cube, curr_t_pos)
                 send_go_request()
 
+def GoToTargetSmooth(is_cube=True, curr_t_pos=current_target_pos, stop_at_end=True):
+    """Drive toward target while continuously correcting heading using differential steering."""
+    while True:
+        streaming_client.update_sync()
+
+        if is_cube:
+            curr_t_pos = current_target_pos
+
+        distance = dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2])
+        if distance < 0.14:
+            if stop_at_end:
+                send_stop_request()
+            return
+
+        angle = angle_between_points(c_pos, curr_t_pos)
+        error = normalize_angle(angle - c_rad)
+        steering_degree = math.degrees(error)
+        steering_degree = max(-30, min(30, steering_degree))
+
+        right, left = get_speed(steering_degree)
+        send_steer_request(left, right)
+
+        time.sleep(0.03)
+
+
 def GoBack( ):
     
     if c_pos[0] >= 3.85:
@@ -215,23 +241,24 @@ def go_to_goal(goal_pos):
         finished = True
         for i in range(len(plan) - 1):
             check_board_validity()  # Check if the robot and cubes are within the defined limits of the board and check if the robot is flipped
-           
+
             go_to_pos = [plan[i+1][0], 0, plan[i+1][1]]
-            
-            turnToTarget(False, go_to_pos)
-            GoToTarget(False, go_to_pos)
-            
+
+            GoToTargetSmooth(False, go_to_pos, stop_at_end=False)
+
             streaming_client.update_sync()
             curr_pos = [cube_bank.get_cube_position_by_id(idx) for idx in cubes_order if idx is not current_target_id]
-            if any(check_cube_moved(prev[0], curr[0], prev[2], curr[2]) for (prev, curr) in zip (cubes_positions, curr_pos)):
+            if any(check_cube_moved(prev[0], curr[0], prev[2], curr[2]) for (prev, curr) in zip(cubes_positions, curr_pos)):
                 print("continue")
                 finished = False
                 break
-            
+
             if dist(c_pos[0], current_target_pos[0], c_pos[2], current_target_pos[2]) > 0.16:
                 send_servo_request(30)
                 return []
-                
+        else:
+            send_stop_request()
+
     return plan  # Return the planned path for further use or analysis
 
 
@@ -248,15 +275,16 @@ def get_path_to_target():
             check_board_validity()  # Check if the robot and cubes are within the defined limits of the board and check if the robot is flipped
 
             go_to_pos = [plan[point+1][0], 0, plan[point+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
-            turnToTarget(False, go_to_pos)
-            GoToTarget(False, go_to_pos)
+            GoToTargetSmooth(False, go_to_pos, stop_at_end=False)
 
             streaming_client.update_sync()
             curr_pos = [cube_bank.get_cube_position_by_id(idx) for idx in cubes_order if idx is not current_target_id]
-            if any(check_cube_moved(prev[0], curr[0], prev[2], curr[2]) for (prev, curr) in zip (cubes_positions, curr_pos)):
+            if any(check_cube_moved(prev[0], curr[0], prev[2], curr[2]) for (prev, curr) in zip(cubes_positions, curr_pos)):
                 print("continue")
                 finished = False
                 break
+        else:
+            send_stop_request()
 
 
 cube_bank = CubeBank()  # Initialize the cube bank to manage cube information and positions
