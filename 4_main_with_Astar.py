@@ -1,4 +1,5 @@
 import time
+import math
 import socket
 from natnet import DataDescriptions, DataFrame, NatNetClient
 import numpy as np
@@ -175,6 +176,37 @@ def GoToTarget(is_cube = True, curr_t_pos = t_pos):
                 turnToTarget(is_cube, curr_t_pos)
                 send_go_request()
 
+def GoToTargetSmooth(is_cube=True, curr_t_pos=t_pos, stop_at_end=True):
+    """Drive toward a target using differential steering to correct heading while moving.
+
+    Args:
+        is_cube (bool): If True, continuously use the live global `t_pos`.
+        curr_t_pos (list): [x, y, z] target position when `is_cube` is False.
+        stop_at_end (bool): If True, send a stop command on arrival.
+    """
+    while True:
+        streaming_client.update_sync()
+
+        if is_cube:
+            curr_t_pos = t_pos
+
+        distance = dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2])
+        if distance < 0.14:
+            if stop_at_end:
+                send_stop_request()
+            return
+
+        angle = angle_between_points(c_pos, curr_t_pos)
+        error = normalize_angle(angle - c_rad)
+        steering_degree = math.degrees(error)
+        steering_degree = max(-30, min(30, steering_degree))
+
+        right, left = get_speed(steering_degree)
+        send_steer_request(left, right)
+
+        time.sleep(0.03)
+
+
 def GoBack( ):
     
     if c_pos[0] >= 3.85:
@@ -245,14 +277,16 @@ def go_to_goal(goal_pos):
             obsticles.remove(t_pos3)
         plan = get_path_to_goal(c_pos, goal_pos,obsticles)
         finshed = True
+        if len(plan) > 1:
+            first_pos = [plan[1][0], 0, plan[1][1]]
+            turnToTarget(False, first_pos)
         for i in range(len(plan) - 1):
-            
+
             is_flipped([t_rot1, t_rot2, t_rot3])
-           
+
             go_to_pos = [plan[i+1][0], 0, plan[i+1][1]]
             # print("Current position:", go_to_pos)
-            turnToTarget(False, go_to_pos)
-            GoToTarget(False, go_to_pos)
+            GoToTargetSmooth(False, go_to_pos, stop_at_end=False)
             if(dist(t_pos1[0], cur_t_pos1[0], t_pos1[2], cur_t_pos1[2]) > 0.1 and y!=604) or( dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1 and y!=606) or (dist(t_pos3[0], cur_t_pos3[0], t_pos3[2], cur_t_pos3[2])> 0.1 and y!=607) :
                 # print("continue")
                 finshed = False
@@ -260,7 +294,9 @@ def go_to_goal(goal_pos):
             if dist(c_pos[0], t_pos[0], c_pos[2], t_pos[2]) > 0.15:
                 send_servo_request(30)
                 return []
-                
+        else:
+            send_stop_request()
+
     return plan  # Return the planned path for further use or analysis
 
 
@@ -274,18 +310,21 @@ def get_path_to_target():
         cur_t_pos3 = t_pos3  # Use the current position of t_pos3
         plan = get_path_to_goal(c_pos, t_pos, [t_pos1,t_pos2,t_pos3])  # Pass t_pos1 as a dynamic obstacle
         finshed = True
+        if len(plan) > 1:
+            first_pos = [plan[1][0], 0, plan[1][1]]
+            turnToTarget(False, first_pos)
         for i in range(len(plan) - 1):
             is_flipped([t_rot1, t_rot2, t_rot3])
             out_limits(c_pos, t_pos)
             go_to_pos = [plan[i+1][0], 0, plan[i+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
             # print("Current position:", go_to_pos)
-            # turnToTarget(False, go_to_pos)
-            turnToTarget(False, go_to_pos)
-            GoToTarget(False, go_to_pos)
-            if dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1 or dist(t_pos1[0], cur_t_pos1[0], t_pos1[2], cur_t_pos1[2]) > 0.1 or dist(t_pos3[0], cur_t_pos3[0], t_pos3[2], cur_t_pos3[2]) > 0.1:    
+            GoToTargetSmooth(False, go_to_pos, stop_at_end=False)
+            if dist(t_pos2[0], cur_t_pos2[0], t_pos2[2], cur_t_pos2[2]) > 0.1 or dist(t_pos1[0], cur_t_pos1[0], t_pos1[2], cur_t_pos1[2]) > 0.1 or dist(t_pos3[0], cur_t_pos3[0], t_pos3[2], cur_t_pos3[2]) > 0.1:
                 print("continue")
                 finshed = False
                 break
+        else:
+            send_stop_request()
          
 try:
     extract_order(word) 
