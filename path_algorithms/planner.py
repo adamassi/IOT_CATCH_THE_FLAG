@@ -102,7 +102,7 @@ def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
 
     smooth_plan = bezier_smooth_plan(
         plan,
-        samples_per_segment=30,
+        samples_per_segment=10,
         tension=0.20
         )
     

@@ -20,6 +20,10 @@ y_base = [-0.15, 0.28, 0.67]  # List of base positions for the cubes
 current_target_id = 604
 current_target_pos = [0,0,0]
 
+# Rate-limiter state for motor commands
+_last_cmd_time = 0.0
+_last_steer = None  # last (left_int, right_int) sent to /steer
+
 def cube_blocks_target_base(base_pos, threshold=0.18):
     """
     Check if another cube is blocking the target base for the current cube.
@@ -131,48 +135,84 @@ def heading_error_to(target_pos):
     angle = angle_between_points(c_pos, target_pos)
     return normalize_angle(angle - c_rad)
 
-def GoToTarget(is_cube = True, curr_t_pos = current_target_pos):
-    """Drive the chaser toward a target position until close.
 
-    Args:
-        is_cube (bool): If True, use the tracked global `t_pos` as the
-            current target; otherwise use the provided `curr_t_pos`.
-        curr_t_pos (list): [x, y, z] fallback target position when
-            `is_cube` is False.
+def _send_steer_if_changed(left, right):
+    """Send /steer only when speeds changed or rate-limit interval elapsed."""
+    global _last_cmd_time, _last_steer
+    l = int(max(SmoothMotion.SPEED_MIN, min(SmoothMotion.SPEED_MAX, left)))
+    r = int(max(SmoothMotion.SPEED_MIN, min(SmoothMotion.SPEED_MAX, right)))
+    now = time.time()
+    if _last_steer != (l, r) or now - _last_cmd_time >= SmoothMotion.CMD_RATE_INTERVAL:
+        send_steer_request(l, r)
+        _last_cmd_time = now
+        _last_steer = (l, r)
 
-    Behavior:
-        - If the distance to the target is >= 0.16 m, start moving forward.
-        - Continuously update streaming data and check distance.
-        - If within 0.14 m, stop and return.
-        - If heading error is large (> 0.5 rad), call `turnToTarget`
-          to re-orient before continuing forward.
+
+def thin_waypoints(plan, step):
+    """Keep every step-th waypoint from plan; always include the last."""
+    if step <= 1 or len(plan) <= 2:
+        return plan
+    indices = list(range(0, len(plan) - 1, step)) + [len(plan) - 1]
+    return plan[indices]
+
+
+def GoToTarget(is_cube = True, curr_t_pos = current_target_pos, stop_at_end = True):
+    """Drive toward a target using differential steering; no unnecessary stops.
+
+    is_cube      – True: track live current_target_pos; always stop on arrival.
+    stop_at_end  – False: leave motors running when arrive radius reached
+                   (use for intermediate path waypoints).
+
+    Heading logic:
+      |error| < ANGLE_SLOW_DOWN  → steer at normal speed
+      |error| < ANGLE_STOP_TURN  → steer at slow speed
+      |error| >= ANGLE_STOP_TURN → stop, spin in place, resume
     """
+    global _last_cmd_time, _last_steer
 
-    # Only start driving if we're not already close to the target
-    if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) >= 0.16:
-        send_go_request()
-        while True:
-            # Keep optitrack data fresh
-            streaming_client.update_sync()
+    if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) < SmoothMotion.DIST_STOP:
+        if stop_at_end:
+            send_stop_request()
+            _last_steer = None
+        return
 
-            # If tracking a cube, always use the live global `t_pos`
-            if is_cube:
-                curr_t_pos = current_target_pos
+    _last_steer = None  # force first steer command through rate-limiter
 
-            # If we got close enough, stop and exit
-            if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) < 0.14:
-                if is_cube:
-                    send_stop_request() #the problem if we remove this line is harder to catch the target 
-                #1/3/2026
-                break
+    while True:
+        streaming_client.update_sync()
 
-            # Compute heading error and optionally re-orient
-            angle = angle_between_points(c_pos, curr_t_pos)
-            normalized_angle = normalize_angle(angle - c_rad)
-            if abs(normalized_angle) > 0.5:
-                # Large heading error: turn toward the target, then resume
-                turnToTarget(is_cube, curr_t_pos)
-                send_go_request()
+        if is_cube:
+            curr_t_pos = current_target_pos
+
+        d = dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2])
+
+        if d < SmoothMotion.DIST_STOP:
+            if stop_at_end:
+                send_stop_request()
+                _last_steer = None
+            break
+
+        heading_err = heading_error_to(curr_t_pos)
+
+        if abs(heading_err) > SmoothMotion.ANGLE_STOP_TURN:
+            # Too far off: stop, spin in place, then resume driving
+            send_stop_request()
+            _last_steer = None
+            turnToTarget(is_cube, curr_t_pos)
+            _last_steer = None
+            continue
+
+        # Choose base speed: slow when close or heading error is moderate
+        if d < SmoothMotion.DIST_SLOW or abs(heading_err) > SmoothMotion.ANGLE_SLOW_DOWN:
+            base_speed = SmoothMotion.SPEED_SLOW
+        else:
+            base_speed = SmoothMotion.SPEED_NORMAL
+
+        # Differential steering:
+        # heading_err > 0 → need to turn right → left motor faster
+        # heading_err < 0 → need to turn left  → right motor faster
+        correction = SmoothMotion.STEER_KP * heading_err
+        _send_steer_if_changed(base_speed + correction, base_speed - correction)
 
 def GoBack( ):
     
@@ -216,22 +256,22 @@ def go_to_goal(goal_pos):
     while not finished:
         streaming_client.update_sync()
 
-        cubes_positions = [cube_bank.get_cube_position_by_id(idx) for idx in cubes_order if idx is not current_target_id]  # Update cube positions in the cube bank
+        cubes_positions = [cube_bank.get_cube_position_by_id(idx) for idx in cubes_order if idx is not current_target_id]
         plan = get_path_to_goal(c_pos, goal_pos, cubes_positions)
+        plan = thin_waypoints(plan, SmoothMotion.EXECUTION_WAYPOINT_STEP)
         finished = True
+        last_idx = len(plan) - 2  # index of last waypoint step
         for i in range(len(plan) - 1):
-            check_board_validity()  # Check if the robot and cubes are within the defined limits of the board and check if the robot is flipped
-           
+            check_board_validity()
+
             go_to_pos = [plan[i+1][0], 0, plan[i+1][1]]
-            
-            # Only turn in place for large heading errors; GoToTarget handles small corrections while driving
-            if abs(heading_error_to(go_to_pos)) > 0.35:
-                turnToTarget(False, go_to_pos)
-            GoToTarget(False, go_to_pos)
+            is_final = (i == last_idx)
+            # Stop only at the last waypoint; keep rolling through intermediate ones
+            GoToTarget(False, go_to_pos, stop_at_end=is_final)
 
             streaming_client.update_sync()
             curr_pos = [cube_bank.get_cube_position_by_id(idx) for idx in cubes_order if idx is not current_target_id]
-            if any(check_cube_moved(prev[0], curr[0], prev[2], curr[2]) for (prev, curr) in zip (cubes_positions, curr_pos)):
+            if any(check_cube_moved(prev[0], curr[0], prev[2], curr[2]) for (prev, curr) in zip(cubes_positions, curr_pos)):
                 print("continue")
                 finished = False
                 break
@@ -239,7 +279,7 @@ def go_to_goal(goal_pos):
             if dist(c_pos[0], current_target_pos[0], c_pos[2], current_target_pos[2]) > 0.16:
                 send_servo_request(30)
                 return []
-                
+
     return plan  # Return the planned path for further use or analysis
 
 
@@ -249,25 +289,26 @@ def get_path_to_target():
     while not finished:
         streaming_client.update_sync()
 
-        cubes_positions = [cube_bank.get_cube_position_by_id(idx) for idx in cubes_order if idx is not current_target_id]  # Update cube positions in the cube bank
-        plan = get_path_to_goal(c_pos, current_target_pos, cubes_positions)  # Pass t_pos1 as a dynamic obstacle
+        cubes_positions = [cube_bank.get_cube_position_by_id(idx) for idx in cubes_order if idx is not current_target_id]
+        plan = get_path_to_goal(c_pos, current_target_pos, cubes_positions)
+        plan = thin_waypoints(plan, SmoothMotion.EXECUTION_WAYPOINT_STEP)
         finished = True
+        last_idx = len(plan) - 2  # index of last waypoint step
         for point in range(len(plan) - 1):
-            check_board_validity()  # Check if the robot and cubes are within the defined limits of the board and check if the robot is flipped
+            check_board_validity()
 
-            go_to_pos = [plan[point+1][0], 0, plan[point+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
-            # Only turn in place for large heading errors; GoToTarget handles small corrections while driving
-            if abs(heading_error_to(go_to_pos)) > 0.35:
-                turnToTarget(False, go_to_pos)
-            if point == len(plan) - 2:
-
-                GoToTarget(True, go_to_pos)
+            go_to_pos = [plan[point+1][0], 0, plan[point+1][1]]
+            is_final = (point == last_idx)
+            if is_final:
+                # Final approach: track live cube position, stop for pickup
+                GoToTarget(True, go_to_pos, stop_at_end=True)
             else:
-                GoToTarget(False, go_to_pos)
+                # Intermediate waypoint: steer through without stopping
+                GoToTarget(False, go_to_pos, stop_at_end=False)
 
             streaming_client.update_sync()
             curr_pos = [cube_bank.get_cube_position_by_id(idx) for idx in cubes_order if idx is not current_target_id]
-            if any(check_cube_moved(prev[0], curr[0], prev[2], curr[2]) for (prev, curr) in zip (cubes_positions, curr_pos)):
+            if any(check_cube_moved(prev[0], curr[0], prev[2], curr[2]) for (prev, curr) in zip(cubes_positions, curr_pos)):
                 print("continue")
                 finished = False
                 break
@@ -322,7 +363,7 @@ try:
                 plan = []
                 plan = move_cube_to_base(PositionConfig.bases[idx])  # Move the cube to the base position
                 turnToTarget(False, [plan[-1][0]+0.4,0.09, y_base[idx]])
-                GoToTarget(False, [plan[-1][0]+0.4,0.09, y_base[idx]])  # Move slightly forward after reaching the target
+                GoToTarget(False, [plan[-1][0]+0.4,0.09, y_base[idx]], stop_at_end=True)  # Stop before releasing cube
                 send_servo_request(30)
                 GoBack()
 

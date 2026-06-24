@@ -52,4 +52,28 @@ class PlaygroundConfig:
     X_MIN = -4.05
     Y_MAX = 2.1
     Y_MIN = -1.9
-    
+
+class SmoothMotion:
+    # Heading error thresholds (radians) — tune after testing
+    ANGLE_STEER_ONLY = 0.10   # below this: drive straight, tiny correction only
+    ANGLE_SLOW_DOWN  = 0.35   # below this: steer while moving at normal speed
+    ANGLE_STOP_TURN  = 0.60   # above this: stop and spin in place
+
+    # Distance thresholds (metres)
+    DIST_STOP = 0.14          # arrive / pass-through radius
+    DIST_SLOW = 0.35          # slow-down approach zone
+
+    # Motor PWM values (0-255)
+    SPEED_NORMAL = 230
+    SPEED_SLOW   = 150
+    SPEED_MIN    = 80         # minimum per-wheel PWM to keep motors spinning
+    SPEED_MAX    = 250
+
+    # Proportional gain for differential steering correction
+    STEER_KP = 80.0
+
+    # Rate limiter: minimum seconds between motor commands to the ESP
+    CMD_RATE_INTERVAL = 0.15
+
+    # Waypoint thinning at execution time (1 = no thinning, 2 = every 2nd, 3 = every 3rd)
+    EXECUTION_WAYPOINT_STEP = 1
