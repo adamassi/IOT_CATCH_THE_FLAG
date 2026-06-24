@@ -228,7 +228,7 @@ def go_to_goal(goal_pos):
                 finished = False
                 break
             
-            if dist(c_pos[0], curr_pos[0], c_pos[2], curr_pos[2]) > 0.16:
+            if dist(c_pos[0], current_target_pos[0], c_pos[2], current_target_pos[2]) > 0.16:
                 send_servo_request(30)
                 return []
                 
