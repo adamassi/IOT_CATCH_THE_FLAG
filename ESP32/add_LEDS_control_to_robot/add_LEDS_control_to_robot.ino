@@ -545,13 +545,43 @@ void setup() {
   pixels.clear();
 
   for (int i = 0; i < NUMPIXELS; i++) {
-    pixels.setPixelColor(i, pixels.Color(255, 160, 0)); // Peach
+    pixels.setPixelColor(i, pixels.Color(0, 50, 250)); // Peach
   }
 
   pixels.show();
   request->send(200, "text/plain", "Lights set to peach");
 });
 
+
+server.on("/lights_color", HTTP_GET, [](AsyncWebServerRequest *request) {
+  if (
+    request->hasParam("red") &&
+    request->hasParam("green") &&
+    request->hasParam("blue")
+  ) {
+    int red = request->getParam("red")->value().toInt();
+    int green = request->getParam("green")->value().toInt();
+    int blue = request->getParam("blue")->value().toInt();
+
+    red = constrain(red, 0, 255);
+    green = constrain(green, 0, 255);
+    blue = constrain(blue, 0, 255);
+
+    pixels.clear();
+
+    for (int i = 0; i < NUMPIXELS; i++) {
+      pixels.setPixelColor(i, pixels.Color(red, green, blue));
+    }
+
+    pixels.show();
+
+    request->send(200, "text/plain", "Lights color updated");
+  } else {
+    request->send(400, "text/plain", "Missing red, green, or blue parameter");
+  }
+});
+
+server.begin();
 
 
 

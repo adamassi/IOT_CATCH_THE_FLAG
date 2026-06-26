@@ -52,4 +52,18 @@ class PlaygroundConfig:
     X_MIN = -4.05
     Y_MAX = 2.1
     Y_MIN = -1.9
+
+
+
+
+class ColorBank:
+    OFF = (0, 0, 0)
+    RED = (255, 0, 0)
+    GREEN = (0, 255, 0)
+    BLUE = (0, 0, 255)
+    PEACH = (100, 229, 180)
+    YELLOW = (100, 255, 0)
+    ORANGE = (255, 165, 0)
+    PURPLE = (128, 0, 255)
+    WHITE = (255, 255, 255)
     
