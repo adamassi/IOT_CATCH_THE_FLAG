@@ -272,19 +272,6 @@ class MapEnvironment(object):
             for coord in polygon.exterior.coords[:-1]
         ]
 
-# aaaaaaaaaaaaaaaaaaaa
-        # Collect all nodes (start, goal, and obstacle vertices)
-        # nodes = additional_points + [
-        #     tuple(coord)
-        #     for polygon in self.obstacles[3:]  # Skip the first three obstacles if they are not relevant for visibility graph
-        #     for coord in polygon.exterior.coords[:-1]
-        # ]
-# aaaaaaaaaaaaaaaaaaaa
-      # nodes = additional_points + [
-        #     tuple(coord)
-        #     for polygon in inflated_obstacles
-        #     for coord in polygon.exterior.coords[:-1]
-        # ]
 
         # Initialize the graph
         graph = {node: [] for node in nodes}
