@@ -121,6 +121,7 @@ def send_lights_peach_request():
     except Exception as e:
         print("Error sending LIGHTS PEACH request:", e)
 
+
 def _send_start_beeping_request_raw(on=300, off=300):
     try:
         requests.get(
