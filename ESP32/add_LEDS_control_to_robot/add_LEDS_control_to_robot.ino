@@ -541,6 +541,10 @@ void setup() {
       pixels.show();
     request->send(200, "text/plain", "LED blue");
   });
+  server.on("/lights_peach", HTTP_GET, [](AsyncWebServerRequest *request) {
+    setRGBColor(255, 229, 180);
+    request->send(200, "text/plain", "Lights set to peach");
+  });
 
 
 

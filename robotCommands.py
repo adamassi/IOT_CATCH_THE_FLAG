@@ -105,6 +105,13 @@ def send_steer_request(left=250, right = 250):
         # print("STEER request sent. Response:", response.text)
     except Exception as e:
         print("Error sending STEER request:", e)
+        
+def send_lights_peach_request():
+    """Turn the robot RGB LEDs to peach."""
+    try:
+        requests.get(f"{ESPConfig.ESP_IP}/lights_peach")
+    except Exception as e:
+        print("Error sending LIGHTS PEACH request:", e)
 
 def _send_start_beeping_request_raw(on=300, off=300):
     try:
