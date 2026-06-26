@@ -37,7 +37,7 @@ class ConfigureScreen(Screen):
                 on_click=lambda: self.manager.go_to("robot_config"),
             ),
             Button(
-                "Extra",
+                "Word Bank",
                 (btn_x, btn_y + 2 * (btn_h + gap), btn_w, btn_h),
                 fonts["button"],
                 config.BTN,

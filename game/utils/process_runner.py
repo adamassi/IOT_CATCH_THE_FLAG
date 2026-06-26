@@ -288,7 +288,7 @@ class ProcessRunner:
         # Even if the script stops, the robot may still be moving,
         # so we explicitly send a stop request.
         send_stop_request()
-
+        send_stop_beeping_request()
         # Update internal state
         self.state.paused = False
         self.state.running = False

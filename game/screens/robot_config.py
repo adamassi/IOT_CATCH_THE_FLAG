@@ -13,16 +13,6 @@ class RobotConfigScreen(Screen):
 
         self.panel = pygame.Rect(config.WIDTH // 2 - 420, 230, 840, 390)
 
-        self.word_bank_btn = Button(
-            "Change Word Bank",
-            (config.WIDTH // 2 - 220, 315, 440, 70),
-            fonts["button"],
-            config.ACCENT,
-            config.ACCENT_HOVER,
-            config.WHITE,
-            on_click=None,
-        )
-
         self.algorithm_slider = OptionSlider(
             rect=(config.WIDTH // 2 - 300, 485, 600, 80),
             options=["RRT", "A*", "CRS"],
@@ -44,7 +34,6 @@ class RobotConfigScreen(Screen):
 
     def handle_event(self, event):
         self.back_btn.handle_event(event)
-        self.word_bank_btn.handle_event(event)
         self.algorithm_slider.handle_event(event)
 
     def draw(self, surface):
@@ -57,7 +46,6 @@ class RobotConfigScreen(Screen):
         draw_soft_shadow(surface, self.panel, spread=18, alpha=65)
         draw_panel(surface, self.panel, config.PANEL_FILL, config.PANEL_BORDER)
 
-        self.word_bank_btn.draw(surface)
 
         label = self.fonts["subtitle"].render(
             f"Algorithm: {self.algorithm_slider.value}",
