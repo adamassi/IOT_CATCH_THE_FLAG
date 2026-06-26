@@ -326,7 +326,18 @@ class MapEnvironment(object):
     # Visualization Functions
     # ------------------------#
 
-    def visualize_map(self, show_map=False, plan=None, tree_edges=None, expanded_nodes=None,visibility_graph=None, name=""):
+    # def visualize_map(self, show_map=False, plan=None, tree_edges=None, expanded_nodes=None,visibility_graph=None, name=""):
+    def visualize_map(
+    self,
+    show_map=False,
+    plan=None,
+    tree_edges=None,
+    expanded_nodes=None,
+    visibility_graph=None,
+    name="",
+    car_pos=None,
+    
+):
         """
         Visualize the map with current state of robot and obstacles in the map (X is vertical, Y is horizontal).
         @param show_map If to show the map or save it.
@@ -381,6 +392,32 @@ class MapEnvironment(object):
             cx, cy = state[1], state[0]
             point_circ = plt.Circle((cx, cy), radius=0.1, color=color, zorder=30)
             plt.gca().add_patch(point_circ)
+                # Plot current robot position from OptiTrack
+        # Plot current robot position.
+        # robot_pos format: [x, z]
+        if car_pos is not None:
+            robot_x = car_pos[0]
+            robot_z = car_pos[1]
+
+            # visualize_map swaps axes:
+            # horizontal = z, vertical = x
+            cx, cy = robot_z, robot_x
+
+            # Draw robot as red point
+            plt.gca().add_patch(plt.Circle((cx, cy), radius=0.13, color='red', zorder=60))
+
+            # Add label near robot point
+            plt.text(
+                cx + 0.05,
+                cy + 0.05,
+                "CAR",
+                color="white",
+                fontsize=9,
+                weight="bold",
+                zorder=61
+            )
+                    
+            
 
         # Set labels and limits
         plt.xlabel('Y Position →')
