@@ -143,6 +143,7 @@ def GoToTarget(is_cube = True, curr_t_pos = current_target_pos):
           to re-orient before continuing forward.
     """
 
+    send_lights_color_request(ColorBank.PEACH)  # Set lights to peach color to indicate movement
     # Only start driving if we're not already close to the target
     if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) >= 0.16:
         send_go_request()
@@ -167,6 +168,7 @@ def GoToTarget(is_cube = True, curr_t_pos = current_target_pos):
                 # Large heading error: turn toward the target, then resume
                 turnToTarget(is_cube, curr_t_pos)
                 send_go_request()
+    send_lights_color_request(ColorBank.OFF)  # Turn off lights after reaching the target
 
 def GoBack( ):
     
@@ -219,7 +221,9 @@ def go_to_goal(goal_pos):
             go_to_pos = [plan[i+1][0], 0, plan[i+1][1]]
             
             turnToTarget(False, go_to_pos)
+            # send_lights_color_request(ColorBank.PEACH)
             GoToTarget(False, go_to_pos)
+            # send_lights_color_request
             
             streaming_client.update_sync()
             curr_pos = [cube_bank.get_cube_position_by_id(idx) for idx in cubes_order if idx is not current_target_id]
