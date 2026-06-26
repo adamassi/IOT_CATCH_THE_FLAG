@@ -11,7 +11,7 @@ from screens.robot_config import RobotConfigScreen
 from screens.remove_obstacle import RemoveObstacleScreen
 from screens.add_obstacle import AddObstacleScreen
 from screens.manual_control import ManualControlScreen
-
+from screens.word_bank_config import WordBankConfigScreen
 
 class ScreenManager:
     def __init__(self, quit_game, fonts):
@@ -25,6 +25,7 @@ class ScreenManager:
         self._screens["configure"] = ConfigureScreen(self, fonts)
         self._screens["layout_config"] = LayoutConfigScreen(self, fonts)
         self._screens["robot_config"] = RobotConfigScreen(self, fonts)
+        self._screens["word_bank_config"] = WordBankConfigScreen(self, fonts)
         self._screens["remove_obstacle"] = RemoveObstacleScreen(self, fonts)
         self._screens["add_obstacle"] = AddObstacleScreen(self, fonts)
         self._screens["manual_control"] = ManualControlScreen(self, fonts)

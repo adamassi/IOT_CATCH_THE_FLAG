@@ -43,7 +43,7 @@ class ConfigureScreen(Screen):
                 config.BTN,
                 config.BTN_HOVER,
                 config.WHITE,
-                on_click=None,
+                on_click=lambda: self.manager.go_to("word_bank_config"),
             ),
         ]
 
