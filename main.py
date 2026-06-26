@@ -237,6 +237,10 @@ def go_to_goal(goal_pos):
 
 
 def get_path_to_target():
+    """
+    Get the path to the current target position.
+    """
+    send_lights_peach_request()
     finished = False
     while not finished:
         streaming_client.update_sync()
