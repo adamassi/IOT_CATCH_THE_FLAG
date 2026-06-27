@@ -157,7 +157,7 @@ class ProcessRunner:
         # Build the command:
         # sys.executable means use the same Python interpreter
         # that is currently running this GUI.
-        cmd = [sys.executable, self.script_path, word]
+        cmd = [sys.executable, "-u", self.script_path, word]
 
         # Start subprocess.
         #
@@ -179,6 +179,7 @@ class ProcessRunner:
             text=True,
             bufsize=1,
             cwd=self.workdir or None,
+            env={**os.environ, "PYTHONUNBUFFERED": "1"},
         )
 
         def _read_stdout():
@@ -324,7 +325,8 @@ class ProcessRunner:
 
                 # Stop the robot physically now that the script is frozen
                 send_stop_request()
-
+                send_stop_beeping_request()
+                
                 self.state.paused = True
                 self.state.running = True
                 self.state.finished = False
