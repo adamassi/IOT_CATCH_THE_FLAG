@@ -6,7 +6,7 @@ from PARAMETERS import *
 import numpy as np  # Import numpy for array operations
 
 
-# number_of_run=1
+number_of_run=1
 def bezier_smooth_plan(plan, samples_per_segment=25, tension=0.25):
     """
     Smooth a polyline plan using cubic Bézier segments.
@@ -72,7 +72,7 @@ def move_cube_blocking_base(cubeId):
 
 # Function get data where the  robot car and where the cube is and calculate the path to the cube
 def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
-    # global number_of_run
+    global number_of_run
     
     # Initialize the map environment with the JSON file path
     planning_env.start = np.array([start_pos[0], start_pos[2]])  # Use x and y coordinates for the start position
@@ -87,7 +87,7 @@ def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
     
 
     # Create an instance of the RCSPlanner with the planning environment
-    print("Creating A*/RRT* planner...")
+    print(f"Creating {PlannerConfig.ALGORITHM} planner...")
     # planner = RRTStarPlanner(planning_env=planning_env, ext_mode='E2', goal_prob=0.40, k=10)
     if PlannerConfig.ALGORITHM == "RRT_STAR":
         planner = RRTStarPlanner(planning_env=planning_env, ext_mode=PlannerConfig.EXTENSION_MODE, goal_prob=PlannerConfig.GOAL_PROBABILITY, k=PlannerConfig.K_NEAREST)
@@ -108,10 +108,10 @@ def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
     
     print("Visualizing the map with the computed plan and expanded nodes...")
     if PlannerConfig.ALGORITHM == "ASTAR":
-        planner.planning_env.visualize_map(plan=smooth_plan, visibility_graph=planner.graph, name='AStarPlan')
+        planner.planning_env.visualize_map(plan=smooth_plan, visibility_graph=planner.graph, name='AStarPlan'+str(number_of_run))
     elif PlannerConfig.ALGORITHM == "RRT_STAR":
-        planner.planning_env.visualize_map(plan=smooth_plan, tree_edges=planner.tree.get_edges_as_states(), name='RRTStarPlan')
-
+        planner.planning_env.visualize_map(plan=smooth_plan, tree_edges=planner.tree.get_edges_as_states(), name='RRTStarPlan'+str(number_of_run))
+    number_of_run+=1
     clear_dynamic_cubes()  # Clear the dynamic cubes from the environment after planning
     remove_cube_obstacle(planning_env, len(cube_obstacles))
 

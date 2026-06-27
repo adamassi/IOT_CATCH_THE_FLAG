@@ -4,7 +4,7 @@ import numpy as np
 from PARAMETERS import PlannerConfig
 
 
-
+obstacle_margin = 0.8
 class AStarPlanner:
     def __init__(self, planning_env, timeout_seconds=None):
         self.start = tuple(planning_env.start)
@@ -30,9 +30,17 @@ class AStarPlanner:
         start = tuple(self.planning_env.start)
         goal = tuple(self.planning_env.goal)
 
+        obstacle_margin = 0.1  # choose robot clearance; 0.9 is probably too large for your map
+
+        # Enlarge real obstacles, but skip first 3 goal polygons
+        enlarged_obstacles = [
+            polygon.buffer(obstacle_margin, join_style=2)
+            for polygon in self.planning_env.obstacles[3:]
+        ]
+
         nodes = [start, goal] + [
             tuple(coord)
-            for polygon in self.planning_env.obstacles[3:]
+            for polygon in enlarged_obstacles
             for coord in polygon.exterior.coords[:-1]
         ]
 
@@ -47,7 +55,7 @@ class AStarPlanner:
                 if self._timeout_reached():
                     print(f"A* visibility graph generation timed out after {self.timeout_seconds} seconds.")
                     return graph
-
+                
                 if node1 != node2 and self.planning_env.is_visible(
                     np.array(node1),
                     np.array(node2)
