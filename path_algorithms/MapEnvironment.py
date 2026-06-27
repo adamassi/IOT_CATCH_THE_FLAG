@@ -154,6 +154,41 @@ class MapEnvironment(object):
 #     [[3.9, -0.05], [3.9, 0.00], [4.5, 0.00], [4.5, -0.40], [3.9, -0.40], [3.9, -0.45], [4.4, -0.45], [4.5, -0.45], [4.5, -0.40], [4.4, -0.40], [4.4, -0.05]]
 
 # ],
+
+    def set_start(self, start):
+        '''
+        Update self.start after initialisation.
+        @param start New start state as array-like [x, y].
+        @param validate If True, raise ValueError when the state is invalid.
+        '''
+        start = np.array(start, dtype=float)
+        if not self.state_validity_checker(start):
+            raise ValueError(f'Start state {start} is outside the map or inside an obstacle.')
+        self.start = start
+
+    def set_goal(self, goal):
+        '''
+        Update self.goal after initialisation.
+        @param goal New goal state as array-like [x, y].
+        @param validate If True, raise ValueError when the state is invalid.
+        '''
+        goal = np.array(goal, dtype=float)
+        if not self.state_validity_checker(goal):
+            raise ValueError(f'Goal state {goal} is outside the map or inside an obstacle.')
+        self.goal = goal
+
+    def set_start_and_goal(self, start, goal):
+        '''
+        Update both start and goal in one call.
+        Validation (when enabled) checks the current obstacle list, so call this
+        AFTER any dynamic obstacles have been added.
+        @param start New start state as array-like [x, y].
+        @param goal  New goal state as array-like [x, y].
+        @param validate If True, raise ValueError when either state is invalid.
+        '''
+        self.set_start(start)
+        self.set_goal(goal)
+
     def is_visible(self, point1, point2):
         """
         Check if two points have line-of-sight visibility.
@@ -335,50 +370,73 @@ class MapEnvironment(object):
         plt.figure(figsize=(6, 10))  # Adjusted to match your preferred dimensions
 
         back_img = np.zeros((2, 5))
-        plt.imshow(
-            back_img.T,  # Transposed to reflect axis swap
-            origin='lower',
-            extent=(-2, 2, -5, 5),
-            zorder=0
-        )
+        # plt.imshow(
+        #     back_img.T,  # Transposed to reflect axis swap
+        #     origin='lower',
+        #     extent=(-2, 2, -5, 5),
+        #     zorder=0
+        # )
+        ax=plt.gca()
+        ax.set_facecolor("#e6e6e6")
+        legend_handles = []
 
         # Draw obstacles (with axis swap)
+        obstacle_patch = None
         for obstacle in self.obstacles:
             coords = list(obstacle.exterior.coords)
             swapped = [(y, x) for x, y in coords]  # Swap X and Y
             xs, ys = zip(*swapped)
-            plt.fill(xs, ys, "y", zorder=5)
-
+            obstacle_patch = plt.fill(xs, ys, "y", zorder=5)[0]
+        if obstacle_patch is not None:
+            obstacle_patch.set_label('Obstacles')
+            legend_handles.append(obstacle_patch)
 
         # Plot the plan if given
+        path_line = None
         if plan is not None:
             for i in range(len(plan) - 1):
                 x0, y0 = plan[i][1], plan[i][0]
                 x1, y1 = plan[i+1][1], plan[i+1][0]
-                plt.plot([x0, x1], [y0, y1], color='navy', linewidth=1, zorder=20)
+                path_line, = plt.plot([x0, x1], [y0, y1], color='navy', linewidth=1, zorder=20)
+            if path_line is not None:
+                path_line.set_label('Path')
+                legend_handles.append(path_line)
 
         # Plot tree edges if given
         if tree_edges is not None:
+            tree_line = None
             for edge in tree_edges:
                 x0, y0 = edge[0][1], edge[0][0]
                 x1, y1 = edge[1][1], edge[1][0]
-                plt.plot([x0, x1], [y0, y1], color='lightgrey', zorder=10)
+                tree_line, = plt.plot([x0, x1], [y0, y1], color='lightgrey', zorder=10)
+            if tree_line is not None:
+                tree_line.set_label('RRT* Tree')
+                legend_handles.append(tree_line)
+
         # Plot expanded nodes if given
         if expanded_nodes is not None:
             for node in expanded_nodes:
                 cx, cy = node[1], node[0]
-                point_circ = plt.Circle((cx, cy), radius=0.1, color='lightgrey', zorder=10)
+                point_circ = plt.Circle((cx, cy), radius=0.1, color='lightblue', zorder=10)
                 plt.gca().add_patch(point_circ)
+
         # Plot visibility graph if given
         if visibility_graph is not None:
+            vg_line = None
             for node, edges in visibility_graph.items():
                 for neighbor, _ in edges:
-                    plt.plot([node[1], neighbor[1]], [node[0], neighbor[0]], color='white', linewidth=0.5, alpha=0.2)
-        # Plot start and goal
-        for state, color in [(self.start, 'r'), (self.goal, 'g')]:
+                    vg_line, = plt.plot([node[1], neighbor[1]], [node[0], neighbor[0]], color='blue', linewidth=0.5, alpha=0.2)
+            if vg_line is not None:
+                vg_line.set_label('Visibility Graph')
+                legend_handles.append(vg_line)
+
+        # Plot start and goal with text labels
+        for state, color, label in [(self.start, 'r', 'Start'), (self.goal, 'g', 'Goal')]:
             cx, cy = state[1], state[0]
-            point_circ = plt.Circle((cx, cy), radius=0.1, color=color, zorder=30)
+            point_circ = plt.Circle((cx, cy), radius=0.1, color=color, zorder=30, label=label)
             plt.gca().add_patch(point_circ)
+            legend_handles.append(point_circ)
+            plt.text(cx + 0.12, cy + 0.12, label, color=color, fontsize=8, weight='bold', zorder=35)
                 # Plot current robot position from OptiTrack
         # Plot current robot position.
         # robot_pos format: [x, z]
@@ -406,6 +464,12 @@ class MapEnvironment(object):
                     
             
 
+        # Add legend outside the plot area so it never covers the map
+        if legend_handles:
+            plt.legend(handles=legend_handles, loc='upper left', fontsize=8,
+                       framealpha=0.7, facecolor='#222222', labelcolor='white',
+                       bbox_to_anchor=(1.02, 1.0), borderaxespad=0.0)
+
         # Set labels and limits
         plt.xlabel('Y Position →')
         plt.ylabel('X Position →')
@@ -417,7 +481,8 @@ class MapEnvironment(object):
         if show_map:
             plt.show()
         else:
-            plt.savefig(f'pics/map-{name}.png')
+            plt.tight_layout()
+            plt.savefig(f'pics/map-{name}.png', bbox_inches="tight")
 
         return plt
 

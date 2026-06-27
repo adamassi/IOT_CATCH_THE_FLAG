@@ -35,14 +35,19 @@ CUBES_BANK_JSON_PATH = "path_algorithms/cube_bank.json"  # Path to the JSON file
 class PlannerConfig:
     MAP_JSON_PATH = "path_algorithms/map1.json"
     # Choose path planning algorithm:
-    # Options: "RRT_STAR", "ASTAR" default is RRT_STAR
+    # Options: "RRT_STAR", "ASTAR", "RCS"
     ALGORITHM = "RRT_STAR"
     # ALGORITHM = "ASTAR"
+    # ALGORITHM = "RCS"
     # RRT* parameters
     GOAL_PROBABILITY = 0.40
     EXTENSION_MODE = 'E2'
     K_NEAREST = 10
     PATH_TIMEOUT_SECONDS = 60
+    # RCS parameters
+    RCS_COARSE_STEP = 0.4       # large grid step size (metres)
+    RCS_FINE_STEP = 0.1         # fine grid step size (metres)
+    RCS_GOAL_TOLERANCE = 0.20   # distance threshold to declare goal reached
 class PlotConfig:
     X_LIM = (-1.9, 1.97)
     Y_LIM = (-3.33, 4.3)
