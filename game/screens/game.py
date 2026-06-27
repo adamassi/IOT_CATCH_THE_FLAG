@@ -120,6 +120,12 @@ class GameScreen(Screen):
         self.reload_cube_bank()
 
         # ------------------------------------------------------------
+        # Timer state
+        # ------------------------------------------------------------
+        self.timer_elapsed = 0.0
+        self.timer_running = False
+
+        # ------------------------------------------------------------
         # Image and log areas
         # ------------------------------------------------------------
         input_area_height = 145
@@ -199,14 +205,18 @@ class GameScreen(Screen):
             return
 
         if not self.runner.state.running:
+            self.timer_elapsed = 0.0
+            self.timer_running = True
             self.runner.start(word)
             self.word_message = f"Running word: {word}"
 
     def on_pause(self):
         self.runner.toggle_pause()
+        self.timer_running = not self.runner.state.paused and self.runner.state.running
 
     def on_stop(self):
         self.runner.stop()
+        self.timer_running = False
 
     # ------------------------------------------------------------
     # Log scrolling helpers
@@ -251,6 +261,12 @@ class GameScreen(Screen):
     def update(self, dt):
         self.runner.poll()
         self._try_load_image()
+
+        if self.timer_running:
+            self.timer_elapsed += dt
+
+        if self.runner.state.finished:
+            self.timer_running = False
 
         if self._auto_follow:
             self.log_scroll_px = self._max_scroll()
@@ -349,7 +365,7 @@ class GameScreen(Screen):
         draw_panel(surface, self.panel, config.PANEL_FILL, config.PANEL_BORDER)
 
         # Timer
-        elapsed = self.runner.elapsed_seconds()
+        elapsed = self.timer_elapsed
         timer_text = self.fonts["subtitle"].render(
             f"Time: {elapsed:.1f}s",
             True,
