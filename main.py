@@ -221,9 +221,8 @@ def go_to_goal(goal_pos):
             go_to_pos = [plan[i+1][0], 0, plan[i+1][1]]
             
             turnToTarget(False, go_to_pos)
-            # send_lights_color_request(ColorBank.PEACH)
             GoToTarget(False, go_to_pos)
-            # send_lights_color_request
+            
             
             streaming_client.update_sync()
             curr_pos = [cube_bank.get_cube_position_by_id(idx) for idx in cubes_order if idx is not current_target_id]
@@ -285,6 +284,7 @@ streaming_client.on_data_frame_received_event.handlers.append(receive_new_frame)
 
 
 try:
+    send_lights_color_request(ColorBank.OFF)
     arr = extract_order(word) 
     print(arr)
 
@@ -319,6 +319,7 @@ try:
                 GoToTarget(False, [plan[-1][0]+0.4,0.09, y_base[idx]])  # Move slightly forward after reaching the target
                 send_servo_request(30)
                 GoBack()
+        celebration_colors()
 
 # Handle connection-related errors specifically
 except ConnectionResetError as e:

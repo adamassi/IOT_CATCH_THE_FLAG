@@ -1,6 +1,9 @@
 import math
 # import state_validators
 from  state_validators import *
+from robotCommands import *
+import time
+from PARAMETERS import *
 # 
 def angle_between_points(p1, p2):
     return math.atan2(p2[2] - p1[2], p2[0] - p1[0])
@@ -55,6 +58,16 @@ def dist(x1, x2, y1, y2):
         float: The Euclidean distance between the two points.
     """
     return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
-
+def celebration_colors():
+    """
+    Function to celebrate by cycling through colors.
+    """
+    start_time = time.time()
+    duration = 5
+    while time.time() - start_time < duration:
+        for color in [ColorBank.RED, ColorBank.GREEN, ColorBank.BLUE]:
+            send_lights_color_request(color)
+            time.sleep(0.02)
+    send_lights_color_request(ColorBank.OFF)
 
 
