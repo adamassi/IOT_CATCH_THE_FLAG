@@ -360,17 +360,6 @@ class GameScreen(Screen):
             (self.panel.x + 40, self.panel.y + 10),
         )
 
-        # Word input
-        word_label = self.fonts["subtitle"].render(
-            "Word",
-            True,
-            config.TEXT_DIM,
-        )
-        surface.blit(
-            word_label,
-            (self.panel.x + 40, self.panel.y + 25),
-        )
-
         self.word_input.draw(surface)
 
         # Available cubes
