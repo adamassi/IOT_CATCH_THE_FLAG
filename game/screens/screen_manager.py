@@ -12,6 +12,7 @@ from screens.remove_obstacle import RemoveObstacleScreen
 from screens.add_obstacle import AddObstacleScreen
 from screens.manual_control import ManualControlScreen
 from screens.word_bank_config import WordBankConfigScreen
+from ui.notification import NotificationManager
 
 class ScreenManager:
     def __init__(self, quit_game, fonts):
@@ -29,6 +30,7 @@ class ScreenManager:
         self._screens["remove_obstacle"] = RemoveObstacleScreen(self, fonts)
         self._screens["add_obstacle"] = AddObstacleScreen(self, fonts)
         self._screens["manual_control"] = ManualControlScreen(self, fonts)
+        self.notifications = NotificationManager(fonts)
 
         self.go_to("menu")
 
@@ -42,3 +44,13 @@ class ScreenManager:
         if self._current_name is None:
             raise RuntimeError("ScreenManager has no active screen.")
         return self._screens[self._current_name]
+    
+    def notify(self, message, is_error=True):
+        self.notifications.show(message, is_error=is_error)
+
+    def safe_call(self, func, *args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            self.notify(f"Error: {e}", is_error=True)
+            return None

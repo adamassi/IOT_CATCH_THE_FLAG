@@ -1,6 +1,8 @@
 # screens/add_obstacle.py
 
 import os
+import json
+import math
 import pygame
 import config
 
@@ -17,9 +19,16 @@ class AddObstacleScreen(Screen):
         self.fonts = fonts
 
         project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-        json_path = os.path.join(project_root, "path_algorithms", "map1.json")
+
+        self.json_path = os.path.join(
+            project_root,
+            "path_algorithms",
+            "map1.json",
+        )
 
         self.selected_type = "rectangle"
+        self.popup_message = None
+        self._last_map_mtime = 0
 
         self.panel = pygame.Rect(
             120,
@@ -36,7 +45,7 @@ class AddObstacleScreen(Screen):
                 self.panel.h - 100,
             ),
             font=fonts["subtitle"],
-            json_path=self.json_path if hasattr(self, "json_path") else json_path,
+            json_path=self.json_path,
         )
 
         right_x = self.map_preview.rect.right + 35
@@ -76,7 +85,7 @@ class AddObstacleScreen(Screen):
             config.WHITE,
             (0, 0, 0),
             config.ACCENT,
-            "x",
+            placeholder="x",
             input_type="float",
         )
 
@@ -86,7 +95,7 @@ class AddObstacleScreen(Screen):
             config.WHITE,
             (0, 0, 0),
             config.ACCENT,
-            "y",
+            placeholder="y",
             input_type="float",
         )
 
@@ -96,7 +105,7 @@ class AddObstacleScreen(Screen):
             config.WHITE,
             (0, 0, 0),
             config.ACCENT,
-            "z",
+            placeholder="z",
             input_type="float",
         )
 
@@ -106,7 +115,7 @@ class AddObstacleScreen(Screen):
             config.WHITE,
             (0, 0, 0),
             config.ACCENT,
-            "width",
+            placeholder="width",
             input_type="float",
         )
 
@@ -116,7 +125,7 @@ class AddObstacleScreen(Screen):
             config.WHITE,
             (0, 0, 0),
             config.ACCENT,
-            "height",
+            placeholder="height",
             input_type="float",
         )
 
@@ -126,7 +135,7 @@ class AddObstacleScreen(Screen):
             config.WHITE,
             (0, 0, 0),
             config.ACCENT,
-            "radius",
+            placeholder="radius",
             input_type="float",
         )
 
@@ -137,7 +146,7 @@ class AddObstacleScreen(Screen):
             config.ACCENT,
             config.ACCENT_HOVER,
             config.WHITE,
-            on_click=None,
+            on_click=self.add_obstacle,
         )
 
         self.back_btn = Button(
@@ -150,10 +159,143 @@ class AddObstacleScreen(Screen):
             on_click=lambda: self.manager.go_to("layout_config"),
         )
 
+        self.ok_btn = Button(
+            "OK",
+            (config.WIDTH // 2 - 80, config.HEIGHT // 2 + 55, 160, 55),
+            fonts["button"],
+            config.ACCENT,
+            config.ACCENT_HOVER,
+            config.WHITE,
+            on_click=self.close_popup,
+        )
+
     def set_type(self, obstacle_type):
         self.selected_type = obstacle_type
 
+    def close_popup(self):
+        self.popup_message = None
+
+    def _read_float(self, input_box, name):
+        text = input_box.text.strip()
+
+        if text in ("", "-", "."):
+            raise ValueError(f"Please enter {name}.")
+
+        return float(text)
+
+    def _load_map_json(self):
+        with open(self.json_path, "r") as f:
+            return json.load(f)
+
+    def _save_map_json(self, data):
+        with open(self.json_path, "w") as f:
+            json.dump(data, f, indent=4)
+
+    def _next_obstacle_id(self, obstacles):
+        existing_ids = [
+            obs.get("id", -1)
+            for obs in obstacles
+            if isinstance(obs.get("id", None), int)
+        ]
+
+        return max(existing_ids, default=-1) + 1
+
+    def add_obstacle(self):
+        try:
+            x = self._read_float(self.x_input, "x")
+            y = self._read_float(self.y_input, "y")
+            self._read_float(self.z_input, "z")  # accepted for UI, not used in 2D map
+
+            data = self._load_map_json()
+            obstacles = data.setdefault("OBSTACLES", [])
+
+            obstacle_id = self._next_obstacle_id(obstacles)
+
+            if self.selected_type == "rectangle":
+                width = self._read_float(self.width_input, "width")
+                height = self._read_float(self.height_input, "height")
+
+                if width <= 0 or height <= 0:
+                    self.popup_message = "Width and height must be positive."
+                    return
+
+                half_h = height / 2
+                half_w = width / 2
+
+                coordinates = [
+                    [x - half_h, y - half_w],
+                    [x + half_h, y - half_w],
+                    [x + half_h, y + half_w],
+                    [x - half_h, y + half_w],
+                    [x - half_h, y - half_w],
+                ]
+
+                new_obstacle = {
+                    "id": obstacle_id,
+                    "type": "rectangle",
+                    "coordinates": coordinates,
+                }
+
+            else:
+                radius = self._read_float(self.radius_input, "radius")
+
+                if radius <= 0:
+                    self.popup_message = "Radius must be positive."
+                    return
+
+                coordinates = []
+
+                for i in range(8):
+                    angle = 2 * math.pi * i / 8
+                    px = x + radius * math.cos(angle)
+                    py = y + radius * math.sin(angle)
+                    coordinates.append([round(px, 3), round(py, 3)])
+
+                coordinates.append(coordinates[0])
+
+                new_obstacle = {
+                    "id": obstacle_id,
+                    "type": "circle",
+                    "coordinates": coordinates,
+                }
+
+            obstacles.append(new_obstacle)
+
+            self._save_map_json(data)
+            self.map_preview.reload()
+
+            self._clear_inputs()
+            self.popup_message = f"Obstacle {obstacle_id} added successfully."
+
+        except ValueError as e:
+            self.popup_message = str(e)
+
+        except Exception as e:
+            self.popup_message = f"Failed to add obstacle: {e}"
+
+    def _clear_inputs(self):
+        self.x_input.text = ""
+        self.y_input.text = ""
+        self.z_input.text = ""
+        self.width_input.text = ""
+        self.height_input.text = ""
+        self.radius_input.text = ""
+
+    def _reload_map_if_file_changed(self):
+        if not os.path.exists(self.json_path):
+            return
+
+        mtime = os.path.getmtime(self.json_path)
+
+        if mtime != self._last_map_mtime:
+            self._last_map_mtime = mtime
+            self.map_preview.reload()
+
     def handle_event(self, event):
+        if self.popup_message:
+            self.ok_btn.handle_event(event)
+            return
+
         self.back_btn.handle_event(event)
         self.rectangle_btn.handle_event(event)
         self.circle_btn.handle_event(event)
@@ -171,7 +313,7 @@ class AddObstacleScreen(Screen):
         self.add_btn.handle_event(event)
 
     def update(self, dt):
-        pass
+        self._reload_map_if_file_changed()
 
     def draw(self, surface):
         title = self.fonts["title"].render("Add Obstacle", True, config.WHITE)
@@ -194,6 +336,9 @@ class AddObstacleScreen(Screen):
 
         self.add_btn.draw(surface)
         self.back_btn.draw(surface)
+
+        if self.popup_message:
+            self.draw_popup(surface)
 
     def _draw_type_buttons(self, surface):
         self.rectangle_btn.base_color = config.ACCENT if self.selected_type == "rectangle" else config.BTN
@@ -230,3 +375,27 @@ class AddObstacleScreen(Screen):
             surface.blit(label, (self.right_x, y + 105))
 
             self.radius_input.draw(surface)
+
+    def draw_popup(self, surface):
+        overlay = pygame.Surface((config.WIDTH, config.HEIGHT), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 150))
+        surface.blit(overlay, (0, 0))
+
+        popup_rect = pygame.Rect(
+            config.WIDTH // 2 - 300,
+            config.HEIGHT // 2 - 110,
+            600,
+            220,
+        )
+
+        draw_soft_shadow(surface, popup_rect, spread=18, alpha=80)
+        draw_panel(surface, popup_rect, config.PANEL_FILL, config.PANEL_BORDER)
+
+        msg = self.fonts["subtitle"].render(
+            self.popup_message,
+            True,
+            config.WHITE,
+        )
+        surface.blit(msg, msg.get_rect(center=(popup_rect.centerx, popup_rect.y + 75)))
+
+        self.ok_btn.draw(surface)

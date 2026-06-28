@@ -3,6 +3,7 @@ import os
 
 from shapely.geometry import Polygon  # For creating geometric shapes
 import numpy as np  # For mathematical operations like cosine and sine
+from PARAMETERS import print_debug
 from path_algorithms.map_json_utils import write_cubes_json, append_obstacle_to_json
 from location import Location
 
@@ -57,7 +58,7 @@ def add_cube_obstacle(env, cube_pos, size=0.23):
     # Append cube to cubes.json
     cubes_path = os.path.join(os.getcwd(), "path_algorithms/cubes.json")
     append_obstacle_to_json(cubes_path, 'CUBES', obstacle_points)
-    print(f"Added cube obstacle at position {cube_pos} with size {size}m.")
+    print_debug(f"Added cube obstacle at position {cube_pos} with size {size}m.")
 
 def remove_cube_obstacle(env, number_of_cubes_to_remove):
     """

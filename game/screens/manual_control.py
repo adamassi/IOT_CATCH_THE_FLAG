@@ -177,12 +177,12 @@ class ManualControlScreen(Screen):
         self.status_message = "Manual control ready"
 
     def on_angle_changed(self, angle):
-        self.send_servo_request(angle)
+        self.manager.safe_call(self.send_servo_request, angle)
         self.status_message = f"Arm angle set to {angle}°"
 
     def on_speed_changed(self, speed):
         speed = int(speed)
-        self.send_speed_request(speed)
+        self.manager.safe_call(self.send_speed_request, speed)
         if speed == 0:
             self.status_message = "Speed set to 0 — stopped"
         elif speed > 0:
@@ -191,28 +191,25 @@ class ManualControlScreen(Screen):
             self.status_message = f"Moving backward at speed {abs(speed)}"
 
     def forward(self):
-        self.send_go_request()
+        self.manager.safe_call(self.send_go_request)
         self.status_message = "Forward command sent"
 
     def backward(self):
-        try:
-            self.send_back_request(abs(self.speed_slider.value))
-        except TypeError:
-            self.send_back_request()
+        self.manager.safe_call(self.send_back_request)
 
         self.status_message = "Backward command sent"
 
     def stop(self):
         self.speed_slider.value = 0
-        self.send_stop_request()
+        self.manager.safe_call(self.send_stop_request)
         self.status_message = "Stop command sent"
 
     def left(self):
-        self.send_left_request()
+        self.manager.safe_call(self.send_left_request)
         self.status_message = "Left command sent"
 
     def right(self):
-        self.send_right_request()
+        self.manager.safe_call(self.send_right_request)
         self.status_message = "Right command sent"
 
     def handle_event(self, event):

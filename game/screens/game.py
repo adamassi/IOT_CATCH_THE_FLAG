@@ -21,7 +21,7 @@ class GameScreen(Screen):
 
         project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
-        self.script_path = os.path.join(project_root, "thread_control_test.py")
+        self.script_path = os.path.join(project_root, "main.py")
         self.image_path = os.path.join(project_root, "map-RRTfor_web.png")
         self.cube_bank_path = os.path.join(project_root, "cube_bank.json")
 
@@ -29,6 +29,7 @@ class GameScreen(Screen):
             script_path=self.script_path,
             workdir=project_root,
             max_lines=2000,
+            on_error=lambda msg: self.manager.notify(msg, is_error=True),
         )
 
         # ------------------------------------------------------------

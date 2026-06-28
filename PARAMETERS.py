@@ -4,6 +4,11 @@
 class OptiTrackConfig:
     SERVER_IP = "132.68.35.2"
     
+is_debug_mode = True  # Set to True to enable debug mode, False for normal operation
+
+def print_debug(message, is_debug_message=True):
+    if is_debug_message and is_debug_mode:
+        print(message)
 
 class ESPConfig:
     ESP_IP = "http://192.168.0.105"

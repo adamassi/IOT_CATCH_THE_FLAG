@@ -9,6 +9,7 @@ from ui.slider import OptionSlider
 from utils.draw import draw_soft_shadow, draw_panel
 
 
+
 class RobotConfigScreen(Screen):
     UI_TO_CONFIG = {
         "RRT": "RRT_STAR",
@@ -23,9 +24,9 @@ class RobotConfigScreen(Screen):
     }
 
     DESCRIPTIONS = {
-        "RRT": "RRT*: Good for exploring continuous spaces and complex maps.",
-        "A*": "A*: Finds an efficient path on a known graph/map.",
-        "RCS": "RCS: Custom planner for the cube retrieval strategy.",
+        "RRT": "Usefull in complex environmentswith many obstacles however it is less predictableand may take longer to find a path.",
+        "A*": "Fast and predictable when the map and obstacles are known in advance, but may struggle in dynamic or complex environments.",
+        "RCS": "Structured and easy ti analyze but it's performance depends strongly on the chosen step sizes.",
     }
 
     def __init__(self, manager, fonts):
@@ -76,7 +77,31 @@ class RobotConfigScreen(Screen):
 
         except Exception as e:
             print("Could not load PlannerConfig.ALGORITHM:", e)
+    
+    def draw_wrapped_text(self, surface, text, font, color, rect, line_spacing=6):
+        words = text.split()
+        lines = []
+        current = ""
 
+        for word in words:
+            test = current + (" " if current else "") + word
+            if font.size(test)[0] <= rect.width:
+                current = test
+            else:
+                lines.append(current)
+                current = word
+
+        if current:
+            lines.append(current)
+
+        total_height = len(lines) * font.get_height() + (len(lines) - 1) * line_spacing
+        y = rect.y + (rect.height - total_height) // 2
+
+        for line in lines:
+            img = font.render(line, True, color)
+            surface.blit(img, img.get_rect(centerx=rect.centerx, y=y))
+            y += font.get_height() + line_spacing
+        
     def _save_algorithm(self, ui_value):
         config_value = self.UI_TO_CONFIG[ui_value]
 
@@ -131,8 +156,21 @@ class RobotConfigScreen(Screen):
         surface.blit(label, label.get_rect(center=(config.WIDTH // 2, 370)))
 
         desc = self.DESCRIPTIONS.get(self.algorithm_slider.value, "")
-        desc_surface = self.fonts["subtitle"].render(desc, True, config.TEXT_DIM)
-        surface.blit(desc_surface, desc_surface.get_rect(center=(config.WIDTH // 2, 430)))
+
+        desc_rect = pygame.Rect(
+            self.panel.x + 50,
+            self.panel.y + 185,
+            self.panel.width - 100,
+            90,
+        )
+
+        self.draw_wrapped_text(
+            surface,
+            desc,
+            self.fonts["subtitle"],
+            config.TEXT_DIM,
+            desc_rect,
+        )
 
         self.algorithm_slider.draw(surface)
 

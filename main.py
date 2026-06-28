@@ -12,7 +12,7 @@ from cubeBank import CubeBank, Cube
 from location import Location
 
 
-word = "OIT"  # Example word to extract order from
+word = "OT"  # Example word to extract order from
 
 c_pos, c_rot, c_rad = [0,0,0], 0, 0
 
@@ -41,7 +41,7 @@ def cube_blocks_target_base(base_pos, threshold=0.18):
         d = dist(cube.position[0], base_pos[0], cube.position[2], base_pos[2])
 
         if d < threshold:
-            print(f"Cube {cube.cube_id} is blocking the target base (distance: {d:.2f} m).")
+            print_debug(f"Cube {cube.cube_id} is blocking the target base (distance: {d:.2f} m).")
             return cube.cube_id
     return None
 
@@ -66,7 +66,7 @@ def receive_new_desc(desc: DataDescriptions):
     # This function is triggered when new data descriptions are received from the OptiTrack #system.
     # It processes the data descriptions and checks for a specific marker set named 'IOT_car'.
 
-    print("Received data descriptions.")  # Notify that data descriptions have been received.
+    print_debug("Received data descriptions.")  # Notify that data descriptions have been received.
 
     # Iterate through the marker sets in the data descriptions.
     for ms in desc.marker_sets:
@@ -97,7 +97,7 @@ def check_board_validity():
     # It uses the `is_out_of_board` function to determine if either the chaser or target is out of bounds.
 
     if is_out_of_board(c_pos[0], c_pos[2]):
-        print("The robot is out of the board limits. Please check the position.")
+        print_debug("The robot is out of the board limits. Please check the position.")
         exit()
 
     cube_bank.validate_cubes()  # Validate the cubes in the cube bank to ensure they are within limits and not flipped
@@ -126,7 +126,7 @@ def turnToTarget(is_cube = True, curr_t_pos = current_target_pos):
                 send_right_request(60)
     # time.sleep(1)
 
-def GoToTarget(is_cube = True, curr_t_pos = current_target_pos):
+def GoToTarget(is_cube = True, curr_t_pos = current_target_pos, is_last = False):
     """Drive the chaser toward a target position until close.
 
     Args:
@@ -157,7 +157,8 @@ def GoToTarget(is_cube = True, curr_t_pos = current_target_pos):
 
             # If we got close enough, stop and exit
             if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) < 0.14:
-                send_stop_request() #the problem if we remove this line is harder to catch the target 
+                if(is_last):
+                    send_stop_request() #the problem if we remove this line is harder to catch the target 
                 #1/3/2026
                 break
 
@@ -192,7 +193,7 @@ def move_cube_to_base(base_pos):
 
     while len(plan) == 0:
         if time.time() - start_time >= PlannerConfig.PATH_TIMEOUT_SECONDS:
-            print(f"Path planning timed out after {PlannerConfig.PATH_TIMEOUT_SECONDS} seconds.")
+            print_debug(f"Path planning timed out after {PlannerConfig.PATH_TIMEOUT_SECONDS} seconds.")
             return np.array([])
         
         get_path_to_target()      # go to the cube
@@ -221,13 +222,13 @@ def go_to_goal(goal_pos):
             go_to_pos = [plan[i+1][0], 0, plan[i+1][1]]
             
             turnToTarget(False, go_to_pos)
-            GoToTarget(False, go_to_pos)
+            GoToTarget(False, go_to_pos, i == len(plan) - 2)  # Pass is_last=True for the last point in the plan
             
             
             streaming_client.update_sync()
             curr_pos = [cube_bank.get_cube_position_by_id(idx) for idx in cubes_order if idx is not current_target_id]
             if any(check_cube_moved(prev[0], curr[0], prev[2], curr[2]) for (prev, curr) in zip (cubes_positions, curr_pos)):
-                print("continue")
+                print_debug("continue")
                 finished = False
                 break
             
@@ -256,12 +257,12 @@ def get_path_to_target():
 
             go_to_pos = [plan[point+1][0], 0, plan[point+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
             turnToTarget(False, go_to_pos)
-            GoToTarget(False, go_to_pos)
+            GoToTarget(False, go_to_pos, point == len(plan) - 2)
 
             streaming_client.update_sync()
             curr_pos = [cube_bank.get_cube_position_by_id(idx) for idx in cubes_order if idx is not current_target_id]
             if any(check_cube_moved(prev[0], curr[0], prev[2], curr[2]) for (prev, curr) in zip (cubes_positions, curr_pos)):
-                print("continue")
+                print_debug("continue")
                 finished = False
                 break
 
@@ -286,7 +287,7 @@ streaming_client.on_data_frame_received_event.handlers.append(receive_new_frame)
 try:
     send_lights_color_request(ColorBank.OFF)
     arr = extract_order(word) 
-    print(arr)
+    print_debug(arr)
 
     # Initial servo position (e.g., Open Claw)
     send_servo_request(30)
@@ -301,7 +302,7 @@ try:
         
         time.sleep(1)  # Allow some time for the client to start and receive data
 
-        print("Streaming started. Waiting for data...", flush=True)
+        print_debug("Streaming started. Waiting for data...")
                
         cubes_order = cube_bank.get_cubes_ordered_by_word(word)  # Get the current cubes from the cube bank
         for idx in range(len(cubes_order)):
@@ -323,16 +324,16 @@ try:
 
 # Handle connection-related errors specifically
 except ConnectionResetError as e:
-    print(f"Dear friend !!\nOptitrack connection failed:\nPlease check if the Optitrack #system is on and streaming.\n\n\n{e}")
+    print_debug(f"Dear friend !!\nOptitrack connection failed:\nPlease check if the Optitrack #system is on and streaming.\n\n\n{e}")
 
     exit()  # Exit the program
 
 except ValueError as e:
-    print(e)
+    print_debug(e)
 
 # Handle any other unexpected exceptions
 except Exception as e:
     # print(f"An unexpected error occurred: {e}", file=#sys.stderr)
-    print(f"An unexpected error occurred: {e}")
+    print_debug(f"An unexpected error occurred: {e}")
     # Handle other exceptions, possibly with logging or retry logic here
 

@@ -29,12 +29,14 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
             else:
-                manager.current.handle_event(event)
+                manager.safe_call(manager.current.handle_event, event)
 
-        manager.current.update(dt)
+        manager.safe_call(manager.current.update, dt)
+        manager.notifications.update(dt)
 
         vertical_gradient(screen, config.BG_TOP, config.BG_BOTTOM)
         manager.current.draw(screen)
+        manager.notifications.draw(screen)
 
         pygame.display.flip()
 

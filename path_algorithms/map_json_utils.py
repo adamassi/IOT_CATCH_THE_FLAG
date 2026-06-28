@@ -124,7 +124,7 @@ def remove_obstacle_by_id(obstacle_id, json_file="path_algorithms/map1.json"):
     """
     # Only allow removal of non-negative IDs (OBSTACLES)
     if obstacle_id < 0:
-        print(f"Error: Cannot remove obstacle with ID {obstacle_id}. Only non-negative IDs (OBSTACLES) can be removed. GOALS are protected.")
+        print_debug(f"Error: Cannot remove obstacle with ID {obstacle_id}. Only non-negative IDs (OBSTACLES) can be removed. GOALS are protected.")
         return False
     
     json_path = os.path.join(os.getcwd(), json_file)
@@ -142,7 +142,7 @@ def remove_obstacle_by_id(obstacle_id, json_file="path_algorithms/map1.json"):
                 break
         
         if obstacle_to_remove is None:
-            print(f"Obstacle with ID {obstacle_id} not found in OBSTACLES section")
+            print_debug(f"Obstacle with ID {obstacle_id} not found in OBSTACLES section")
             return False
         
         # Remove from OBSTACLES
@@ -162,11 +162,11 @@ def remove_obstacle_by_id(obstacle_id, json_file="path_algorithms/map1.json"):
         # Write back to file while keeping coordinate arrays compact
         write_map_json_compact(json_path, json_dict)
         
-        print(f"Obstacle with ID {obstacle_id} successfully removed and added to HISTORY")
+        print_debug(f"Obstacle with ID {obstacle_id} successfully removed and added to HISTORY")
         return True
     
     except Exception as e:
-        print(f"Error removing obstacle: {e}")
+        print_debug(f"Error removing obstacle: {e}")
         return False
 
 
@@ -189,7 +189,7 @@ def undo_remove_obstacle(json_file="path_algorithms/map1.json"):
         # Check if HISTORY is not empty
         history = json_dict.get('HISTORY', [])
         if not history:
-            print("Error: HISTORY is empty. Nothing to undo.")
+            print_debug("Error: HISTORY is empty. Nothing to undo.")
             return False
         
         # Get the last removed obstacle from HISTORY
@@ -222,7 +222,7 @@ def undo_remove_obstacle(json_file="path_algorithms/map1.json"):
             )
             used_ids = [item_id for item_id in used_ids if isinstance(item_id, int) and item_id >= 0]
             new_id = 0 if not used_ids else max(used_ids) + 1
-            print(f"Warning: ID {restored_id} already exists in OBSTACLES. Restoring with new ID {new_id}.")
+            print_debug(f"Warning: ID {restored_id} already exists in OBSTACLES. Restoring with new ID {new_id}.")
             last_removed['id'] = new_id
         
         json_dict['OBSTACLES'].append(last_removed)
@@ -231,11 +231,11 @@ def undo_remove_obstacle(json_file="path_algorithms/map1.json"):
         # Write back to file while keeping coordinate arrays compact
         write_map_json_compact(json_path, json_dict)
         
-        print(f"Obstacle with ID {last_removed.get('id')} successfully restored from HISTORY to OBSTACLES")
+        print_debug(f"Obstacle with ID {last_removed.get('id')} successfully restored from HISTORY to OBSTACLES")
         return True
     
     except Exception as e:
-        print(f"Error undoing removal: {e}")
+        print_debug(f"Error undoing removal: {e}")
         return False
 
 

@@ -8,6 +8,7 @@ from matplotlib import collections as coll
 from numpy.core.fromnumeric import size
 from shapely.geometry import Point, LineString, Polygon
 from path_algorithms.map_json_utils import write_map_json_compact, remove_obstacle_by_id
+from PARAMETERS import print_debug
 # from path_algorithms.create_obstacles import *
 # 2.71, 0.14, 1.06
 # add circle obstacles function
@@ -54,19 +55,19 @@ class MapEnvironment(object):
         # # test ithe valueError
         # add_cube_obstacle(self, [-4.14, 0.14, 1.06])
         # # check that the start location is within limits and collision free
-        print("Validating start and goal states...")
+        print_debug("Validating start and goal states...")
         if not self.state_validity_checker(state=self.start):
             
             raise ValueError('Start state must be within the map limits');
 
         # check that the goal location is within limits and collision free
-        print("Validating goal state...")
+        print_debug("Validating goal state...")
         if not self.state_validity_checker(state=self.goal):
             raise ValueError('Goal state must be within the map limits');
 
         # if you want to - you can display starting map here
         #self.visualize_map()
-        print("Map environment initialized successfully.")
+        print_debug("Map environment initialized successfully.")
 
     def load_obstacles(self, obstacles):
         # s
@@ -99,7 +100,7 @@ class MapEnvironment(object):
         
         @param obstacles_coords A list of Shapely Polygon objects from self.obstacles
         '''
-        print("\n=== Rectangle Obstacles ===")
+        print_debug("\n=== Rectangle Obstacles ===")
         for idx, obstacle in enumerate(obstacles_coords):
             # Extract coordinates from Shapely Polygon
             coords = list(obstacle.exterior.coords[:-1])  # Remove the closing point
@@ -117,7 +118,7 @@ class MapEnvironment(object):
                 width = max_x - min_x
                 height = max_z - min_z
                 
-                print(f"Obstacle {idx}: rectangle obstacle at position [{center_x:.2f}, 0.14, {center_z:.2f}] with width {width:.2f}m and height {height:.2f}m.")
+                print_debug(f"Obstacle {idx}: rectangle obstacle at position [{center_x:.2f}, 0.14, {center_z:.2f}] with width {width:.2f}m and height {height:.2f}m.")
 
 
     def compute_distance(self, start_state, end_state):

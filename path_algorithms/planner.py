@@ -81,13 +81,13 @@ def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
 
     # Add dynamic obstacles (e.g., cubes detected in the environment)
     for cube_pos in cube_obstacles:
-        print(f"Adding cube obstacle NOT GOAL at position {cube_pos}.")
+        print_debug(f"Adding cube obstacle NOT GOAL at position {cube_pos}.")
         add_cube_obstacle(planning_env, cube_pos)
         nember_of_added_obstacles += 1
     
 
     # Create an instance of the RCSPlanner with the planning environment
-    print(f"Creating {PlannerConfig.ALGORITHM} planner...")
+    print_debug(f"Creating {PlannerConfig.ALGORITHM} planner...")
     # planner = RRTStarPlanner(planning_env=planning_env, ext_mode='E2', goal_prob=0.40, k=10)
     if PlannerConfig.ALGORITHM == "RRT_STAR":
         planner = RRTStarPlanner(planning_env=planning_env, ext_mode=PlannerConfig.EXTENSION_MODE, goal_prob=PlannerConfig.GOAL_PROBABILITY, k=PlannerConfig.K_NEAREST)
@@ -96,7 +96,7 @@ def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
     else:
         raise ValueError(f"Unsupported planner algorithm: {PlannerConfig.ALGORITHM}")
     
-    print(f"Planning path from {planning_env.start} to {planning_env.goal}...")
+    print_debug(f"Planning path from {planning_env.start} to {planning_env.goal}...")
     # Execute the planning algorithm to get the path
     plan = planner.plan()
 
@@ -106,7 +106,7 @@ def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
         tension=0.20
         )
     
-    print("Visualizing the map with the computed plan and expanded nodes...")
+    print_debug("Visualizing the map with the computed plan and expanded nodes...")
     if PlannerConfig.ALGORITHM == "ASTAR":
         planner.planning_env.visualize_map(plan=smooth_plan, visibility_graph=planner.graph, name='AStarPlan'+str(number_of_run))
     elif PlannerConfig.ALGORITHM == "RRT_STAR":
