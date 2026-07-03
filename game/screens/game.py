@@ -20,9 +20,9 @@ class GameScreen(Screen):
         self.fonts = fonts
 
         project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-
+        
         self.script_path = os.path.join(project_root, "main.py")
-        self.image_path = os.path.join(project_root, "map-RRTfor_web.png")
+        self.image_path = os.path.join(project_root, "map-map_for_web.png")
         self.cube_bank_path = os.path.join(project_root, "cube_bank.json")
 
         self.runner = ProcessRunner(

@@ -4,7 +4,7 @@
 class OptiTrackConfig:
     SERVER_IP = "132.68.35.2"
     
-is_debug_mode = True  # Set to True to enable debug mode, False for normal operation
+is_debug_mode = False  # Set to True to enable debug mode, False for normal operation
 
 def print_debug(message, is_debug_message=True):
     if is_debug_message and is_debug_mode:
@@ -41,9 +41,9 @@ class PlannerConfig:
     MAP_JSON_PATH = "path_algorithms/map1.json"
     # Choose path planning algorithm:
     # Options: "RRT_STAR", "ASTAR", "RCS"
-    ALGORITHM = "RRT_STAR"
+    # ALGORITHM = "RRT_STAR"
     # ALGORITHM = "ASTAR"
-    # ALGORITHM = "RCS"
+    ALGORITHM = "ASTAR"
     # RRT* parameters
     GOAL_PROBABILITY = 0.40
     EXTENSION_MODE = 'E2'

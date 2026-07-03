@@ -57,7 +57,6 @@ def add_cube_obstacle(env, cube_pos, size=0.23):
 
     # Append cube to cubes.json
     cubes_path = os.path.join(os.getcwd(), "path_algorithms/cubes.json")
-    append_obstacle_to_json(cubes_path, 'CUBES', obstacle_points)
     print_debug(f"Added cube obstacle at position {cube_pos} with size {size}m.")
 
 def remove_cube_obstacle(env, number_of_cubes_to_remove):

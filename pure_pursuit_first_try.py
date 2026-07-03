@@ -407,3 +407,6 @@ def main():
     finally:
         send_stop_request()
 
+
+if __name__ == "__main__":
+    main()

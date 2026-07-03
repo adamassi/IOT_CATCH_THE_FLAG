@@ -58,6 +58,9 @@ class CubeBank:
     def get_all_cubes(self):
         return list(self.cubes.values())
     
+    def get_all_cubes_idx(self):
+        return list(self.cubes.keys())
+    
     def get_cubes_ordered_by_word(self, word):
         ordered_cubes = []
         for letter in word:

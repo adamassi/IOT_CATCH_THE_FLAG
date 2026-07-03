@@ -12,7 +12,7 @@ from cubeBank import CubeBank, Cube
 from location import Location
 
 
-word = "OT"  # Example word to extract order from
+word = "OI"  # Example word to extract order from
 
 c_pos, c_rot, c_rad = [0,0,0], 0, 0
 
@@ -113,6 +113,7 @@ def turnToTarget(is_cube = True, curr_t_pos = current_target_pos):
             curr_t_pos = current_target_pos
         angle = angle_between_points(curr_c_pos, curr_t_pos)
         normalized_angle = normalize_angle(angle - curr_c_rad)
+        # print_debug(f"Turning: angle={angle:.2f} rad, normalized_angle = {normalized_angle:.2f} rad")
         if abs(normalized_angle) < 0.07:
             send_stop_request()
             break
@@ -143,7 +144,7 @@ def GoToTarget(is_cube = True, curr_t_pos = current_target_pos, is_last = False)
           to re-orient before continuing forward.
     """
 
-    send_lights_color_request(ColorBank.PEACH)  # Set lights to peach color to indicate movement
+    # send_lights_color_request(ColorBank.PEACH)  # Set lights to peach color to indicate movement
     # Only start driving if we're not already close to the target
     if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) >= 0.16:
         send_go_request()
@@ -157,8 +158,8 @@ def GoToTarget(is_cube = True, curr_t_pos = current_target_pos, is_last = False)
 
             # If we got close enough, stop and exit
             if dist(c_pos[0], curr_t_pos[0], c_pos[2], curr_t_pos[2]) < 0.14:
-                if(is_last):
-                    send_stop_request() #the problem if we remove this line is harder to catch the target 
+                
+                send_stop_request() #the problem if we remove this line is harder to catch the target 
                 #1/3/2026
                 break
 
@@ -213,7 +214,7 @@ def go_to_goal(goal_pos):
     while not finished:
         streaming_client.update_sync()
 
-        cubes_positions = [cube_bank.get_cube_position_by_id(idx) for idx in cubes_order if idx is not current_target_id]  # Update cube positions in the cube bank
+        cubes_positions = [cube_bank.get_cube_position_by_id(idx) for idx in cube_bank.get_all_cubes_idx() if idx != current_target_id]  # Update cube positions in the cube bank
         plan = get_path_to_goal(c_pos, goal_pos, cubes_positions)
         finished = True
         for i in range(len(plan) - 1):
@@ -222,11 +223,11 @@ def go_to_goal(goal_pos):
             go_to_pos = [plan[i+1][0], 0, plan[i+1][1]]
             
             turnToTarget(False, go_to_pos)
-            GoToTarget(False, go_to_pos, i == len(plan) - 2)  # Pass is_last=True for the last point in the plan
+            GoToTarget(False, go_to_pos)  # Pass is_last=True for the last point in the plan
             
             
             streaming_client.update_sync()
-            curr_pos = [cube_bank.get_cube_position_by_id(idx) for idx in cubes_order if idx is not current_target_id]
+            curr_pos = [cube_bank.get_cube_position_by_id(idx) for idx in cube_bank.get_all_cubes_idx() if idx != current_target_id]
             if any(check_cube_moved(prev[0], curr[0], prev[2], curr[2]) for (prev, curr) in zip (cubes_positions, curr_pos)):
                 print_debug("continue")
                 finished = False
@@ -249,7 +250,7 @@ def get_path_to_target():
     while not finished:
         streaming_client.update_sync()
 
-        cubes_positions = [cube_bank.get_cube_position_by_id(idx) for idx in cubes_order if idx is not current_target_id]  # Update cube positions in the cube bank
+        cubes_positions = [cube_bank.get_cube_position_by_id(idx) for idx in cube_bank.get_all_cubes_idx() if idx != current_target_id]  # Update cube positions in the cube bank
         plan = get_path_to_goal(c_pos, current_target_pos, cubes_positions)  # Pass t_pos1 as a dynamic obstacle
         finished = True
         for point in range(len(plan) - 1):
@@ -257,10 +258,10 @@ def get_path_to_target():
 
             go_to_pos = [plan[point+1][0], 0, plan[point+1][1]]  # Add an extra element (e.g., 0) to go_to_pos
             turnToTarget(False, go_to_pos)
-            GoToTarget(False, go_to_pos, point == len(plan) - 2)
+            GoToTarget(False, go_to_pos)
 
             streaming_client.update_sync()
-            curr_pos = [cube_bank.get_cube_position_by_id(idx) for idx in cubes_order if idx is not current_target_id]
+            curr_pos = [cube_bank.get_cube_position_by_id(idx) for idx in cube_bank.get_all_cubes_idx() if idx != current_target_id]
             if any(check_cube_moved(prev[0], curr[0], prev[2], curr[2]) for (prev, curr) in zip (cubes_positions, curr_pos)):
                 print_debug("continue")
                 finished = False
@@ -286,8 +287,6 @@ streaming_client.on_data_frame_received_event.handlers.append(receive_new_frame)
 
 try:
     send_lights_color_request(ColorBank.OFF)
-    arr = extract_order(word) 
-    print_debug(arr)
 
     # Initial servo position (e.g., Open Claw)
     send_servo_request(30)

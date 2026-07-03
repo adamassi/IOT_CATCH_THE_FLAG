@@ -5,6 +5,7 @@ from path_algorithms.AStarPlanner import AStarPlanner
 from path_algorithms.RCSPlanner import RCSPlanner
 from PARAMETERS import *
 import numpy as np  # Import numpy for array operations
+import time  # Import time for measuring planning duration
 
 
 number_of_run=1
@@ -69,14 +70,14 @@ def move_cube_blocking_base(cubeId):
     pass
 
 
-
+time_n = time.time()
 
 # Function get data where the  robot car and where the cube is and calculate the path to the cube
 def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
     global number_of_run
 
     nember_of_added_obstacles = 0
-
+    global time_n
     # Add dynamic obstacles BEFORE validating start/goal so the validity check
     # also covers temporary cube obstacles.
     for cube_pos in cube_obstacles:
@@ -126,12 +127,14 @@ def get_path_to_goal(start_pos, goal_pos, cube_obstacles=[]):
         )
 
     print("Visualizing the map with the computed plan and expanded nodes...")
-    if PlannerConfig.ALGORITHM == "ASTAR":
-        planner.planning_env.visualize_map(plan=smooth_plan, visibility_graph=planner.graph, name='AStarPlan'+str(number_of_run))
-    elif PlannerConfig.ALGORITHM == "RRT_STAR":
-        planner.planning_env.visualize_map(plan=smooth_plan, tree_edges=planner.tree.get_edges_as_states(), name='RRTStarPlan'+str(number_of_run))
-    elif PlannerConfig.ALGORITHM == "RCS":
-        planner.planning_env.visualize_map(plan=smooth_plan, expanded_nodes=planner.get_expanded_nodes(), name='RCSPlan'+str(number_of_run))
+    if time.time() > time_n + 1:
+        if PlannerConfig.ALGORITHM == "ASTAR":
+            planner.planning_env.visualize_map(plan=smooth_plan, visibility_graph=planner.graph, name='map_for_web')
+        elif PlannerConfig.ALGORITHM == "RRT_STAR":
+            planner.planning_env.visualize_map(plan=smooth_plan, tree_edges=planner.tree.get_edges_as_states(), name='map_for_web')
+        elif PlannerConfig.ALGORITHM == "RCS":
+            planner.planning_env.visualize_map(plan=smooth_plan, expanded_nodes=planner.get_expanded_nodes(), name='map_for_web')
+    time_n = time.time()
     number_of_run+=1
     clear_dynamic_cubes()  # Clear the dynamic cubes from the environment after planning
     remove_cube_obstacle(planning_env, len(cube_obstacles))
